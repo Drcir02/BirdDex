@@ -189,3 +189,13 @@ Accounts and cloud sync, sharing and social features, non-European birds, separa
 - WebKit bug on camera in home-screen mode: https://bugs.webkit.org/show_bug.cgi?id=273938
 - Home-screen web apps and the 7-day storage rule: https://developer.apple.com/forums/thread/710157
 - GitHub Pages availability by plan: https://help.github.com/articles/what-is-github-pages
+
+## Status after the overnight build
+
+Written 2026-10-17. Milestones M0 to M6 are built and live at https://drcir02.github.io/BirdDex/. M7 is open.
+
+**Done and verified on a desktop (Chromium, real models):** app shell and installable PWA with offline start; local database with backup and restore; 423 European species (276 for Czechia) with Czech names; sound identification with BirdNET V2.4 and photo identification with WingCLIP, both measured on fixtures; Dex, species pages, scan screens (sound, photo, live camera) and the catch flow; settings, welcome, credits, sounds, update banner, and the Field check page. About 1700 unit tests and the end-to-end suite pass; the GitHub build and deployment run on every push to `main`.
+
+**Not tested on a real phone (honestly):** everything on an iPhone and on Android. That includes microphone and camera behaviour (especially the camera in home-screen mode), the share sheet for backups, the install flow, memory use and speed of the models, storage persistence, the update flow of a deployed new version, EXIF reading of real phone photos, and Wikipedia photos and place-name lookups (these were only tested against mock answers). Recognition quality on real Czech birds is unknown; the catch thresholds in `src/domain/thresholds.ts` are starting values to tune from the owner's results.
+
+The next step is the owner's iPhone test with [TEST-GUIDE.md](TEST-GUIDE.md); the open items are in `docs/NEXT.md`.
