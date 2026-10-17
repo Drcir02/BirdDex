@@ -1,0 +1,549 @@
+/* The detail screen of one bird: photo panel, name, status, the catches and the recording player. */
+
+.bd-species {
+  gap: var(--space-4);
+}
+
+/* ---------- Top bar: back, position, previous and next ---------- */
+
+.bd-spnav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.bd-spnav__position {
+  flex: 1;
+  margin: 0;
+  font: 700 16px / 1 var(--font-wordmark);
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.bd-spnav__flip svg {
+  transform: scaleX(-1);
+}
+
+/* ---------- The photo panel ---------- */
+
+.bd-spphoto {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.bd-spphoto__panel {
+  padding: var(--space-2);
+}
+
+.bd-spphoto__screen {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  /* A phone lying on its side has little height: the picture becomes a wide strip instead of filling the whole screen. */
+  max-height: max(190px, 56vh);
+  overflow: hidden;
+  color: var(--lcd-glow);
+  background: radial-gradient(ellipse at 50% 40%, #2f6142, var(--lcd-deep) 78%);
+  border-radius: var(--radius-s);
+  box-shadow:
+    inset 0 0 0 2px rgba(182, 255, 157, 0.2),
+    inset 0 0 26px rgba(0, 0, 0, 0.55);
+}
+
+.bd-spphoto__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bd-spphoto__open {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: zoom-in;
+}
+
+.bd-spphoto__open:focus-visible {
+  outline: 3px solid var(--focus-on-dark);
+  outline-offset: -5px;
+}
+
+.bd-spphoto__sil {
+  width: 62%;
+  color: rgba(182, 255, 157, 0.9);
+  filter: drop-shadow(0 0 8px rgba(182, 255, 157, 0.55));
+}
+
+.bd-spphoto__sil[data-caught='false'] {
+  color: rgba(182, 255, 157, 0.62);
+}
+
+.bd-spphoto__wait {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  text-align: center;
+}
+
+.bd-spphoto__number {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 4px 8px 3px;
+  font: 700 17px / 1 var(--font-wordmark);
+  color: var(--lcd-glow);
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* Scanlines over the picture, like the screen of the device. They do not catch taps. */
+.bd-spphoto__scan {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.16) 0 1px, transparent 1px 3px);
+  pointer-events: none;
+}
+
+.bd-spphoto__credit {
+  display: flex;
+  flex-direction: column;
+  margin: var(--space-2) 2px 0;
+  font-size: var(--fs-small);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.bd-spphoto__credit a {
+  align-self: flex-start;
+  /* The padding makes the link 44 px high to tap, the negative margin keeps the lines of the credit close together. */
+  padding: 12px 0;
+  margin: -8px 0;
+  color: var(--lcd-glow);
+  text-underline-offset: 3px;
+}
+
+.bd-spphoto__note {
+  margin: var(--space-2) 2px 0;
+  font-size: var(--fs-small);
+  line-height: 1.15;
+}
+
+/* ---------- Name block and status ---------- */
+
+.bd-spname__title {
+  margin: 0 0 var(--space-1);
+  font: 400 14px / 1.65 var(--font-display);
+  overflow-wrap: anywhere;
+}
+
+.bd-spname__latin {
+  margin: 0 0 var(--space-2);
+  font-size: 26px;
+  line-height: 1.1;
+  color: var(--ink-soft);
+}
+
+.bd-spname__family {
+  margin: 0 0 var(--space-3);
+}
+
+.bd-spname__label {
+  color: var(--ink-soft);
+}
+
+.bd-spname__latinfamily {
+  color: var(--ink-soft);
+}
+
+.bd-spname__chips,
+.bd-spname__flags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+}
+
+.bd-spname__flags {
+  margin-top: var(--space-3);
+}
+
+.bd-spname__flagslabel {
+  margin-right: var(--space-1);
+  color: var(--ink-soft);
+}
+
+.bd-spname__flagslabel::after {
+  content: ':';
+}
+
+.bd-spname .bd-chip.is-off {
+  opacity: 0.65;
+}
+
+.bd-spname .bd-chip .bd-stars {
+  margin-right: 2px;
+}
+
+.bd-spstatus p {
+  margin: 0 0 var(--space-3);
+}
+
+.bd-spstatus__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  font: 400 11px / 1.7 var(--font-display);
+}
+
+.bd-spstatus--caught {
+  background: var(--ok-bg);
+}
+
+.bd-spstatus--caught .bd-spstatus__title {
+  color: var(--ok);
+}
+
+.bd-spstatus--caught p:last-child {
+  margin-bottom: 0;
+}
+
+.bd-spstatus__rarity {
+  color: var(--ink-soft);
+}
+
+/* ---------- The catches ---------- */
+
+.bd-spcatches__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  font: 400 12px / 1.7 var(--font-display);
+}
+
+.bd-spcatches__count {
+  min-width: 30px;
+  margin-left: auto;
+  padding: 3px 8px 2px;
+  font: 700 15px / 1 var(--font-wordmark);
+  text-align: center;
+  color: var(--lcd-bg-hi);
+  background: var(--ink);
+  border-radius: var(--radius-pill);
+}
+
+.bd-catches {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bd-catch {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--lcd-panel);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-pixel);
+}
+
+.bd-catch__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: calc(var(--space-1) * -1) 0 calc(var(--space-2) * -1);
+}
+
+.bd-catch__method {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 24px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.bd-catch p {
+  margin: 0;
+}
+
+.bd-catch__when,
+.bd-catch__where {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.bd-catch__when svg,
+.bd-catch__where svg {
+  flex: none;
+  color: var(--ink-soft);
+}
+
+.bd-catch__muted {
+  color: var(--ink-soft);
+}
+
+.bd-catch__demo {
+  padding: 2px 6px 0;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  color: var(--info);
+  border: 2px solid var(--info);
+  border-radius: var(--radius-s);
+}
+
+.bd-catch__map {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  margin-left: auto;
+  color: var(--info);
+  text-underline-offset: 3px;
+}
+
+.bd-catch__note {
+  padding-left: var(--space-3);
+  border-left: 3px solid var(--lcd-line);
+  color: var(--ink-soft);
+}
+
+.bd-catch__confidence .bd-conf__value {
+  font-size: 24px;
+}
+
+.bd-catch__photo {
+  display: block;
+  width: 100%;
+  height: 150px;
+  padding: 0;
+  overflow: hidden;
+  background: var(--lcd-deep);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-s);
+  cursor: zoom-in;
+}
+
+.bd-catch__photo:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.bd-catch__photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bd-catch__photo-wait {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- The player for saved recordings ---------- */
+
+.bd-audio {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
+  color: var(--lcd-glow);
+  background: var(--lcd-deep);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-m);
+  box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.45);
+}
+
+.bd-audio.is-quiet {
+  display: flex;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--ink-soft);
+  background: transparent;
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.bd-audio__button {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  color: var(--lcd-glow);
+  background: rgba(182, 255, 157, 0.12);
+  border: 3px solid var(--lcd-glow);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform var(--dur-fast) ease-out;
+}
+
+.bd-audio__button:focus-visible {
+  outline: 3px solid var(--focus-on-dark);
+  outline-offset: 3px;
+}
+
+.bd-audio__button:active {
+  transform: scale(0.94);
+}
+
+.bd-audio.is-playing .bd-audio__button {
+  background: rgba(182, 255, 157, 0.28);
+  box-shadow: 0 0 12px rgba(182, 255, 157, 0.6);
+}
+
+.bd-audio__track {
+  position: relative;
+  height: 48px;
+}
+
+.bd-audio__bars {
+  position: absolute;
+  inset: 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.bd-audio__bar {
+  flex: 1;
+  min-height: 3px;
+  background: rgba(182, 255, 157, 0.26);
+  border-radius: 1px;
+}
+
+.bd-audio__bar.is-lit {
+  background: var(--lcd-glow);
+  box-shadow: 0 0 6px rgba(182, 255, 157, 0.7);
+}
+
+/* The seek bar lies over the loudness bars: a line that can be dragged or tapped anywhere. */
+.bd-audio__seek {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.bd-audio__seek:focus-visible {
+  outline: 3px solid var(--focus-on-dark);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.bd-audio__seek::-webkit-slider-runnable-track {
+  height: 48px;
+  background: transparent;
+}
+
+.bd-audio__seek::-moz-range-track {
+  height: 48px;
+  background: transparent;
+}
+
+.bd-audio__seek::-webkit-slider-thumb {
+  width: 6px;
+  height: 48px;
+  background: #fff;
+  border: 0;
+  border-radius: 3px;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.bd-audio__seek::-moz-range-thumb {
+  width: 6px;
+  height: 48px;
+  background: #fff;
+  border: 0;
+  border-radius: 3px;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
+}
+
+.bd-audio__seek:disabled {
+  cursor: default;
+}
+
+.bd-audio__seek:disabled::-webkit-slider-thumb {
+  background: transparent;
+  box-shadow: none;
+}
+
+.bd-audio__time {
+  min-width: 5.4ch;
+  font-size: 20px;
+  line-height: 1;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.bd-audio__error {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #ffb3b3;
+}
+
+/* ---------- Photo at full size ---------- */
+
+.bd-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-dialog);
+  display: grid;
+  place-items: center;
+  padding: max(var(--space-4), var(--safe-top)) max(var(--space-4), var(--safe-right)) max(var(--space-4), var(--safe-bottom)) max(var(--space-4), var(--safe-left));
+  color: #fff;
+  font-family: var(--font-lcd);
+  font-size: var(--fs-body);
+  background: rgba(6, 14, 9, 0.95);
+  cursor: zoom-out;
+  animation: bd-viewer-in var(--dur) ease-out;
+}
+
+.bd-viewer__img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-s);
+  box-shadow: 0 0 0 3px rgba(182, 255, 157, 0.3);
+}
+
+.bd-viewer__message {
+  margin: 0;
+}
+
+.bd-viewer__close {
+  position: absolute;
+  top: max(var(--space-3), var(--safe-top));
+  right: max(var(--space-3), var(--safe-right));
+}
+
+@keyframes bd-viewer-in {
+  from {
+    opacity: 0;
+  }
+}

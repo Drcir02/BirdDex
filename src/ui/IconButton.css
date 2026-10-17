@@ -1,0 +1,56 @@
+.bd-iconbtn {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    transform var(--dur-fast) ease-out,
+    background-color var(--dur-fast) ease-out;
+}
+
+.bd-iconbtn--solid {
+  background: linear-gradient(180deg, var(--btn-light-hi), var(--btn-light));
+  border: 3px solid var(--ink);
+  box-shadow: 0 3px 0 var(--ink);
+}
+
+.bd-iconbtn:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.bd-iconbtn:active:not(:disabled) {
+  transform: translateY(2px);
+}
+
+.bd-iconbtn--solid:active:not(:disabled) {
+  box-shadow: 0 1px 0 var(--ink);
+}
+
+.bd-iconbtn--ghost:active:not(:disabled) {
+  background: rgba(23, 48, 31, 0.14);
+}
+
+.bd-iconbtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (hover: hover) {
+  .bd-iconbtn--solid:hover:not(:disabled) {
+    filter: brightness(1.05);
+  }
+
+  .bd-iconbtn--ghost:hover:not(:disabled) {
+    background: rgba(23, 48, 31, 0.1);
+  }
+}

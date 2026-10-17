@@ -1,0 +1,15 @@
+/* The hidden demo page (/#/dev/demo). */
+
+.bd-demo__safe {
+  color: var(--ink-soft);
+}
+
+.bd-demo__count {
+  margin: 0 0 var(--space-3);
+  font-size: 26px;
+}
+
+.bd-demo__actions {
+  display: grid;
+  gap: var(--space-3);
+}

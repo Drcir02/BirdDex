@@ -1,0 +1,75 @@
+.bd-errorscreen {
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  padding: var(--space-4);
+}
+
+.bd-errorscreen--app {
+  position: fixed;
+  inset: 0;
+  padding: max(var(--space-4), var(--safe-top)) max(var(--space-4), var(--safe-right)) max(var(--space-4), var(--safe-bottom)) max(var(--space-4), var(--safe-left));
+  background: linear-gradient(180deg, var(--shell-red-hi), var(--shell-red) 20%, var(--shell-red-lo));
+}
+
+.bd-errorscreen__box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  width: min(100%, 380px);
+  padding: var(--space-5) var(--space-4);
+  text-align: center;
+  color: var(--ink);
+  background: var(--lcd-panel);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-pixel);
+}
+
+.bd-errorscreen__box > svg {
+  color: var(--lcd-dark);
+}
+
+.bd-errorscreen__title {
+  margin: 0;
+  font: 400 var(--fs-h2) / var(--lh-display) var(--font-display);
+}
+
+.bd-errorscreen__box p {
+  margin: 0;
+}
+
+.bd-errorscreen__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.bd-errorscreen__details {
+  width: 100%;
+  margin-top: var(--space-2);
+  font-size: var(--fs-small);
+  color: var(--ink-soft);
+  text-align: left;
+}
+
+.bd-errorscreen__details summary {
+  min-height: var(--tap);
+  padding-top: 10px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.bd-errorscreen__details pre {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2) var(--space-3);
+  overflow: auto;
+  font: 400 15px / 1.3 ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: rgba(23, 48, 31, 0.1);
+  border-radius: var(--radius-s);
+}

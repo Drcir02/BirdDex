@@ -1,0 +1,66 @@
+.bd-toasts {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  left: var(--space-3);
+  z-index: var(--z-toast);
+  display: grid;
+  gap: var(--space-2);
+  pointer-events: none;
+}
+
+.bd-toast {
+  --toast-accent: var(--lens-blue-hi);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 4px 4px 4px var(--space-3);
+  color: var(--lcd-bg-hi);
+  background: var(--lcd-deep);
+  border: 3px solid #0b1a11;
+  border-left: 8px solid var(--toast-accent);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-pixel);
+  pointer-events: auto;
+  animation: bd-toast-in var(--dur) var(--ease);
+}
+
+.bd-toast--success {
+  --toast-accent: var(--led-green);
+}
+
+.bd-toast--error {
+  --toast-accent: var(--led-red);
+}
+
+.bd-toast > svg {
+  flex: none;
+  color: var(--toast-accent);
+}
+
+.bd-toast__text {
+  flex: 1;
+  min-width: 0;
+  padding-block: var(--space-2);
+  font: 400 var(--fs-small) / 1.15 var(--font-lcd);
+  overflow-wrap: anywhere;
+}
+
+.bd-toast .bd-iconbtn {
+  color: var(--lcd-bg-hi);
+}
+
+.bd-toast .bd-iconbtn:focus-visible {
+  outline-color: var(--focus-on-dark);
+}
+
+.bd-toast .bd-iconbtn--ghost:active:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+@keyframes bd-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}

@@ -1,0 +1,213 @@
+/*
+ * Styles of the Field check page (the M0 phone test). It keeps its own dark look and lives outside the device shell.
+ * Everything is scoped under .fc-root so it cannot leak into the Pokedex theme (and the other way round).
+ */
+
+.fc-root {
+  color-scheme: dark;
+  --bg: #12151a;
+  --card: #1c2129;
+  --card-border: #2b323d;
+  --text: #eef1f5;
+  --muted: #9aa5b4;
+  --accent: #e0383e;
+  --pass: #2fbf71;
+  --warn: #e8a824;
+  --fail: #ef4b4b;
+  --run: #5aa9ff;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+.fc-root :focus-visible {
+  outline-color: #8ab4ff;
+}
+
+.fc-root .page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom))
+    calc(16px + env(safe-area-inset-left));
+}
+
+.fc-root h1 {
+  margin: 0 0 8px;
+  font-size: 1.6rem;
+}
+
+.fc-root h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.fc-root p {
+  line-height: 1.45;
+}
+
+.fc-root .muted,
+.fc-root .hint {
+  color: var(--muted);
+}
+
+.fc-root .hint {
+  margin: 8px 0;
+  font-size: 0.9rem;
+}
+
+.fc-root .button,
+.fc-root button {
+  display: inline-block;
+  min-height: 44px;
+  padding: 10px 16px;
+  margin: 4px 8px 4px 0;
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.fc-root button.secondary {
+  background: #2f3743;
+}
+
+.fc-root button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.fc-root .card {
+  margin: 14px 0;
+  padding: 14px;
+  border: 1px solid var(--card-border);
+  border-left-width: 5px;
+  border-radius: 12px;
+  background: var(--card);
+}
+
+.fc-root .card.pass {
+  border-left-color: var(--pass);
+}
+.fc-root .card.warn {
+  border-left-color: var(--warn);
+}
+.fc-root .card.fail {
+  border-left-color: var(--fail);
+}
+.fc-root .card.running {
+  border-left-color: var(--run);
+}
+
+.fc-root .card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fc-root .chip {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #2f3743;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.fc-root .chip.pass {
+  background: var(--pass);
+  color: #04210f;
+}
+.fc-root .chip.warn {
+  background: var(--warn);
+  color: #2b1d00;
+}
+.fc-root .chip.fail {
+  background: var(--fail);
+  color: #fff;
+}
+.fc-root .chip.running {
+  background: var(--run);
+  color: #04152b;
+}
+
+.fc-root .lines {
+  margin: 10px 0 0;
+  padding-left: 18px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.fc-root .meter {
+  height: 14px;
+  margin: 10px 0;
+  border-radius: 7px;
+  background: #0d1014;
+  overflow: hidden;
+}
+.fc-root .meter > div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--pass), var(--warn), var(--fail));
+  transition: width 60ms linear;
+}
+
+.fc-root video,
+.fc-root .preview {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  margin: 10px 0;
+  border-radius: 10px;
+  background: #000;
+  object-fit: contain;
+}
+
+.fc-root select {
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  background: #0d1014;
+  color: var(--text);
+  font: inherit;
+}
+
+.fc-root textarea {
+  width: 100%;
+  min-height: 220px;
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: #0d1014;
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+}
+
+.fc-root .banner {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #2b2412;
+  border: 1px solid #5c4b17;
+  font-size: 0.9rem;
+}
+
+.fc-root .back {
+  display: inline-block;
+  margin-bottom: 8px;
+  color: var(--muted);
+}
+
+/* The file picker has a wide built-in size; keep it inside the card on a narrow phone. */
+.fc-root input {
+  max-width: 100%;
+}

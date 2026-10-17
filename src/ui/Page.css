@@ -1,0 +1,49 @@
+.bd-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 100%;
+  padding: var(--space-3);
+  animation: bd-page-in 200ms steps(4, end);
+}
+
+/* A short LCD refresh when a screen appears. */
+@keyframes bd-page-in {
+  from {
+    opacity: 0.4;
+  }
+}
+
+.bd-page--bleed {
+  padding: 0;
+}
+
+.bd-pageheader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap);
+}
+
+.bd-pageheader__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.bd-pageheader__title {
+  margin: 0;
+  font: 400 var(--fs-h1) / var(--lh-display) var(--font-display);
+  overflow-wrap: anywhere;
+}
+
+.bd-pageheader__subtitle {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: var(--fs-small);
+}
+
+.bd-pageheader__actions {
+  display: flex;
+  flex: none;
+  gap: var(--space-2);
+}

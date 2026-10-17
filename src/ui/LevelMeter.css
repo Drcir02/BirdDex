@@ -1,0 +1,45 @@
+.bd-meter {
+  display: grid;
+  grid-template-columns: repeat(var(--segments, 16), 1fr);
+  gap: 3px;
+  height: 32px;
+  padding: 5px;
+  background: var(--lcd-deep);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-s);
+  box-shadow: var(--shadow-inset);
+}
+
+/* Vertical: the first light sits at the bottom. */
+.bd-meter--vertical {
+  display: flex;
+  flex-direction: column-reverse;
+  width: 32px;
+  height: 160px;
+}
+
+.bd-meter--vertical .bd-meter__seg {
+  flex: 1;
+}
+
+.bd-meter__seg {
+  --seg: #5df08a;
+  background: rgba(182, 255, 157, 0.13);
+  border-radius: 2px;
+  transition:
+    background-color 70ms linear,
+    box-shadow 70ms linear;
+}
+
+.bd-meter__seg[data-tone='mid'] {
+  --seg: var(--led-yellow);
+}
+
+.bd-meter__seg[data-tone='high'] {
+  --seg: var(--led-red);
+}
+
+.bd-meter__seg.is-lit {
+  background: var(--seg);
+  box-shadow: 0 0 7px var(--seg);
+}

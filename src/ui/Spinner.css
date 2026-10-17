@@ -1,0 +1,43 @@
+.bd-spinner {
+  --s: 32px;
+  display: inline-block;
+  flex: none;
+  width: var(--s);
+  height: var(--s);
+  color: var(--ink);
+  vertical-align: middle;
+}
+
+.bd-spinner--sm {
+  --s: 20px;
+}
+
+.bd-spinner--lg {
+  --s: 56px;
+}
+
+.bd-spinner__ring {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: bd-spinner-turn 800ms steps(8, end) infinite;
+}
+
+.bd-spinner__ring > i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--s) * 0.16);
+  height: calc(var(--s) * 0.16);
+  margin: calc(var(--s) * -0.08);
+  background: currentColor;
+  transform: rotate(calc(var(--i) * 45deg)) translateY(calc(var(--s) * -0.38));
+  opacity: calc(0.15 + var(--i) * 0.12);
+}
+
+@keyframes bd-spinner-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}

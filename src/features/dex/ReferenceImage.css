@@ -1,0 +1,10 @@
+/* A picture from the web fades in when it has loaded, so it never pops in half drawn. */
+
+.bd-refimg {
+  opacity: 0;
+  transition: opacity var(--dur-slow) ease-out;
+}
+
+.bd-refimg.is-loaded {
+  opacity: 1;
+}

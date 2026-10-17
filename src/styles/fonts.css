@@ -1,0 +1,13 @@
+/*
+ * Pixel fonts (SIL OFL), only the Latin and Latin Extended parts: that is everything Czech needs.
+ * Checked glyph by glyph: Press Start 2P and VT323 have every Czech letter.
+ * Silkscreen LACKS ě č ř ů ď ť ň (and their capitals). Use it only for numbers and the wordmark, never for Czech sentences.
+ */
+@import '@fontsource/press-start-2p/latin-400.css';
+@import '@fontsource/press-start-2p/latin-ext-400.css';
+@import '@fontsource/vt323/latin-400.css';
+@import '@fontsource/vt323/latin-ext-400.css';
+@import '@fontsource/silkscreen/latin-400.css';
+@import '@fontsource/silkscreen/latin-ext-400.css';
+@import '@fontsource/silkscreen/latin-700.css';
+@import '@fontsource/silkscreen/latin-ext-700.css';

@@ -1,0 +1,45 @@
+.bd-ring {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  color: var(--ink);
+}
+
+.bd-ring > svg {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+
+.bd-ring__track {
+  fill: none;
+  stroke: rgba(23, 48, 31, 0.18);
+}
+
+.bd-ring__value {
+  fill: none;
+  stroke: var(--ring-color, var(--lens-blue));
+  stroke-linecap: butt;
+  transition: stroke-dashoffset var(--dur-slow) var(--ease);
+}
+
+.bd-ring__label {
+  position: relative;
+  font-family: var(--font-display);
+  line-height: 1.3;
+  text-align: center;
+}
+
+.bd-ring--busy > svg {
+  animation: bd-ring-turn 1.1s linear infinite;
+}
+
+@keyframes bd-ring-turn {
+  from {
+    transform: rotate(-90deg);
+  }
+  to {
+    transform: rotate(270deg);
+  }
+}

@@ -1,0 +1,323 @@
+/* The Dex list: header, filters and the grid of bird cards. */
+
+.bd-dex {
+  /* The grid chooses its number of columns from the width of the screen it sits on. */
+  container: bd-dex / inline-size;
+  gap: var(--space-3);
+}
+
+.bd-dex__ring {
+  display: grid;
+  place-items: center;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.bd-dex__progress {
+  display: block;
+  font-size: 26px;
+  line-height: 1.05;
+  color: var(--ink);
+}
+
+.bd-dex__note {
+  display: block;
+  margin-top: 2px;
+  line-height: 1.1;
+}
+
+/* While the list catches up with a tap or a letter it dims a little, but only if that takes more than a moment. */
+.bd-dex__results {
+  transition: opacity 80ms ease-out 160ms;
+}
+
+.bd-dex__results[data-stale] {
+  opacity: 0.6;
+}
+
+.bd-dex__loading {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) 0;
+  color: var(--ink-soft);
+}
+
+.bd-dex__loading p {
+  margin: 0;
+}
+
+/* ---------- Search, chips, sort ---------- */
+
+.bd-dexctl {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.bd-dexctl__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.bd-dexctl__count {
+  min-width: 0;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 24px;
+}
+
+.bd-dexctl__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.bd-dexsort {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  margin-bottom: 3px;
+}
+
+.bd-dexsort__select {
+  min-width: 120px;
+  min-height: var(--tap);
+  padding: 4px 32px 2px 36px;
+  font: 400 20px / 1 var(--font-lcd);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-s);
+  box-shadow: 0 3px 0 var(--ink);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.bd-dexsort__select:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.bd-dexsort__icon,
+.bd-dexsort__arrow {
+  position: absolute;
+  color: var(--ink);
+  pointer-events: none;
+}
+
+.bd-dexsort__icon {
+  left: 10px;
+}
+
+.bd-dexsort__arrow {
+  right: 8px;
+  transform: rotate(90deg);
+}
+
+/* ---------- The grid ---------- */
+
+.bd-dexgrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* The cards have room around them for their shadow and focus ring; this margin gives that room back. */
+  margin: -5px;
+  padding: 0;
+  list-style: none;
+}
+
+@container bd-dex (min-width: 520px) {
+  .bd-dexgrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container bd-dex (min-width: 760px) {
+  .bd-dexgrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/*
+ * Hundreds of cards: the browser skips the layout and painting of the ones far away (content-visibility), and every card
+ * has the same height, so the skipped ones take exactly the room they will need and the scrollbar does not jump.
+ * The stand-in height is the height of the content (the card, 176 px); the padding comes on top, as it does for a real card.
+ * Skipping also clips whatever sticks out of the item, hence the padding for the shadow and the focus ring.
+ */
+.bd-dexcard {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto 176px;
+  padding: 5px;
+}
+
+.bd-dexcard__link {
+  --rarity: var(--rarity-common);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 176px;
+  padding: 6px;
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--lcd-panel);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-m);
+  box-shadow: 3px 3px 0 rgba(23, 48, 31, 0.35);
+  transition: transform var(--dur-fast) ease-out;
+}
+
+.bd-dexcard[data-rarity='uncommon'] .bd-dexcard__link {
+  --rarity: var(--rarity-uncommon);
+}
+
+.bd-dexcard[data-rarity='rare'] .bd-dexcard__link {
+  --rarity: var(--rarity-rare);
+}
+
+.bd-dexcard[data-rarity='epic'] .bd-dexcard__link {
+  --rarity: var(--rarity-epic);
+}
+
+.bd-dexcard[data-rarity='legendary'] .bd-dexcard__link {
+  --rarity: var(--rarity-legendary);
+}
+
+.bd-dexcard__link:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.bd-dexcard__link:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 rgba(23, 48, 31, 0.35);
+}
+
+/* Not caught yet: a dashed, quieter card, like an empty slot in the collection. */
+.bd-dexcard[data-caught='false'] .bd-dexcard__link {
+  background: rgba(228, 244, 214, 0.55);
+  border-style: dashed;
+  border-color: var(--lcd-dark);
+  box-shadow: none;
+}
+
+.bd-dexcard__pic {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  height: 88px;
+  overflow: hidden;
+  background: var(--lcd-bg-lo);
+  border: 2px solid var(--ink);
+  border-bottom: 5px solid var(--rarity);
+  border-radius: var(--radius-s);
+}
+
+.bd-dexcard[data-caught='false'] .bd-dexcard__pic {
+  border-color: var(--lcd-dark);
+  border-bottom-color: var(--rarity);
+}
+
+.bd-dexcard[data-caught='true'] .bd-dexcard__pic {
+  background: radial-gradient(ellipse at 50% 40%, #2c5a3b, var(--lcd-deep) 80%);
+}
+
+.bd-dexcard__sil {
+  width: 100%;
+  height: 100%;
+  padding: 7px;
+  color: var(--lcd-dark);
+  opacity: 0.8;
+}
+
+.bd-dexcard[data-caught='true'] .bd-dexcard__sil {
+  color: var(--lcd-glow);
+  opacity: 0.9;
+}
+
+.bd-dexcard__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bd-dexcard__badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 3px;
+  color: #fff;
+  background: var(--ok);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.bd-dexcard__badge svg {
+  stroke-width: 3.4;
+}
+
+.bd-dexcard__times {
+  padding-right: 2px;
+  font: 400 17px / 1 var(--font-lcd);
+}
+
+.bd-dexcard__names {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  height: 44px;
+  overflow: hidden;
+}
+
+/* Two lines of 22 px. A name of one line leaves room for the Latin name under it; a name of two lines pushes it out of sight. */
+.bd-dexcard__name {
+  font: 400 21px / 22px var(--font-lcd);
+  overflow-wrap: anywhere;
+}
+
+.bd-dexcard__latin {
+  overflow: hidden;
+  font: italic 400 17px / 22px var(--font-lcd);
+  color: var(--ink-soft);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.bd-dexcard[data-caught='false'] .bd-dexcard__name {
+  color: var(--ink-soft);
+}
+
+.bd-dexcard__meta {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  height: 18px;
+}
+
+.bd-dexcard__num {
+  font: 700 13px / 1 var(--font-wordmark);
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
+
+/* A caught photo in a card appears at once (it comes from the device, not from the web). */
+.bd-dexcard__img.is-loaded {
+  opacity: 1;
+}

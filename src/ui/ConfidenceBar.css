@@ -1,0 +1,54 @@
+.bd-conf {
+  --conf-color: var(--lens-blue);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.bd-conf--below {
+  --conf-color: #cf8a00;
+}
+
+.bd-conf--met {
+  --conf-color: #1f8a45;
+}
+
+.bd-conf__track {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 24px;
+  padding: 3px;
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-s);
+  box-shadow: inset 0 3px 0 rgba(23, 48, 31, 0.12);
+}
+
+/* Pixel blocks: 8 px pitch, 2 px gaps. */
+.bd-conf__fill {
+  width: var(--w);
+  height: 100%;
+  background-color: var(--conf-color);
+  background-image: linear-gradient(90deg, transparent 0 6px, var(--paper) 6px 8px);
+  background-size: 8px 100%;
+  transition: width var(--dur-slow) var(--ease);
+}
+
+.bd-conf__mark {
+  position: absolute;
+  top: -7px;
+  bottom: -7px;
+  left: calc(3px + (100% - 6px) * var(--t, 0));
+  width: 4px;
+  margin-left: -2px;
+  background: var(--ink);
+  border-radius: 1px;
+}
+
+.bd-conf__value {
+  flex: none;
+  min-width: 3.6ch;
+  font: 400 26px / 1 var(--font-lcd);
+  text-align: right;
+}

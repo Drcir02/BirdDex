@@ -1,0 +1,145 @@
+/* Reset and basic typography. Component styles live next to their components in src/ui. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--stage-bg);
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  overscroll-behavior: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--lens-blue);
+  color: #fff;
+}
+
+.bd-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- Text on the LCD (class bd-text on the screen, dialogs, error screens). Zero specificity (:where), so component classes always win. ---- */
+
+:where(.bd-text) {
+  font-family: var(--font-lcd);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--ink);
+}
+
+:where(.bd-text h1) {
+  margin: 0 0 var(--space-3);
+  font: 400 var(--fs-h1) / var(--lh-display) var(--font-display);
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+:where(.bd-text h2) {
+  margin: 0 0 var(--space-2);
+  font: 400 var(--fs-h2) / var(--lh-display) var(--font-display);
+  overflow-wrap: anywhere;
+}
+
+:where(.bd-text h3) {
+  margin: 0 0 var(--space-2);
+  font: 400 var(--fs-h3) / var(--lh-display) var(--font-display);
+  overflow-wrap: anywhere;
+}
+
+:where(.bd-text p) {
+  margin: 0 0 var(--space-3);
+}
+
+:where(.bd-text small) {
+  font-size: var(--fs-small);
+}
+
+:where(.bd-text a) {
+  color: var(--info);
+  text-underline-offset: 3px;
+}
+
+:where(.bd-text ul, .bd-text ol) {
+  margin: 0 0 var(--space-3);
+  padding-left: 1.3em;
+}
+
+:where(.bd-text hr) {
+  margin: var(--space-4) 0;
+  border: 0;
+  border-top: 3px dotted var(--lcd-line);
+}
+
+:where(.bd-text input:not([type='checkbox'], [type='radio'], [type='range'], [type='file']), .bd-text select, .bd-text textarea) {
+  min-height: var(--tap);
+  padding: 6px 12px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-m);
+  box-shadow: inset 0 3px 0 rgba(23, 48, 31, 0.12);
+}
+
+:where(.bd-text input::placeholder) {
+  color: var(--ink-soft);
+  opacity: 0.8;
+}
+
+/* Calm things down for people who asked for less motion. Status lights stay readable because they keep their colour. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}

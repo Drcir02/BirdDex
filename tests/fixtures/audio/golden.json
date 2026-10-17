@@ -1,0 +1,1732 @@
+{
+ "about": "BirdNET V2.4 top 5 per window, made by scripts/make-audio-golden.py with ai-edge-litert in Python. Scores are sigmoid(clip(logit, -15, 15)). Do not edit by hand.",
+ "sampleRate": 48000,
+ "windowSeconds": 3,
+ "models": {
+  "fp16": {
+   "file": "birdnet-v2.4-fp16.tflite",
+   "sha256": "5c64ba3ffab264ccbfafe784896392051a86be63b0cc507e7683db7df114546b"
+  },
+  "fp32": {
+   "file": "birdnet-v2.4-fp32.tflite",
+   "sha256": "55f3e4055b1a13bfa9a2452731d0d34f6a02d6b775a334362665892794165e4c"
+  }
+ },
+ "files": {
+  "birdnet-demo-sample.wav": {
+   "seconds": 3.0,
+   "windows": [
+    {
+     "startS": 0,
+     "fp16": [
+      {
+       "index": 6,
+       "label": "Acanthis cabaret_Lesser Redpoll",
+       "score": 0.944871
+      },
+      {
+       "index": 7,
+       "label": "Acanthis flammea_Common Redpoll",
+       "score": 0.798427
+      },
+      {
+       "index": 8,
+       "label": "Acanthis hornemanni_Hoary Redpoll",
+       "score": 0.05923
+      },
+      {
+       "index": 2304,
+       "label": "Ficedula albicilla_Taiga Flycatcher",
+       "score": 0.000825
+      },
+      {
+       "index": 1215,
+       "label": "Chloris chloris_European Greenfinch",
+       "score": 0.000608
+      }
+     ],
+     "fp32": [
+      {
+       "index": 6,
+       "label": "Acanthis cabaret_Lesser Redpoll",
+       "score": 0.944401
+      },
+      {
+       "index": 7,
+       "label": "Acanthis flammea_Common Redpoll",
+       "score": 0.799722
+      },
+      {
+       "index": 8,
+       "label": "Acanthis hornemanni_Hoary Redpoll",
+       "score": 0.058995
+      },
+      {
+       "index": 2304,
+       "label": "Ficedula albicilla_Taiga Flycatcher",
+       "score": 0.000816
+      },
+      {
+       "index": 1215,
+       "label": "Chloris chloris_European Greenfinch",
+       "score": 0.000596
+      }
+     ]
+    }
+   ]
+  },
+  "soundscape-24s.wav": {
+   "seconds": 24.0,
+   "windows": [
+    {
+     "startS": 0,
+     "fp16": [
+      {
+       "index": 4771,
+       "label": "Poecile atricapillus_Black-capped Chickadee",
+       "score": 0.814842
+      },
+      {
+       "index": 636,
+       "label": "Baeolophus bicolor_Tufted Titmouse",
+       "score": 0.092615
+      },
+      {
+       "index": 3294,
+       "label": "Loxia leucoptera_White-winged Crossbill",
+       "score": 0.045277
+      },
+      {
+       "index": 5629,
+       "label": "Spinus tristis_American Goldfinch",
+       "score": 0.029162
+      },
+      {
+       "index": 4774,
+       "label": "Poecile gambeli_Mountain Chickadee",
+       "score": 0.024512
+      }
+     ],
+     "fp32": [
+      {
+       "index": 4771,
+       "label": "Poecile atricapillus_Black-capped Chickadee",
+       "score": 0.814056
+      },
+      {
+       "index": 636,
+       "label": "Baeolophus bicolor_Tufted Titmouse",
+       "score": 0.092088
+      },
+      {
+       "index": 3294,
+       "label": "Loxia leucoptera_White-winged Crossbill",
+       "score": 0.045174
+      },
+      {
+       "index": 5629,
+       "label": "Spinus tristis_American Goldfinch",
+       "score": 0.029455
+      },
+      {
+       "index": 4774,
+       "label": "Poecile gambeli_Mountain Chickadee",
+       "score": 0.024612
+      }
+     ]
+    },
+    {
+     "startS": 1,
+     "fp16": [
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.105132
+      },
+      {
+       "index": 5629,
+       "label": "Spinus tristis_American Goldfinch",
+       "score": 0.051274
+      },
+      {
+       "index": 3514,
+       "label": "Melospiza melodia_Song Sparrow",
+       "score": 0.025521
+      },
+      {
+       "index": 2649,
+       "label": "Haemorhous purpureus_Purple Finch",
+       "score": 0.021243
+      },
+      {
+       "index": 5575,
+       "label": "Sitta pygmaea_Pygmy Nuthatch",
+       "score": 0.01824
+      }
+     ],
+     "fp32": [
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.103516
+      },
+      {
+       "index": 5629,
+       "label": "Spinus tristis_American Goldfinch",
+       "score": 0.051135
+      },
+      {
+       "index": 3514,
+       "label": "Melospiza melodia_Song Sparrow",
+       "score": 0.025541
+      },
+      {
+       "index": 2649,
+       "label": "Haemorhous purpureus_Purple Finch",
+       "score": 0.021242
+      },
+      {
+       "index": 5575,
+       "label": "Sitta pygmaea_Pygmy Nuthatch",
+       "score": 0.01792
+      }
+     ]
+    },
+    {
+     "startS": 2,
+     "fp16": [
+      {
+       "index": 4774,
+       "label": "Poecile gambeli_Mountain Chickadee",
+       "score": 0.21112
+      },
+      {
+       "index": 4771,
+       "label": "Poecile atricapillus_Black-capped Chickadee",
+       "score": 0.185878
+      },
+      {
+       "index": 5575,
+       "label": "Sitta pygmaea_Pygmy Nuthatch",
+       "score": 0.043425
+      },
+      {
+       "index": 2143,
+       "label": "Engine_Engine",
+       "score": 0.028912
+      },
+      {
+       "index": 5629,
+       "label": "Spinus tristis_American Goldfinch",
+       "score": 0.021147
+      }
+     ],
+     "fp32": [
+      {
+       "index": 4774,
+       "label": "Poecile gambeli_Mountain Chickadee",
+       "score": 0.210016
+      },
+      {
+       "index": 4771,
+       "label": "Poecile atricapillus_Black-capped Chickadee",
+       "score": 0.184402
+      },
+      {
+       "index": 5575,
+       "label": "Sitta pygmaea_Pygmy Nuthatch",
+       "score": 0.043793
+      },
+      {
+       "index": 2143,
+       "label": "Engine_Engine",
+       "score": 0.029255
+      },
+      {
+       "index": 5629,
+       "label": "Spinus tristis_American Goldfinch",
+       "score": 0.021126
+      }
+     ]
+    },
+    {
+     "startS": 3,
+     "fp16": [
+      {
+       "index": 4771,
+       "label": "Poecile atricapillus_Black-capped Chickadee",
+       "score": 0.308111
+      },
+      {
+       "index": 4774,
+       "label": "Poecile gambeli_Mountain Chickadee",
+       "score": 0.087285
+      },
+      {
+       "index": 636,
+       "label": "Baeolophus bicolor_Tufted Titmouse",
+       "score": 0.029525
+      },
+      {
+       "index": 5575,
+       "label": "Sitta pygmaea_Pygmy Nuthatch",
+       "score": 0.022821
+      },
+      {
+       "index": 5629,
+       "label": "Spinus tristis_American Goldfinch",
+       "score": 0.021563
+      }
+     ],
+     "fp32": [
+      {
+       "index": 4771,
+       "label": "Poecile atricapillus_Black-capped Chickadee",
+       "score": 0.308285
+      },
+      {
+       "index": 4774,
+       "label": "Poecile gambeli_Mountain Chickadee",
+       "score": 0.084656
+      },
+      {
+       "index": 636,
+       "label": "Baeolophus bicolor_Tufted Titmouse",
+       "score": 0.029574
+      },
+      {
+       "index": 5575,
+       "label": "Sitta pygmaea_Pygmy Nuthatch",
+       "score": 0.022692
+      },
+      {
+       "index": 5629,
+       "label": "Spinus tristis_American Goldfinch",
+       "score": 0.021565
+      }
+     ]
+    },
+    {
+     "startS": 4,
+     "fp16": [
+      {
+       "index": 4771,
+       "label": "Poecile atricapillus_Black-capped Chickadee",
+       "score": 0.263122
+      },
+      {
+       "index": 636,
+       "label": "Baeolophus bicolor_Tufted Titmouse",
+       "score": 0.254093
+      },
+      {
+       "index": 5642,
+       "label": "Spizelloides arborea_American Tree Sparrow",
+       "score": 0.103206
+      },
+      {
+       "index": 4772,
+       "label": "Poecile carolinensis_Carolina Chickadee",
+       "score": 0.025585
+      },
+      {
+       "index": 2819,
+       "label": "Human vocal_Human vocal",
+       "score": 0.014765
+      }
+     ],
+     "fp32": [
+      {
+       "index": 4771,
+       "label": "Poecile atricapillus_Black-capped Chickadee",
+       "score": 0.262108
+      },
+      {
+       "index": 636,
+       "label": "Baeolophus bicolor_Tufted Titmouse",
+       "score": 0.255322
+      },
+      {
+       "index": 5642,
+       "label": "Spizelloides arborea_American Tree Sparrow",
+       "score": 0.102176
+      },
+      {
+       "index": 4772,
+       "label": "Poecile carolinensis_Carolina Chickadee",
+       "score": 0.025559
+      },
+      {
+       "index": 2819,
+       "label": "Human vocal_Human vocal",
+       "score": 0.014727
+      }
+     ]
+    },
+    {
+     "startS": 5,
+     "fp16": [
+      {
+       "index": 636,
+       "label": "Baeolophus bicolor_Tufted Titmouse",
+       "score": 0.59053
+      },
+      {
+       "index": 6265,
+       "label": "Turdus philomelos_Song Thrush",
+       "score": 0.290792
+      },
+      {
+       "index": 5642,
+       "label": "Spizelloides arborea_American Tree Sparrow",
+       "score": 0.15622
+      },
+      {
+       "index": 4771,
+       "label": "Poecile atricapillus_Black-capped Chickadee",
+       "score": 0.091083
+      },
+      {
+       "index": 635,
+       "label": "Baeolophus atricristatus_Black-crested Titmouse",
+       "score": 0.059222
+      }
+     ],
+     "fp32": [
+      {
+       "index": 636,
+       "label": "Baeolophus bicolor_Tufted Titmouse",
+       "score": 0.589026
+      },
+      {
+       "index": 6265,
+       "label": "Turdus philomelos_Song Thrush",
+       "score": 0.293403
+      },
+      {
+       "index": 5642,
+       "label": "Spizelloides arborea_American Tree Sparrow",
+       "score": 0.153919
+      },
+      {
+       "index": 4771,
+       "label": "Poecile atricapillus_Black-capped Chickadee",
+       "score": 0.090758
+      },
+      {
+       "index": 635,
+       "label": "Baeolophus atricristatus_Black-crested Titmouse",
+       "score": 0.058646
+      }
+     ]
+    },
+    {
+     "startS": 6,
+     "fp16": [
+      {
+       "index": 636,
+       "label": "Baeolophus bicolor_Tufted Titmouse",
+       "score": 0.186593
+      },
+      {
+       "index": 6265,
+       "label": "Turdus philomelos_Song Thrush",
+       "score": 0.082066
+      },
+      {
+       "index": 5642,
+       "label": "Spizelloides arborea_American Tree Sparrow",
+       "score": 0.070823
+      },
+      {
+       "index": 2110,
+       "label": "Emberiza rustica_Rustic Bunting",
+       "score": 0.059535
+      },
+      {
+       "index": 2649,
+       "label": "Haemorhous purpureus_Purple Finch",
+       "score": 0.045153
+      }
+     ],
+     "fp32": [
+      {
+       "index": 636,
+       "label": "Baeolophus bicolor_Tufted Titmouse",
+       "score": 0.186432
+      },
+      {
+       "index": 6265,
+       "label": "Turdus philomelos_Song Thrush",
+       "score": 0.081428
+      },
+      {
+       "index": 5642,
+       "label": "Spizelloides arborea_American Tree Sparrow",
+       "score": 0.070015
+      },
+      {
+       "index": 2110,
+       "label": "Emberiza rustica_Rustic Bunting",
+       "score": 0.059362
+      },
+      {
+       "index": 2649,
+       "label": "Haemorhous purpureus_Purple Finch",
+       "score": 0.045119
+      }
+     ]
+    },
+    {
+     "startS": 7,
+     "fp16": [
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.1783
+      },
+      {
+       "index": 636,
+       "label": "Baeolophus bicolor_Tufted Titmouse",
+       "score": 0.03763
+      },
+      {
+       "index": 1988,
+       "label": "Dryobates nuttallii_Nuttall's Woodpecker",
+       "score": 0.034175
+      },
+      {
+       "index": 727,
+       "label": "Branta canadensis_Canada Goose",
+       "score": 0.029948
+      },
+      {
+       "index": 2649,
+       "label": "Haemorhous purpureus_Purple Finch",
+       "score": 0.026622
+      }
+     ],
+     "fp32": [
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.178441
+      },
+      {
+       "index": 636,
+       "label": "Baeolophus bicolor_Tufted Titmouse",
+       "score": 0.037665
+      },
+      {
+       "index": 1988,
+       "label": "Dryobates nuttallii_Nuttall's Woodpecker",
+       "score": 0.03411
+      },
+      {
+       "index": 727,
+       "label": "Branta canadensis_Canada Goose",
+       "score": 0.029958
+      },
+      {
+       "index": 2649,
+       "label": "Haemorhous purpureus_Purple Finch",
+       "score": 0.026751
+      }
+     ]
+    },
+    {
+     "startS": 8,
+     "fp16": [
+      {
+       "index": 5593,
+       "label": "Spatula discors_Blue-winged Teal",
+       "score": 0.103438
+      },
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.068864
+      },
+      {
+       "index": 6488,
+       "label": "Zonotrichia atricapilla_Golden-crowned Sparrow",
+       "score": 0.03444
+      },
+      {
+       "index": 5575,
+       "label": "Sitta pygmaea_Pygmy Nuthatch",
+       "score": 0.026904
+      },
+      {
+       "index": 636,
+       "label": "Baeolophus bicolor_Tufted Titmouse",
+       "score": 0.021797
+      }
+     ],
+     "fp32": [
+      {
+       "index": 5593,
+       "label": "Spatula discors_Blue-winged Teal",
+       "score": 0.101962
+      },
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.069427
+      },
+      {
+       "index": 6488,
+       "label": "Zonotrichia atricapilla_Golden-crowned Sparrow",
+       "score": 0.034659
+      },
+      {
+       "index": 5575,
+       "label": "Sitta pygmaea_Pygmy Nuthatch",
+       "score": 0.02702
+      },
+      {
+       "index": 636,
+       "label": "Baeolophus bicolor_Tufted Titmouse",
+       "score": 0.021381
+      }
+     ]
+    },
+    {
+     "startS": 9,
+     "fp16": [
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.639279
+      },
+      {
+       "index": 6488,
+       "label": "Zonotrichia atricapilla_Golden-crowned Sparrow",
+       "score": 0.016374
+      },
+      {
+       "index": 893,
+       "label": "Calypte anna_Anna's Hummingbird",
+       "score": 0.013396
+      },
+      {
+       "index": 1988,
+       "label": "Dryobates nuttallii_Nuttall's Woodpecker",
+       "score": 0.012155
+      },
+      {
+       "index": 7,
+       "label": "Acanthis flammea_Common Redpoll",
+       "score": 0.010161
+      }
+     ],
+     "fp32": [
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.639378
+      },
+      {
+       "index": 6488,
+       "label": "Zonotrichia atricapilla_Golden-crowned Sparrow",
+       "score": 0.01634
+      },
+      {
+       "index": 893,
+       "label": "Calypte anna_Anna's Hummingbird",
+       "score": 0.013492
+      },
+      {
+       "index": 1988,
+       "label": "Dryobates nuttallii_Nuttall's Woodpecker",
+       "score": 0.012158
+      },
+      {
+       "index": 7,
+       "label": "Acanthis flammea_Common Redpoll",
+       "score": 0.010094
+      }
+     ]
+    },
+    {
+     "startS": 10,
+     "fp16": [
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.258906
+      },
+      {
+       "index": 7,
+       "label": "Acanthis flammea_Common Redpoll",
+       "score": 0.044164
+      },
+      {
+       "index": 885,
+       "label": "Callipepla gambelii_Gambel's Quail",
+       "score": 0.010619
+      },
+      {
+       "index": 727,
+       "label": "Branta canadensis_Canada Goose",
+       "score": 0.009609
+      },
+      {
+       "index": 2140,
+       "label": "Empidonax wrightii_Gray Flycatcher",
+       "score": 0.00886
+      }
+     ],
+     "fp32": [
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.261197
+      },
+      {
+       "index": 7,
+       "label": "Acanthis flammea_Common Redpoll",
+       "score": 0.044064
+      },
+      {
+       "index": 885,
+       "label": "Callipepla gambelii_Gambel's Quail",
+       "score": 0.010552
+      },
+      {
+       "index": 727,
+       "label": "Branta canadensis_Canada Goose",
+       "score": 0.00953
+      },
+      {
+       "index": 2140,
+       "label": "Empidonax wrightii_Gray Flycatcher",
+       "score": 0.008766
+      }
+     ]
+    },
+    {
+     "startS": 11,
+     "fp16": [
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.596271
+      },
+      {
+       "index": 2143,
+       "label": "Engine_Engine",
+       "score": 0.021943
+      },
+      {
+       "index": 7,
+       "label": "Acanthis flammea_Common Redpoll",
+       "score": 0.016568
+      },
+      {
+       "index": 893,
+       "label": "Calypte anna_Anna's Hummingbird",
+       "score": 0.012551
+      },
+      {
+       "index": 6314,
+       "label": "Tyrannus vociferans_Cassin's Kingbird",
+       "score": 0.011206
+      }
+     ],
+     "fp32": [
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.596324
+      },
+      {
+       "index": 2143,
+       "label": "Engine_Engine",
+       "score": 0.022038
+      },
+      {
+       "index": 7,
+       "label": "Acanthis flammea_Common Redpoll",
+       "score": 0.016328
+      },
+      {
+       "index": 893,
+       "label": "Calypte anna_Anna's Hummingbird",
+       "score": 0.01245
+      },
+      {
+       "index": 6314,
+       "label": "Tyrannus vociferans_Cassin's Kingbird",
+       "score": 0.011246
+      }
+     ]
+    },
+    {
+     "startS": 12,
+     "fp16": [
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.081765
+      },
+      {
+       "index": 2649,
+       "label": "Haemorhous purpureus_Purple Finch",
+       "score": 0.060214
+      },
+      {
+       "index": 2143,
+       "label": "Engine_Engine",
+       "score": 0.049096
+      },
+      {
+       "index": 2647,
+       "label": "Haemorhous cassinii_Cassin's Finch",
+       "score": 0.047341
+      },
+      {
+       "index": 6375,
+       "label": "Vireo bellii_Bell's Vireo",
+       "score": 0.030404
+      }
+     ],
+     "fp32": [
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.080788
+      },
+      {
+       "index": 2649,
+       "label": "Haemorhous purpureus_Purple Finch",
+       "score": 0.060172
+      },
+      {
+       "index": 2143,
+       "label": "Engine_Engine",
+       "score": 0.050091
+      },
+      {
+       "index": 2647,
+       "label": "Haemorhous cassinii_Cassin's Finch",
+       "score": 0.047556
+      },
+      {
+       "index": 6375,
+       "label": "Vireo bellii_Bell's Vireo",
+       "score": 0.030032
+      }
+     ]
+    },
+    {
+     "startS": 13,
+     "fp16": [
+      {
+       "index": 2110,
+       "label": "Emberiza rustica_Rustic Bunting",
+       "score": 0.060999
+      },
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.048969
+      },
+      {
+       "index": 2649,
+       "label": "Haemorhous purpureus_Purple Finch",
+       "score": 0.028494
+      },
+      {
+       "index": 727,
+       "label": "Branta canadensis_Canada Goose",
+       "score": 0.020205
+      },
+      {
+       "index": 2489,
+       "label": "Geothlypis trichas_Common Yellowthroat",
+       "score": 0.019077
+      }
+     ],
+     "fp32": [
+      {
+       "index": 2110,
+       "label": "Emberiza rustica_Rustic Bunting",
+       "score": 0.059343
+      },
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.049056
+      },
+      {
+       "index": 2649,
+       "label": "Haemorhous purpureus_Purple Finch",
+       "score": 0.028193
+      },
+      {
+       "index": 727,
+       "label": "Branta canadensis_Canada Goose",
+       "score": 0.020401
+      },
+      {
+       "index": 2489,
+       "label": "Geothlypis trichas_Common Yellowthroat",
+       "score": 0.019148
+      }
+     ]
+    },
+    {
+     "startS": 14,
+     "fp16": [
+      {
+       "index": 727,
+       "label": "Branta canadensis_Canada Goose",
+       "score": 0.204269
+      },
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.130374
+      },
+      {
+       "index": 124,
+       "label": "Agelaius phoeniceus_Red-winged Blackbird",
+       "score": 0.117269
+      },
+      {
+       "index": 2649,
+       "label": "Haemorhous purpureus_Purple Finch",
+       "score": 0.078456
+      },
+      {
+       "index": 1748,
+       "label": "Cyanocitta cristata_Blue Jay",
+       "score": 0.067113
+      }
+     ],
+     "fp32": [
+      {
+       "index": 727,
+       "label": "Branta canadensis_Canada Goose",
+       "score": 0.207489
+      },
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.12502
+      },
+      {
+       "index": 124,
+       "label": "Agelaius phoeniceus_Red-winged Blackbird",
+       "score": 0.117986
+      },
+      {
+       "index": 2649,
+       "label": "Haemorhous purpureus_Purple Finch",
+       "score": 0.077914
+      },
+      {
+       "index": 1748,
+       "label": "Cyanocitta cristata_Blue Jay",
+       "score": 0.067429
+      }
+     ]
+    },
+    {
+     "startS": 15,
+     "fp16": [
+      {
+       "index": 1748,
+       "label": "Cyanocitta cristata_Blue Jay",
+       "score": 0.065726
+      },
+      {
+       "index": 2227,
+       "label": "Euphagus carolinus_Rusty Blackbird",
+       "score": 0.055908
+      },
+      {
+       "index": 727,
+       "label": "Branta canadensis_Canada Goose",
+       "score": 0.030647
+      },
+      {
+       "index": 5182,
+       "label": "Pyrrhula pyrrhula_Eurasian Bullfinch",
+       "score": 0.030552
+      },
+      {
+       "index": 4331,
+       "label": "Periparus ater_Coal Tit",
+       "score": 0.023881
+      }
+     ],
+     "fp32": [
+      {
+       "index": 1748,
+       "label": "Cyanocitta cristata_Blue Jay",
+       "score": 0.066153
+      },
+      {
+       "index": 2227,
+       "label": "Euphagus carolinus_Rusty Blackbird",
+       "score": 0.059297
+      },
+      {
+       "index": 727,
+       "label": "Branta canadensis_Canada Goose",
+       "score": 0.031453
+      },
+      {
+       "index": 5182,
+       "label": "Pyrrhula pyrrhula_Eurasian Bullfinch",
+       "score": 0.030425
+      },
+      {
+       "index": 4331,
+       "label": "Periparus ater_Coal Tit",
+       "score": 0.023839
+      }
+     ]
+    },
+    {
+     "startS": 16,
+     "fp16": [
+      {
+       "index": 1748,
+       "label": "Cyanocitta cristata_Blue Jay",
+       "score": 0.114802
+      },
+      {
+       "index": 4752,
+       "label": "Pluvialis apricaria_European Golden-Plover",
+       "score": 0.061002
+      },
+      {
+       "index": 3096,
+       "label": "Larus delawarensis_Ring-billed Gull",
+       "score": 0.048091
+      },
+      {
+       "index": 2227,
+       "label": "Euphagus carolinus_Rusty Blackbird",
+       "score": 0.039335
+      },
+      {
+       "index": 3955,
+       "label": "Numenius arquata_Eurasian Curlew",
+       "score": 0.037648
+      }
+     ],
+     "fp32": [
+      {
+       "index": 1748,
+       "label": "Cyanocitta cristata_Blue Jay",
+       "score": 0.114797
+      },
+      {
+       "index": 4752,
+       "label": "Pluvialis apricaria_European Golden-Plover",
+       "score": 0.060443
+      },
+      {
+       "index": 3096,
+       "label": "Larus delawarensis_Ring-billed Gull",
+       "score": 0.04762
+      },
+      {
+       "index": 2227,
+       "label": "Euphagus carolinus_Rusty Blackbird",
+       "score": 0.039652
+      },
+      {
+       "index": 3955,
+       "label": "Numenius arquata_Eurasian Curlew",
+       "score": 0.037681
+      }
+     ]
+    },
+    {
+     "startS": 17,
+     "fp16": [
+      {
+       "index": 1748,
+       "label": "Cyanocitta cristata_Blue Jay",
+       "score": 0.222681
+      },
+      {
+       "index": 4632,
+       "label": "Picus canus_Gray-headed Woodpecker",
+       "score": 0.190639
+      },
+      {
+       "index": 35,
+       "label": "Accipiter striatus_Sharp-shinned Hawk",
+       "score": 0.048573
+      },
+      {
+       "index": 1412,
+       "label": "Clamator coromandus_Chestnut-winged Cuckoo",
+       "score": 0.034461
+      },
+      {
+       "index": 2298,
+       "label": "Falco subbuteo_Eurasian Hobby",
+       "score": 0.020774
+      }
+     ],
+     "fp32": [
+      {
+       "index": 1748,
+       "label": "Cyanocitta cristata_Blue Jay",
+       "score": 0.220376
+      },
+      {
+       "index": 4632,
+       "label": "Picus canus_Gray-headed Woodpecker",
+       "score": 0.191432
+      },
+      {
+       "index": 35,
+       "label": "Accipiter striatus_Sharp-shinned Hawk",
+       "score": 0.048638
+      },
+      {
+       "index": 1412,
+       "label": "Clamator coromandus_Chestnut-winged Cuckoo",
+       "score": 0.034344
+      },
+      {
+       "index": 2298,
+       "label": "Falco subbuteo_Eurasian Hobby",
+       "score": 0.0211
+      }
+     ]
+    },
+    {
+     "startS": 18,
+     "fp16": [
+      {
+       "index": 1748,
+       "label": "Cyanocitta cristata_Blue Jay",
+       "score": 0.435534
+      },
+      {
+       "index": 1412,
+       "label": "Clamator coromandus_Chestnut-winged Cuckoo",
+       "score": 0.325642
+      },
+      {
+       "index": 35,
+       "label": "Accipiter striatus_Sharp-shinned Hawk",
+       "score": 0.034734
+      },
+      {
+       "index": 4752,
+       "label": "Pluvialis apricaria_European Golden-Plover",
+       "score": 0.022982
+      },
+      {
+       "index": 1764,
+       "label": "Cyanocorax yncas_Green Jay",
+       "score": 0.020259
+      }
+     ],
+     "fp32": [
+      {
+       "index": 1748,
+       "label": "Cyanocitta cristata_Blue Jay",
+       "score": 0.435272
+      },
+      {
+       "index": 1412,
+       "label": "Clamator coromandus_Chestnut-winged Cuckoo",
+       "score": 0.322588
+      },
+      {
+       "index": 35,
+       "label": "Accipiter striatus_Sharp-shinned Hawk",
+       "score": 0.03532
+      },
+      {
+       "index": 4752,
+       "label": "Pluvialis apricaria_European Golden-Plover",
+       "score": 0.0231
+      },
+      {
+       "index": 1764,
+       "label": "Cyanocorax yncas_Green Jay",
+       "score": 0.019573
+      }
+     ]
+    },
+    {
+     "startS": 19,
+     "fp16": [
+      {
+       "index": 1748,
+       "label": "Cyanocitta cristata_Blue Jay",
+       "score": 0.470599
+      },
+      {
+       "index": 1412,
+       "label": "Clamator coromandus_Chestnut-winged Cuckoo",
+       "score": 0.103667
+      },
+      {
+       "index": 1764,
+       "label": "Cyanocorax yncas_Green Jay",
+       "score": 0.059961
+      },
+      {
+       "index": 35,
+       "label": "Accipiter striatus_Sharp-shinned Hawk",
+       "score": 0.040119
+      },
+      {
+       "index": 3591,
+       "label": "Mimus polyglottos_Northern Mockingbird",
+       "score": 0.025922
+      }
+     ],
+     "fp32": [
+      {
+       "index": 1748,
+       "label": "Cyanocitta cristata_Blue Jay",
+       "score": 0.47296
+      },
+      {
+       "index": 1412,
+       "label": "Clamator coromandus_Chestnut-winged Cuckoo",
+       "score": 0.101964
+      },
+      {
+       "index": 1764,
+       "label": "Cyanocorax yncas_Green Jay",
+       "score": 0.059594
+      },
+      {
+       "index": 35,
+       "label": "Accipiter striatus_Sharp-shinned Hawk",
+       "score": 0.040127
+      },
+      {
+       "index": 3591,
+       "label": "Mimus polyglottos_Northern Mockingbird",
+       "score": 0.025872
+      }
+     ]
+    },
+    {
+     "startS": 20,
+     "fp16": [
+      {
+       "index": 1748,
+       "label": "Cyanocitta cristata_Blue Jay",
+       "score": 0.329679
+      },
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.112011
+      },
+      {
+       "index": 2289,
+       "label": "Falco columbarius_Merlin",
+       "score": 0.0379
+      },
+      {
+       "index": 2666,
+       "label": "Haliaeetus leucocephalus_Bald Eagle",
+       "score": 0.036474
+      },
+      {
+       "index": 1182,
+       "label": "Charadrius vociferus_Killdeer",
+       "score": 0.028341
+      }
+     ],
+     "fp32": [
+      {
+       "index": 1748,
+       "label": "Cyanocitta cristata_Blue Jay",
+       "score": 0.327782
+      },
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.11182
+      },
+      {
+       "index": 2289,
+       "label": "Falco columbarius_Merlin",
+       "score": 0.038467
+      },
+      {
+       "index": 2666,
+       "label": "Haliaeetus leucocephalus_Bald Eagle",
+       "score": 0.03709
+      },
+      {
+       "index": 1182,
+       "label": "Charadrius vociferus_Killdeer",
+       "score": 0.028562
+      }
+     ]
+    },
+    {
+     "startS": 21,
+     "fp16": [
+      {
+       "index": 1748,
+       "label": "Cyanocitta cristata_Blue Jay",
+       "score": 0.326172
+      },
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.185977
+      },
+      {
+       "index": 2227,
+       "label": "Euphagus carolinus_Rusty Blackbird",
+       "score": 0.032262
+      },
+      {
+       "index": 1749,
+       "label": "Cyanocitta stelleri_Steller's Jay",
+       "score": 0.031864
+      },
+      {
+       "index": 124,
+       "label": "Agelaius phoeniceus_Red-winged Blackbird",
+       "score": 0.028565
+      }
+     ],
+     "fp32": [
+      {
+       "index": 1748,
+       "label": "Cyanocitta cristata_Blue Jay",
+       "score": 0.329087
+      },
+      {
+       "index": 2648,
+       "label": "Haemorhous mexicanus_House Finch",
+       "score": 0.186721
+      },
+      {
+       "index": 2227,
+       "label": "Euphagus carolinus_Rusty Blackbird",
+       "score": 0.032037
+      },
+      {
+       "index": 1749,
+       "label": "Cyanocitta stelleri_Steller's Jay",
+       "score": 0.031665
+      },
+      {
+       "index": 124,
+       "label": "Agelaius phoeniceus_Red-winged Blackbird",
+       "score": 0.027818
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "geo": {
+  "model": {
+   "file": "birdnet-v2.4-geo-fp16.tflite",
+   "sha256": "1226f23fc20362617deb09178f366111b70cf085c2c82893f2814e5acedce6c2"
+  },
+  "threshold": 0.03,
+  "places": [
+   {
+    "name": "Prague, week 20",
+    "lat": 50.1,
+    "lon": 14.4,
+    "week": 20,
+    "countAboveThreshold": 139,
+    "dexCountAboveThreshold": 139,
+    "watch": {
+     "Acanthis cabaret": 0.001471,
+     "Poecile atricapillus": 1e-06
+    },
+    "top": [
+     {
+      "index": 6253,
+      "label": "Turdus merula_Eurasian Blackbird",
+      "score": 0.999481
+     },
+     {
+      "index": 2370,
+      "label": "Fringilla coelebs_Common Chaffinch",
+      "score": 0.996389
+     },
+     {
+      "index": 4237,
+      "label": "Parus major_Great Tit",
+      "score": 0.995436
+     },
+     {
+      "index": 1491,
+      "label": "Columba palumbus_Common Wood-Pigeon",
+      "score": 0.978948
+     },
+     {
+      "index": 2802,
+      "label": "Hirundo rustica_Barn Swallow",
+      "score": 0.976725
+     },
+     {
+      "index": 5801,
+      "label": "Sylvia atricapilla_Eurasian Blackcap",
+      "score": 0.972607
+     },
+     {
+      "index": 3666,
+      "label": "Motacilla alba_White Wagtail",
+      "score": 0.94956
+     },
+     {
+      "index": 4541,
+      "label": "Phylloscopus collybita_Common Chiffchaff",
+      "score": 0.941982
+     },
+     {
+      "index": 267,
+      "label": "Anas platyrhynchos_Mallard",
+      "score": 0.920437
+     },
+     {
+      "index": 5783,
+      "label": "Sturnus vulgaris_European Starling",
+      "score": 0.916901
+     }
+    ]
+   },
+   {
+    "name": "Prague, week 2",
+    "lat": 50.1,
+    "lon": 14.4,
+    "week": 2,
+    "countAboveThreshold": 105,
+    "dexCountAboveThreshold": 105,
+    "watch": {
+     "Acanthis cabaret": 0.006856,
+     "Poecile atricapillus": 0.000247
+    },
+    "top": [
+     {
+      "index": 4237,
+      "label": "Parus major_Great Tit",
+      "score": 0.998828
+     },
+     {
+      "index": 1745,
+      "label": "Cyanistes caeruleus_Eurasian Blue Tit",
+      "score": 0.986516
+     },
+     {
+      "index": 6253,
+      "label": "Turdus merula_Eurasian Blackbird",
+      "score": 0.970278
+     },
+     {
+      "index": 267,
+      "label": "Anas platyrhynchos_Mallard",
+      "score": 0.876723
+     },
+     {
+      "index": 1878,
+      "label": "Dendrocopos major_Great Spotted Woodpecker",
+      "score": 0.764551
+     },
+     {
+      "index": 2370,
+      "label": "Fringilla coelebs_Common Chaffinch",
+      "score": 0.72103
+     },
+     {
+      "index": 4603,
+      "label": "Pica pica_Eurasian Magpie",
+      "score": 0.687983
+     },
+     {
+      "index": 783,
+      "label": "Buteo buteo_Common Buzzard",
+      "score": 0.657691
+     },
+     {
+      "index": 5567,
+      "label": "Sitta europaea_Eurasian Nuthatch",
+      "score": 0.652257
+     },
+     {
+      "index": 1579,
+      "label": "Corvus corone_Carrion Crow",
+      "score": 0.629677
+     }
+    ]
+   },
+   {
+    "name": "Paris, week 30",
+    "lat": 48.9,
+    "lon": 2.4,
+    "week": 30,
+    "countAboveThreshold": 154,
+    "dexCountAboveThreshold": 154,
+    "watch": {
+     "Acanthis cabaret": 0.007114,
+     "Poecile atricapillus": 5.2e-05
+    },
+    "top": [
+     {
+      "index": 1579,
+      "label": "Corvus corone_Carrion Crow",
+      "score": 0.99458
+     },
+     {
+      "index": 1491,
+      "label": "Columba palumbus_Common Wood-Pigeon",
+      "score": 0.992904
+     },
+     {
+      "index": 2802,
+      "label": "Hirundo rustica_Barn Swallow",
+      "score": 0.918808
+     },
+     {
+      "index": 4237,
+      "label": "Parus major_Great Tit",
+      "score": 0.812826
+     },
+     {
+      "index": 6253,
+      "label": "Turdus merula_Eurasian Blackbird",
+      "score": 0.810695
+     },
+     {
+      "index": 1745,
+      "label": "Cyanistes caeruleus_Eurasian Blue Tit",
+      "score": 0.807795
+     },
+     {
+      "index": 468,
+      "label": "Ardea cinerea_Gray Heron",
+      "score": 0.797926
+     },
+     {
+      "index": 4603,
+      "label": "Pica pica_Eurasian Magpie",
+      "score": 0.784606
+     },
+     {
+      "index": 267,
+      "label": "Anas platyrhynchos_Mallard",
+      "score": 0.773606
+     },
+     {
+      "index": 1853,
+      "label": "Delichon urbicum_Common House-Martin",
+      "score": 0.749379
+     }
+    ]
+   },
+   {
+    "name": "Sydney, week 10",
+    "lat": -33.9,
+    "lon": 151.2,
+    "week": 10,
+    "countAboveThreshold": 155,
+    "dexCountAboveThreshold": 14,
+    "watch": {
+     "Acanthis cabaret": 3.9e-05,
+     "Poecile atricapillus": 8e-06
+    },
+    "top": [
+     {
+      "index": 2622,
+      "label": "Gymnorhina tibicen_Australian Magpie",
+      "score": 0.99009
+     },
+     {
+      "index": 3374,
+      "label": "Malurus cyaneus_Superb Fairywren",
+      "score": 0.925584
+     },
+     {
+      "index": 5743,
+      "label": "Strepera graculina_Pied Currawong",
+      "score": 0.902498
+     },
+     {
+      "index": 5284,
+      "label": "Rhipidura leucophrys_Willie-wagtail",
+      "score": 0.841915
+     },
+     {
+      "index": 1580,
+      "label": "Corvus coronoides_Australian Raven",
+      "score": 0.833709
+     },
+     {
+      "index": 2588,
+      "label": "Grallina cyanoleuca_Magpie-lark",
+      "score": 0.810925
+     },
+     {
+      "index": 321,
+      "label": "Anthochaera carunculata_Red Wattlebird",
+      "score": 0.810042
+     },
+     {
+      "index": 2801,
+      "label": "Hirundo neoxena_Welcome Swallow",
+      "score": 0.745051
+     },
+     {
+      "index": 5274,
+      "label": "Rhipidura albiscapa_Gray Fantail",
+      "score": 0.73223
+     },
+     {
+      "index": 6140,
+      "label": "Trichoglossus moluccanus_Rainbow Lorikeet",
+      "score": 0.715621
+     }
+    ]
+   },
+   {
+    "name": "New York, week 20",
+    "lat": 40.7,
+    "lon": -74.0,
+    "week": 20,
+    "countAboveThreshold": 135,
+    "dexCountAboveThreshold": 18,
+    "watch": {
+     "Acanthis cabaret": 1.1e-05,
+     "Poecile atricapillus": 0.535267
+    },
+    "top": [
+     {
+      "index": 6254,
+      "label": "Turdus migratorius_American Robin",
+      "score": 0.979344
+     },
+     {
+      "index": 6469,
+      "label": "Zenaida macroura_Mourning Dove",
+      "score": 0.967719
+     },
+     {
+      "index": 991,
+      "label": "Cardinalis cardinalis_Northern Cardinal",
+      "score": 0.923021
+     },
+     {
+      "index": 5629,
+      "label": "Spinus tristis_American Goldfinch",
+      "score": 0.914805
+     },
+     {
+      "index": 3514,
+      "label": "Melospiza melodia_Song Sparrow",
+      "score": 0.866089
+     },
+     {
+      "index": 2031,
+      "label": "Dumetella carolinensis_Gray Catbird",
+      "score": 0.85792
+     },
+     {
+      "index": 1748,
+      "label": "Cyanocitta cristata_Blue Jay",
+      "score": 0.855819
+     },
+     {
+      "index": 5208,
+      "label": "Quiscalus quiscula_Common Grackle",
+      "score": 0.849038
+     },
+     {
+      "index": 124,
+      "label": "Agelaius phoeniceus_Red-winged Blackbird",
+      "score": 0.813488
+     },
+     {
+      "index": 5639,
+      "label": "Spizella passerina_Chipping Sparrow",
+      "score": 0.763293
+     }
+    ]
+   },
+   {
+    "name": "Mid Atlantic, week 24",
+    "lat": 0.0,
+    "lon": -30.0,
+    "week": 24,
+    "countAboveThreshold": 384,
+    "dexCountAboveThreshold": 27,
+    "watch": {
+     "Acanthis cabaret": 0.0,
+     "Poecile atricapillus": 0.0
+    },
+    "top": [
+     {
+      "index": 6349,
+      "label": "Vanellus chilensis_Southern Lapwing",
+      "score": 0.999783
+     },
+     {
+      "index": 750,
+      "label": "Bubulcus ibis_Cattle Egret",
+      "score": 0.999783
+     },
+     {
+      "index": 4622,
+      "label": "Picumnus limae_Ochraceous Piculet",
+      "score": 0.999552
+     },
+     {
+      "index": 2266,
+      "label": "Eupsittula cactorum_Cactus Parakeet",
+      "score": 0.999534
+     },
+     {
+      "index": 2194,
+      "label": "Estrilda astrild_Common Waxbill",
+      "score": 0.999444
+     },
+     {
+      "index": 4685,
+      "label": "Pitangus sulphuratus_Great Kiskadee",
+      "score": 0.999442
+     },
+     {
+      "index": 3947,
+      "label": "Nothura boraquira_White-bellied Nothura",
+      "score": 0.99935
+     },
+     {
+      "index": 6033,
+      "label": "Thraupis sayaca_Sayaca Tanager",
+      "score": 0.999236
+     },
+     {
+      "index": 467,
+      "label": "Ardea alba_Great Egret",
+      "score": 0.998978
+     },
+     {
+      "index": 1453,
+      "label": "Coereba flaveola_Bananaquit",
+      "score": 0.998949
+     }
+    ]
+   }
+  ]
+ },
+ "maxFp16VsFp32AbsDifference": 0.005354
+}

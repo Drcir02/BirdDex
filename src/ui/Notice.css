@@ -1,0 +1,56 @@
+.bd-notice {
+  --notice-accent: var(--info);
+  --notice-bg: var(--info-bg);
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  color: var(--ink);
+  background: var(--notice-bg);
+  border: 3px solid var(--notice-accent);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-pixel);
+}
+
+.bd-notice--success {
+  --notice-accent: var(--ok);
+  --notice-bg: var(--ok-bg);
+}
+
+.bd-notice--warning {
+  --notice-accent: var(--warn);
+  --notice-bg: var(--warn-bg);
+}
+
+.bd-notice--error {
+  --notice-accent: var(--bad);
+  --notice-bg: var(--bad-bg);
+}
+
+.bd-notice__icon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--notice-accent);
+}
+
+.bd-notice__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.bd-notice__title {
+  margin: 0 0 var(--space-1);
+  font: 400 var(--fs-h3) / var(--lh-display) var(--font-display);
+  overflow-wrap: anywhere;
+}
+
+.bd-notice__text {
+  overflow-wrap: anywhere;
+}
+
+.bd-notice__text > :last-child {
+  margin-bottom: 0;
+}
+
+.bd-notice__action {
+  margin-top: var(--space-3);
+}

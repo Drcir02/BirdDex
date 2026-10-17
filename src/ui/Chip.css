@@ -1,0 +1,113 @@
+.bd-chip {
+  --chip-accent: var(--ink);
+  --chip-bg: var(--lcd-panel);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 3px 10px 1px;
+  font: 400 19px / 1 var(--font-lcd);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--ink);
+  background: var(--chip-bg);
+  border: 2px solid var(--chip-accent);
+  border-radius: var(--radius-s);
+}
+
+button.bd-chip {
+  min-height: var(--tap);
+  padding: 4px 14px 2px;
+  margin-bottom: 3px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  box-shadow: 0 3px 0 var(--chip-accent);
+  transition:
+    transform var(--dur-fast) ease-out,
+    box-shadow var(--dur-fast) ease-out;
+}
+
+button.bd-chip:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+button.bd-chip:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--chip-accent);
+}
+
+button.bd-chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* A selected toggle (or emphasised label) is filled with its accent colour. */
+.bd-chip.is-selected {
+  color: #fff;
+  background: var(--chip-accent);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.bd-chip--neutral.is-selected {
+  color: var(--lcd-bg-hi);
+}
+
+.bd-chip--info {
+  --chip-accent: var(--info);
+  --chip-bg: var(--info-bg);
+}
+
+.bd-chip--success {
+  --chip-accent: var(--ok);
+  --chip-bg: var(--ok-bg);
+}
+
+.bd-chip--warning {
+  --chip-accent: var(--warn);
+  --chip-bg: var(--warn-bg);
+}
+
+.bd-chip--danger {
+  --chip-accent: var(--bad);
+  --chip-bg: var(--bad-bg);
+}
+
+.bd-chip--common {
+  --chip-accent: var(--rarity-common);
+  --chip-bg: #e3f0e1;
+}
+
+.bd-chip--uncommon {
+  --chip-accent: var(--rarity-uncommon);
+  --chip-bg: #d3f2d9;
+}
+
+.bd-chip--rare {
+  --chip-accent: var(--rarity-rare);
+  --chip-bg: #d6e5ff;
+}
+
+.bd-chip--epic {
+  --chip-accent: var(--rarity-epic);
+  --chip-bg: #e8dbff;
+}
+
+.bd-chip--legendary {
+  --chip-accent: var(--rarity-legendary);
+  --chip-bg: #ffefb8;
+}
+
+.bd-chip--legendary.is-selected,
+.bd-chip--warning.is-selected {
+  color: var(--ink);
+  text-shadow: none;
+}
+
+@media (hover: hover) {
+  button.bd-chip:hover:not(:disabled):not(.is-selected) {
+    filter: brightness(1.05);
+  }
+}

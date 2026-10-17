@@ -1,0 +1,15 @@
+.bd-sil {
+  display: block;
+  flex: none;
+}
+
+.bd-sil__line {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bd-sil__eye {
+  fill: var(--sil-eye, var(--lcd-panel));
+}

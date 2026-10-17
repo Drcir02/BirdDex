@@ -1,0 +1,38 @@
+.bd-lcdpanel {
+  position: relative;
+  padding: var(--space-3);
+  color: var(--ink);
+  background: var(--lcd-panel);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-m);
+  box-shadow:
+    var(--shadow-pixel),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.45);
+}
+
+.bd-lcdpanel__title {
+  margin: calc(var(--space-3) * -1) calc(var(--space-3) * -1) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  font: 400 var(--fs-h3) / 1.6 var(--font-display);
+  color: var(--lcd-bg-hi);
+  background: var(--ink);
+  border-radius: calc(var(--radius-m) - 3px) calc(var(--radius-m) - 3px) 0 0;
+  overflow-wrap: anywhere;
+}
+
+.bd-lcdpanel--dark {
+  --ink: var(--lcd-bg-hi);
+  --ink-soft: var(--lcd-bg-lo);
+  --focus: var(--focus-on-dark);
+  color: var(--lcd-bg-hi);
+  background: var(--lcd-deep);
+  border-color: #0b1a11;
+  box-shadow:
+    var(--shadow-pixel),
+    inset 0 0 0 2px rgba(182, 255, 157, 0.14);
+}
+
+.bd-lcdpanel--dark .bd-lcdpanel__title {
+  color: var(--lcd-glow);
+  background: rgba(0, 0, 0, 0.38);
+}

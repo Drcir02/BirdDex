@@ -1,0 +1,101 @@
+.bd-btn {
+  --btn-top: var(--btn-blue-hi);
+  --btn-bottom: var(--btn-blue);
+  --btn-edge: var(--btn-blue-edge);
+  --btn-text: #fff;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: var(--tap);
+  min-height: var(--tap);
+  margin: 0 0 4px; /* room for the 3D edge underneath */
+  padding: 4px 18px 2px;
+  font: 400 24px / 1 var(--font-lcd);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+  color: var(--btn-text);
+  background: linear-gradient(180deg, var(--btn-top), var(--btn-bottom));
+  border: 0;
+  border-radius: var(--radius-m);
+  box-shadow:
+    0 4px 0 var(--btn-edge),
+    0 7px 10px rgba(0, 0, 0, 0.22),
+    inset 0 2px 0 rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    transform var(--dur-fast) ease-out,
+    box-shadow var(--dur-fast) ease-out;
+}
+
+.bd-btn:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.bd-btn:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 var(--btn-edge),
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3);
+}
+
+.bd-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  filter: grayscale(0.6);
+}
+
+.bd-btn--secondary {
+  --btn-top: var(--btn-light-hi);
+  --btn-bottom: var(--btn-light);
+  --btn-edge: var(--ink);
+  --btn-text: var(--ink);
+  padding-block: 2px 0;
+  text-shadow: none;
+  border: 3px solid var(--ink);
+  box-shadow:
+    0 4px 0 var(--btn-edge),
+    0 7px 10px rgba(0, 0, 0, 0.16),
+    inset 0 2px 0 rgba(255, 255, 255, 0.7);
+}
+
+.bd-btn--secondary:active:not(:disabled) {
+  box-shadow:
+    0 1px 0 var(--btn-edge),
+    inset 0 2px 0 rgba(255, 255, 255, 0.5);
+}
+
+.bd-btn--danger {
+  --btn-top: var(--btn-red-hi);
+  --btn-bottom: var(--btn-red);
+  --btn-edge: var(--btn-red-edge);
+}
+
+.bd-btn--lg {
+  min-height: 56px;
+  padding-inline: 26px;
+  font-size: 28px;
+  border-radius: var(--radius-l);
+}
+
+.bd-btn--full {
+  display: flex;
+  width: 100%;
+}
+
+.bd-btn__label {
+  min-width: 0;
+}
+
+@media (hover: hover) {
+  .bd-btn:hover:not(:disabled) {
+    filter: brightness(1.07);
+  }
+}

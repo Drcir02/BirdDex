@@ -1,0 +1,37 @@
+/* The rarity stars: one filled star for a common bird up to five for a legendary one. */
+
+.bd-stars {
+  --star: var(--rarity-common);
+  display: inline-block;
+  flex: none;
+  overflow: visible;
+}
+
+.bd-stars[data-rarity='uncommon'] {
+  --star: var(--rarity-uncommon);
+}
+
+.bd-stars[data-rarity='rare'] {
+  --star: var(--rarity-rare);
+}
+
+.bd-stars[data-rarity='epic'] {
+  --star: var(--rarity-epic);
+}
+
+.bd-stars[data-rarity='legendary'] {
+  --star: var(--rarity-legendary);
+}
+
+.bd-stars__star {
+  fill: transparent;
+  stroke: rgba(23, 48, 31, 0.4);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.bd-stars__star.is-on {
+  fill: var(--star);
+  stroke: var(--ink);
+  stroke-width: 0.9;
+}

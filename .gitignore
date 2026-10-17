@@ -1,0 +1,11 @@
+node_modules
+dist
+public/vendor
+public/models
+test-results
+playwright-report
+.DS_Store
+*.log
+.venv
+checkpoints
+dist-e2e-*

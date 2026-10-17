@@ -1,0 +1,328 @@
+/*
+ * The result screen: guess cards, "nothing sure", what will be saved, the question, and the success screen.
+ * Class prefix bd-result-; the pieces shared with the scan screens (bd-scan-) are in scan.css.
+ */
+
+.bd-result-guesses {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.bd-result-heading {
+  margin: 0;
+  font: 400 var(--fs-h2) / var(--lh-display) var(--font-display);
+}
+
+/* ---------- One guess ---------- */
+
+.bd-result-card {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  color: var(--ink);
+  background: var(--lcd-panel);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-m);
+  box-shadow:
+    var(--shadow-pixel),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.45);
+}
+
+/* The guesses that may be caught stand out from the ones that may not. */
+.bd-result-card[data-allowed='true'] {
+  background: linear-gradient(180deg, #eaf8dc, var(--lcd-panel));
+  box-shadow:
+    var(--shadow-pixel),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.45),
+    0 0 0 3px var(--ok-bg);
+}
+
+.bd-result-card__top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.bd-result-card__photo {
+  flex: none;
+}
+
+.bd-result-card__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.bd-result-card__name {
+  margin: 0 0 var(--space-1);
+  font: 400 12px / 1.6 var(--font-display);
+  overflow-wrap: anywhere;
+}
+
+.bd-result-card__sci {
+  margin: 0 0 var(--space-2);
+  color: var(--ink-soft);
+  font-size: var(--fs-small);
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+
+.bd-result-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bd-result-card__blocked {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.bd-result-card__blocked .bd-btn {
+  flex: none;
+}
+
+.bd-result-card p.bd-result-card__reason {
+  flex: 1;
+  margin: 0;
+  padding-left: var(--space-3);
+  color: var(--ink);
+  font-size: var(--fs-small);
+  line-height: 1.1;
+  border-left: 4px solid var(--warn);
+}
+
+.bd-result-card p.bd-result-card__credit {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 16px;
+  line-height: 1.1;
+}
+
+.bd-result-card__credit a {
+  display: inline-block;
+  padding: 14px 6px;
+  margin: -14px -6px;
+  color: inherit;
+}
+
+.bd-result-photo {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: #5e8f68;
+  background: var(--lcd-deep);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-s);
+  box-shadow: var(--shadow-inset);
+}
+
+.bd-result-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---------- Nothing sure enough ---------- */
+
+.bd-result-nothing__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+  color: var(--ink);
+}
+
+.bd-result-nothing__head svg {
+  flex: none;
+  color: var(--lcd-dark);
+  opacity: 0.75;
+}
+
+.bd-result-nothing__head p {
+  margin: 0;
+}
+
+.bd-result-nothing .bd-result-nothing__tips-title {
+  margin: var(--space-3) 0 var(--space-1);
+  font: 400 var(--fs-h3) / var(--lh-display) var(--font-display);
+}
+
+.bd-result-nothing__tips {
+  margin: 0 0 var(--space-3);
+  padding-left: 1.2em;
+  font-size: var(--fs-small);
+}
+
+.bd-result-nothing__tips li {
+  margin-bottom: var(--space-1);
+}
+
+.bd-result-nothing p.bd-result-nothing__settings {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: var(--space-3) 0 0;
+  color: var(--ink-soft);
+  font-size: var(--fs-small);
+}
+
+/* ---------- What will be saved ---------- */
+
+.bd-result-meta__image {
+  display: block;
+  width: 100%;
+  max-height: 200px;
+  margin-bottom: var(--space-3);
+  object-fit: contain;
+  background: var(--lcd-deep);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-s);
+}
+
+.bd-result-meta__audio audio {
+  display: block;
+  width: 100%;
+  margin-bottom: var(--space-3);
+}
+
+.bd-result-meta__list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.bd-result-meta__list > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.bd-result-meta__list dt {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-soft);
+}
+
+.bd-result-meta__list dd {
+  margin: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.bd-result-meta p.bd-result-meta__hint {
+  margin: var(--space-2) 0 0;
+  color: var(--ink-soft);
+  font-size: var(--fs-small);
+}
+
+/* ---------- The question ---------- */
+
+.bd-result-confirm p {
+  margin: 0 0 var(--space-2);
+}
+
+.bd-result-confirm p.bd-result-confirm__name {
+  font: 400 var(--fs-h2) / 1.6 var(--font-display);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- After the catch ---------- */
+
+.bd-result-success {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-3);
+  overflow: hidden;
+  text-align: center;
+}
+
+.bd-result-success__picture {
+  position: relative;
+  z-index: 1;
+}
+
+.bd-result-success__image {
+  display: block;
+  width: 136px;
+  height: 136px;
+  object-fit: cover;
+  border: 4px solid var(--ink);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-pixel);
+}
+
+.bd-result-success p {
+  margin: 0;
+}
+
+.bd-result-success p.bd-result-success__caught {
+  font: 400 14px / 1.7 var(--font-display);
+  overflow-wrap: anywhere;
+}
+
+.bd-result-success__chips {
+  justify-content: center;
+}
+
+/* The placeholder celebration: pixel sparks flying out of the picture, in the colour of the bird's rarity. */
+.bd-celebrate {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.bd-celebrate i {
+  --spark: var(--rarity-common);
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  width: 10px;
+  height: 10px;
+  background: var(--spark);
+  box-shadow: 0 0 0 2px var(--ink);
+  animation: bd-spark 1100ms var(--ease) both;
+}
+
+.bd-celebrate[data-rarity='uncommon'] i {
+  --spark: var(--rarity-uncommon);
+}
+
+.bd-celebrate[data-rarity='rare'] i {
+  --spark: var(--rarity-rare);
+}
+
+.bd-celebrate[data-rarity='epic'] i {
+  --spark: var(--rarity-epic);
+}
+
+.bd-celebrate[data-rarity='legendary'] i {
+  --spark: var(--rarity-legendary);
+}
+
+.bd-celebrate[data-new='true'] i {
+  width: 12px;
+  height: 12px;
+  animation-duration: 1500ms;
+}
+
+@keyframes bd-spark {
+  from {
+    opacity: 1;
+    transform: rotate(var(--a)) translateY(0) scale(0.4);
+  }
+  to {
+    opacity: 0;
+    transform: rotate(var(--a)) translateY(calc(var(--d) * -1.7)) scale(1);
+  }
+}
