@@ -273,6 +273,12 @@ const hooks = {
     const dex = photo.runtime.dex
     setOccurrencePriorProvider(region ? () => createRegionPrior(dex, region) : undefined)
   },
+  /** Switches a prior on that is given as numbers (species id to weight, for example BirdNET's location scores) or off (no argument). */
+  setPriorWeights: async (weights?: Record<string, number>) => {
+    const { setOccurrencePriorProvider } = await import('./prior')
+    const prior = weights && new Map(Object.entries(weights))
+    setOccurrencePriorProvider(prior ? () => prior : undefined)
+  },
   startLive,
   stopLive,
   liveSnapshot: async () => {
