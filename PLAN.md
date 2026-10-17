@@ -17,7 +17,7 @@ Still needed from you: the one-time setup in section 8.
 ## 1. How you get and test the app
 
 - I build on a temporary cloud computer and push the code to your GitHub repo after every milestone.
-- GitHub builds it and publishes it at a link like `https://<your-github-name>.github.io/birddex/`.
+- GitHub builds it and publishes it at a link like `https://<your-github-name>.github.io/<repo-name>/` (for yours: `https://drcir02.github.io/BirdDex/`).
 - **iPhone:** open the link in Safari, tap Share, then Add to Home Screen. It gets its own icon, opens full-screen, and works offline once the models are downloaded.
 - **Android (the recipient's phone):** open the link in Chrome and tap Install app.
 - The person you give it to only needs the link.
