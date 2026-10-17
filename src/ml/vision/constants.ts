@@ -45,8 +45,13 @@ export const SCORING = {
   outOfDexPenalty: 6,
   /** How strongly an OccurrencePrior counts: score += strength * ln(weight / best weight). 1 is a neutral first guess. */
   priorStrength: 1,
-  /** Weights below this count as this (0.001), so one zero does not veto a species for good. */
-  priorFloor: 0.001,
+  /**
+   * Weights below this count as this (0.01), so one zero does not veto a species for good: a bird that BirdNET's location model
+   * has never seen here is held back by a factor of 100 at most (4.6 units), less than the 6 units of a bird outside the Dex, so a
+   * real rarity can still win. Measured with the location prior on the fixtures (docs/notes/integration.md): 0.01 keeps the
+   * effect on the foreign birds (geese 0.67 to 0.09, gulls 0.39 to 0.08) while 0.03 and above gives it back (0.23, 0.16).
+   */
+  priorFloor: 0.01,
   /** A picture whose brightness (0 to 255) varies less than this over the crop is blank (covered lens): no bird. */
   blankSpread: 3,
   /** How many guesses go back to the screens. */

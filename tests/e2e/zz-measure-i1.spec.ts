@@ -17,9 +17,9 @@ test('measure priors', async ({ page }) => {
   await page.waitForFunction(() => window.birddexPhotoDev !== undefined)
   await page.evaluate(() => window.birddexPhotoDev!.prepare())
   const out: string[] = []
-  for (const mode of ['prague@0.5', 'prague@0.75', 'prague_may@0.5', 'prague_may@0.75']) {
+  for (const mode of ['prague@0.01', 'prague@0.03', 'prague@0.1', 'prague_may@0.03', 'prague_may@0.1']) {
     const [key, k] = mode.split('@')
-    const weights = Object.fromEntries(Object.entries(geo[key]).map(([id, w]) => [id, Math.pow(Math.max(w, 0.001), Number(k))]))
+    const weights = Object.fromEntries(Object.entries(geo[key]).map(([id, w]) => [id, Math.max(w, Number(k))]))
     await page.evaluate((w) => window.birddexPhotoDev!.setPriorWeights(w), weights)
     out.push(`== ${mode}`)
     for (const file of readdirSync(PHOTOS).filter((f) => f.endsWith('.jpg')).sort()) {

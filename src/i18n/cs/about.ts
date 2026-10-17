@@ -17,7 +17,7 @@ export const about = {
 
   gift: {
     title: 'Dárek, ne zboží',
-    text: '{appName} je dárek. Není na prodej a nesmí se prodávat ani nabízet za peníze: modely uvnitř povolují jen nekomerční použití. Šířit ho dál zdarma a s uvedením původu ale smíš.',
+    text: '{appName} je dárek. Není na prodej a nesmí se prodávat ani nabízet za peníze: modely uvnitř povolují jen nekomerční použití.',
   },
 
   privacy: {

@@ -32,6 +32,28 @@ describe('classifyScanError: the model store', () => {
   })
 })
 
+describe('classifyScanError: the code of an engine that cannot be fetched', () => {
+  const failedImport = () => new TypeError('Failed to fetch dynamically imported module: https://example.org/assets/engine-abc.js')
+
+  it('says "no network" when the phone is offline and "part of the app" when it is not', () => {
+    const online = Object.getOwnPropertyDescriptor(Navigator.prototype, 'onLine')
+    try {
+      Object.defineProperty(Navigator.prototype, 'onLine', { configurable: true, get: () => false })
+      expect(classifyScanError(failedImport())).toBe('network')
+      Object.defineProperty(Navigator.prototype, 'onLine', { configurable: true, get: () => true })
+      expect(classifyScanError(failedImport())).toBe('chunk')
+      expect(classifyScanError(new TypeError('error loading dynamically imported module'))).toBe('chunk')
+      expect(classifyScanError(new TypeError('Importing a module script failed.'))).toBe('chunk')
+    } finally {
+      if (online) Object.defineProperty(Navigator.prototype, 'onLine', online)
+    }
+  })
+
+  it('leaves other TypeErrors alone', () => {
+    expect(classifyScanError(new TypeError('x is not a function'))).toBe('generic')
+  })
+})
+
 describe('classifyScanError: the microphone', () => {
   const capture = (reason: string) => named('SoundCaptureError', { reason })
 
@@ -81,7 +103,7 @@ describe('classifyScanError: anything else', () => {
 })
 
 describe('scanErrorText', () => {
-  const KINDS: ScanErrorKind[] = ['micDenied', 'micMissing', 'cameraDenied', 'cameraMissing', 'cameraBusy', 'cameraStalled', 'network', 'storageFull', 'modelDownload', 'modelLoad', 'unsupported', 'generic']
+  const KINDS: ScanErrorKind[] = ['micDenied', 'micMissing', 'cameraDenied', 'cameraMissing', 'cameraBusy', 'cameraStalled', 'network', 'chunk', 'storageFull', 'modelDownload', 'modelLoad', 'unsupported', 'generic']
 
   it('has a Czech sentence for every kind, and none of them is the key itself', () => {
     const seen = new Set<string>()

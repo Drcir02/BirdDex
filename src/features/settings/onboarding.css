@@ -1,0 +1,213 @@
+/* Welcome screens. Class prefix bd-onb-. */
+
+.bd-onb {
+  gap: var(--space-3);
+}
+
+.bd-onb-panel {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.bd-onb-step {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.bd-onb-step p {
+  margin: 0;
+}
+
+.bd-onb-rows {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bd-onb-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.bd-onb-row p {
+  margin: 0;
+}
+
+.bd-onb-row__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  color: var(--lcd-glow);
+  background: var(--lcd-deep);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-pixel);
+}
+
+.bd-onb-row__title {
+  margin: 0 0 2px;
+  font: 400 var(--fs-h3) / var(--lh-display) var(--font-display);
+}
+
+.bd-onb-readout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  color: var(--lcd-glow);
+  background: var(--lcd-deep);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-inset);
+  text-shadow: 0 0 8px rgba(182, 255, 157, 0.6);
+}
+
+.bd-onb-readout__value {
+  font: 400 24px / 1.2 var(--font-display);
+}
+
+.bd-onb-perm {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--paper);
+  border: 2px solid var(--lcd-line);
+  border-radius: var(--radius-m);
+}
+
+.bd-onb-perm__head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.bd-onb-perm__head .bd-onb-row__icon {
+  width: 44px;
+  height: 44px;
+}
+
+.bd-onb-perm__text {
+  min-width: 0;
+}
+
+.bd-onb-perm__text p {
+  margin: 0;
+  font-size: var(--fs-small);
+}
+
+.bd-onb-perm__ok {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ok);
+}
+
+.bd-onb-perm__note {
+  color: var(--ink-soft);
+  font-size: var(--fs-small);
+}
+
+.bd-onb-later {
+  color: var(--ink-soft);
+  font-size: var(--fs-small);
+}
+
+.bd-onb-install {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.bd-onb-nav {
+  /* The colour of the LCD along its bottom edge, so that the bar does not show as a patch (same trick as the scan keys). */
+  --bar: linear-gradient(90deg, rgb(178, 210, 158), rgb(186, 217, 166) 15%, rgb(193, 222, 173) 30%, rgb(197, 225, 178) 50%, rgb(193, 222, 173) 70%, rgb(186, 217, 166) 85%, rgb(178, 210, 158));
+  /* The buttons stay at the bottom of the screen while the text scrolls. */
+  position: sticky;
+  bottom: 2px;
+  z-index: 3;
+  display: grid;
+  gap: var(--space-1);
+  margin: auto calc(var(--space-3) * -1 + 2px) calc(var(--space-3) * -1 + 2px);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  background: var(--bar);
+  box-shadow: inset 0 -4px 10px rgba(0, 60, 20, 0.16);
+}
+
+.bd-onb-nav::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  height: 22px;
+  background: var(--bar);
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000);
+  mask-image: linear-gradient(180deg, transparent, #000);
+  pointer-events: none;
+}
+
+.bd-onb-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap);
+}
+
+.bd-onb-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.bd-onb-actions > * {
+  flex: 1 1 0;
+}
+
+.bd-onb-dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bd-onb-dot {
+  width: 14px;
+  height: 14px;
+  background: transparent;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+}
+
+.bd-onb-dot[aria-current='step'] {
+  background: var(--ink);
+}
+
+.bd-onb-skip {
+  position: absolute;
+  right: var(--space-3);
+  min-height: var(--tap);
+  padding: 0 var(--space-2);
+  font: 400 20px / 1 var(--font-lcd);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: underline;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.bd-onb-skip:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.bd-onb-heading {
+  outline: none;
+}

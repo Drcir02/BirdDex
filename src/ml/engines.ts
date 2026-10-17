@@ -156,11 +156,28 @@ export function buildEngines(loaders: EngineLoaders): Engines {
   }
 }
 
-/** The loaders of the real engines, written by tasks E1 and E2. */
+/**
+ * The loaders of the real engines, written by tasks E1 and E2. The photo engine and the live camera also get BirdNET's
+ * location model as their occurrence prior (src/ml/vision/geoPrior.ts), which only does something when the model is on the phone.
+ */
 export const realLoaders: EngineLoaders = {
   sound: () => import('./sound/engine').then((module) => pickEngine(module as Record<string, unknown>, ['createSoundEngine', 'soundEngine', 'default'], isSoundEngine, 'sound engine')),
-  photo: () => import('./vision/engine').then((module) => pickEngine(module as Record<string, unknown>, ['createPhotoEngine', 'photoEngine', 'default'], isPhotoEngine, 'photo engine')),
-  live: () => import('./vision/live').then((module) => pickEngine(module as Record<string, unknown>, ['createLiveScanner', 'liveScanner', 'default'], isLiveScanner, 'live scanner')),
+  photo: () =>
+    Promise.all([import('./vision/engine'), installGeoPriorLater()]).then(([module]) =>
+      pickEngine(module as Record<string, unknown>, ['createPhotoEngine', 'photoEngine', 'default'], isPhotoEngine, 'photo engine'),
+    ),
+  live: () =>
+    Promise.all([import('./vision/live'), installGeoPriorLater()]).then(([module]) =>
+      pickEngine(module as Record<string, unknown>, ['createLiveScanner', 'liveScanner', 'default'], isLiveScanner, 'live scanner'),
+    ),
+}
+
+/** Loads the location prior module (a small chunk of its own) and registers it. A failure to load it must not stop the engine. */
+function installGeoPriorLater(): Promise<void> {
+  return import('./vision/geoPrior').then(
+    (module) => module.installGeoPrior(),
+    (error: unknown) => console.warn('The location prior could not be loaded, identifying without it', error),
+  )
 }
 
 /** The loaders of the fakes. The fakes are one small module, loaded once for all three; nothing from it is imported up front. */

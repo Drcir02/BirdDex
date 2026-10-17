@@ -1,0 +1,224 @@
+/* Celebration after a catch: confetti, sparkles, ring, flash and the NOVÝ stamp. All of it is decorative. */
+
+.bd-fun-celebrate {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* ---- Confetti ---- */
+.bd-fun-piece {
+  position: absolute;
+  top: calc(var(--s) / -2);
+  left: calc(var(--s) / -2);
+  width: var(--s);
+  height: var(--s);
+  background: var(--c);
+  opacity: 0;
+  animation: bd-fun-fly var(--dur) var(--delay) var(--ease) both;
+}
+
+.bd-fun-piece--bar {
+  width: calc(var(--s) * 0.5);
+  height: calc(var(--s) * 1.5);
+  left: calc(var(--s) / -4);
+  top: calc(var(--s) * -0.75);
+}
+
+.bd-fun-piece--diamond {
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.bd-fun-piece--star {
+  width: calc(var(--s) * 1.5);
+  height: calc(var(--s) * 1.5);
+  left: calc(var(--s) * -0.75);
+  top: calc(var(--s) * -0.75);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+}
+
+@keyframes bd-fun-fly {
+  0% {
+    opacity: 1;
+    transform: rotate(var(--a)) translateY(0) rotate(0deg) scale(0.3);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--a)) translateY(calc(var(--d) * -1.5)) rotate(var(--spin)) scale(1);
+  }
+}
+
+/* ---- Sparkles ---- */
+.bd-fun-sparkle {
+  position: absolute;
+  top: calc(var(--y) - var(--s) / 2);
+  left: calc(var(--x) - var(--s) / 2);
+  width: var(--s);
+  height: var(--s);
+  fill: var(--rarity-legendary);
+  stroke: var(--ink);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+  opacity: 0;
+  animation: bd-fun-twinkle 1300ms var(--delay) ease-in-out both;
+}
+
+.bd-fun-celebrate[data-rarity='rare'] .bd-fun-sparkle {
+  fill: #7cc7ff;
+}
+
+.bd-fun-celebrate[data-rarity='epic'] .bd-fun-sparkle {
+  fill: #d6a8ff;
+}
+
+@keyframes bd-fun-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.2) rotate(0deg);
+  }
+  35%,
+  60% {
+    opacity: 1;
+    transform: scale(1) rotate(45deg);
+  }
+}
+
+/* ---- Ring (rare and above) ---- */
+.bd-fun-ring {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--rarity-rare);
+  border-radius: 50%;
+  opacity: 0;
+  animation: bd-fun-ring 900ms var(--ease) both;
+}
+
+.bd-fun-celebrate[data-rarity='epic'] .bd-fun-ring {
+  border-color: var(--rarity-epic);
+}
+
+.bd-fun-celebrate[data-rarity='legendary'] .bd-fun-ring {
+  border-color: var(--rarity-legendary);
+}
+
+@keyframes bd-fun-ring {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(7);
+  }
+}
+
+/* ---- Legendary: a golden flash and turning rays ---- */
+.bd-fun-flash {
+  position: absolute;
+  top: -260px;
+  left: -260px;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(255, 244, 168, 0.95) 0%, rgba(255, 210, 58, 0.55) 30%, rgba(255, 210, 58, 0) 65%);
+  opacity: 0;
+  animation: bd-fun-flash 1200ms ease-out both;
+}
+
+@keyframes bd-fun-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.1);
+  }
+}
+
+.bd-fun-rays {
+  position: absolute;
+  top: -160px;
+  left: -160px;
+  width: 320px;
+  height: 320px;
+  fill: rgba(255, 210, 58, 0.55);
+  opacity: 0;
+  animation: bd-fun-rays 2200ms ease-out both;
+}
+
+@keyframes bd-fun-rays {
+  0% {
+    opacity: 0;
+    transform: rotate(0deg) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(60deg) scale(1.2);
+  }
+}
+
+/* ---- The NOVÝ stamp ---- */
+.bd-fun-newbadge {
+  position: absolute;
+  top: -82px;
+  left: 22px;
+  z-index: 2;
+  padding: 6px 9px 3px;
+  /* VT323, not the pixel heading font: its capital Ý is clean at this size. */
+  font: 400 28px / 1 var(--font-lcd);
+  letter-spacing: 0.1em;
+  color: #fff;
+  white-space: nowrap;
+  background: var(--btn-red);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-s);
+  box-shadow: var(--shadow-pixel);
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+  transform: rotate(10deg);
+  animation: bd-fun-stamp 700ms 250ms var(--ease) both;
+}
+
+@keyframes bd-fun-stamp {
+  0% {
+    opacity: 0;
+    transform: rotate(-30deg) scale(2.6);
+  }
+  55% {
+    opacity: 1;
+    transform: rotate(14deg) scale(0.9);
+  }
+  75% {
+    transform: rotate(8deg) scale(1.12);
+  }
+  100% {
+    transform: rotate(10deg) scale(1);
+  }
+}
+
+/* With reduced motion nothing flies: the stamp is simply there (the global rule also shortens every animation). */
+@media (prefers-reduced-motion: reduce) {
+  .bd-fun-piece,
+  .bd-fun-sparkle,
+  .bd-fun-ring,
+  .bd-fun-flash,
+  .bd-fun-rays {
+    display: none;
+  }
+}

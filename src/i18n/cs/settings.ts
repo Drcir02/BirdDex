@@ -6,8 +6,8 @@ export const settings = {
 
   // The trainer card at the top
   trainer: {
-    title: 'Ptačí průkaz',
-    empty: 'Zatím nemáš žádný úlovek. Pojď chytit prvního ptáka a průkaz ožije.',
+    title: 'Karta lovce',
+    empty: 'Zatím nemáš žádný úlovek. Pojď chytit prvního ptáka a karta ožije.',
     emptyAction: 'Jdu na to',
     species: 'Chycené druhy',
     speciesDetail: '{catches} nálezů celkem',
@@ -68,14 +68,14 @@ export const settings = {
     modelDownloading: 'stahuje se',
     modelFailed: 'selhalo',
     models: {
-      'birdnet-fp16': 'Poslech ptáků (BirdNET)',
-      'birdnet-geo-fp16': 'Poslech: filtr podle místa',
-      'wingclip-onnx': 'Fotky: model (WingCLIP)',
-      'wingclip-data': 'Fotky: váhy modelu',
-      'wingclip-text': 'Fotky: seznam druhů',
+      'birdnet-fp16': 'Poslech (BirdNET)',
+      'birdnet-geo-fp16': 'Poslech: filtr místa',
+      'wingclip-onnx': 'Fotky: model',
+      'wingclip-data': 'Fotky: váhy',
+      'wingclip-text': 'Fotky: druhy',
     },
     modelOther: 'Další soubor',
-    deleteModels: 'Smazat stažené modely',
+    deleteModels: 'Smazat modely',
     deleteTitle: 'Smazat stažené modely?',
     deleteMessage: 'Uvolní se {size}. Bez nich {appName} ptáky nepozná, dokud je znovu nestáhneš (k tomu potřebuješ internet). Tvoje sbírka zůstane.',
     deleteConfirm: 'Smazat modely',

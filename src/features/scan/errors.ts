@@ -16,6 +16,7 @@ export type ScanErrorKind =
   | 'cameraBusy'
   | 'cameraStalled'
   | 'network'
+  | 'chunk'
   | 'storageFull'
   | 'modelDownload'
   | 'modelLoad'
@@ -66,6 +67,12 @@ function fromMediaDevices(name: string, device: ScanDevice): ScanErrorKind | und
   }
 }
 
+/** A dynamic `import()` that failed to download, as Chromium, Safari and Firefox word it. */
+function isChunkLoadFailure(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : ''
+  return /dynamically imported module|importing a module script failed|error loading dynamically imported module|Loading chunk/i.test(message)
+}
+
 export function classifyScanError(error: unknown, device?: ScanDevice): ScanErrorKind {
   if (error instanceof ModelStorageFullError || nameOf(error) === 'StorageFullError') return 'storageFull'
   if (error instanceof ModelDownloadError) return error.reason === 'offline' ? 'network' : 'modelDownload'
@@ -73,6 +80,8 @@ export function classifyScanError(error: unknown, device?: ScanDevice): ScanErro
   if (isQuotaExceededError(error)) return 'storageFull'
 
   const name = nameOf(error)
+  // The code of the engine itself could not be fetched (the connection went away between opening the app and starting a scan).
+  if (isChunkLoadFailure(error)) return typeof navigator !== 'undefined' && navigator.onLine === false ? 'network' : 'chunk'
   if (name === 'SoundCaptureError') return fromSoundCapture(reasonOf(error))
   if (name === 'ModelLoadError') return 'modelLoad'
   if (name === 'ModelStorageFullError') return 'storageFull'
@@ -103,6 +112,8 @@ export function scanErrorText(kind: ScanErrorKind): string {
       return t('common.errors.cameraStalled')
     case 'network':
       return t('common.errors.network')
+    case 'chunk':
+      return t('common.errors.chunk')
     case 'storageFull':
       return t('common.errors.storageFull')
     case 'modelDownload':
