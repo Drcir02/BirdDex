@@ -1,22 +1,153 @@
-// Texts of the settings screen. The polish task owns this file and may extend it.
-// Keep the named export `settings` and `as const`.
+// Texts of the settings screen (trainer card, sensitivity, storage, backup, erase, version).
+// Keep the named export `settings` and `as const`. No bird name sits inside a sentence (Czech declines names).
 
 export const settings = {
   title: 'Nastavení',
+
+  // The trainer card at the top
+  trainer: {
+    title: 'Ptačí průkaz',
+    empty: 'Zatím nemáš žádný úlovek. Pojď chytit prvního ptáka a průkaz ožije.',
+    emptyAction: 'Jdu na to',
+    species: 'Chycené druhy',
+    speciesDetail: '{catches} nálezů celkem',
+    czechia: 'Česko',
+    europe: 'Evropa',
+    ofTotal: '{caught} z {total}',
+    rarest: 'Nejvzácnější úlovek',
+    firstCatch: 'První úlovek',
+    streak: 'Série dnů',
+    streakDays: '{count} {days}',
+    streakBest: 'rekord {count} {days}',
+    streakNone: 'zatím žádná',
+    methods: 'Podle způsobu',
+  },
+
+  // Sensitivity
   sensitivity: {
     title: 'Citlivost chytání',
-    hint: 'Čím přísnější nastavení, tím jistější musí rozpoznání být, než ptáka půjde chytit.',
+    hint: 'Říká, jak jistý si musí {appName} být, než ti dovolí ptáka chytit. Mění se tím jen tlačítko Chytit, ne samotné rozpoznávání.',
+    label: 'Citlivost',
     strict: 'Přísná',
-    normal: 'Běžná',
-    easy: 'Shovívavá',
+    normal: 'Normální',
+    easy: 'Snadná',
+    strictInfo: 'Chytíš jen skoro jistá rozpoznání. Méně omylů, ale častěji uvidíš „Nic jistého“.',
+    normalInfo: 'Zlatý střed: rozpoznání musí být dost jisté, ale nemusí být dokonalé.',
+    easyInfo: 'Chytíš i méně jistá rozpoznání. Víc úlovků, jen se občas může stát omyl.',
+    numbers: 'Hlas: od {sound} jistoty. Fotka a živý záběr: od {photo} jistoty a s jasným náskokem před druhým tipem.',
   },
+
+  // Sound effects
+  sounds: {
+    title: 'Zvuky',
+    label: 'Zvukové efekty',
+    hint: 'Veselá melodie po chycení ptáka a pípnutí při zaměření. Na iPhonu je ztlumí přepínač zvonění.',
+    preview: 'Tak to zní!',
+  },
+
+  // Storage
+  storage: {
+    title: 'Úložiště',
+    used: 'Zabrané místo',
+    usedValue: '{used} z {quota}',
+    unknown: 'Prohlížeč neumí říct, kolik místa se používá.',
+    persistentYes: 'Data jsou chráněná: prohlížeč je sám nesmaže, ani když telefonu dojde místo.',
+    persistentNo: 'Data zatím nejsou chráněná: když telefonu dojde místo, prohlížeč je může smazat. Udělej si raději zálohu.',
+    persistentUnsupported: 'Tenhle prohlížeč o ochranu dat požádat neumí. Udělej si raději zálohu.',
+    persistentRequest: 'Chránit data',
+    persistentDenied: 'Prohlížeč to zatím nepovolil. Zkus to znovu, až aplikaci chvíli využiješ nebo si ji přidáš na plochu.',
+    persistentGranted: 'Hotovo, data jsou teď chráněná.',
+    modelsTitle: 'Stažený ptačí mozek',
+    modelsNone: 'Zatím nic není stažené. Stáhne se při prvním skenování (asi {size}).',
+    modelsSome: 'Staženo {downloaded} z {total}.',
+    modelsAll: 'Vše je staženo ({total}). Aplikace funguje i bez internetu.',
+    modelsUnavailable: 'Seznam modelů teď nejde načíst. Zkontroluj připojení nebo to zkus později.',
+    modelsLoading: 'Zjišťuju, co je staženo…',
+    modelReady: 'staženo',
+    modelMissing: 'chybí',
+    modelDownloading: 'stahuje se',
+    modelFailed: 'selhalo',
+    models: {
+      'birdnet-fp16': 'Poslech ptáků (BirdNET)',
+      'birdnet-geo-fp16': 'Poslech: filtr podle místa',
+      'wingclip-onnx': 'Fotky: model (WingCLIP)',
+      'wingclip-data': 'Fotky: váhy modelu',
+      'wingclip-text': 'Fotky: seznam druhů',
+    },
+    modelOther: 'Další soubor',
+    deleteModels: 'Smazat stažené modely',
+    deleteTitle: 'Smazat stažené modely?',
+    deleteMessage: 'Uvolní se {size}. Bez nich {appName} ptáky nepozná, dokud je znovu nestáhneš (k tomu potřebuješ internet). Tvoje sbírka zůstane.',
+    deleteConfirm: 'Smazat modely',
+    deleted: 'Modely jsou smazané. Místo je volné.',
+    deleteFailed: 'Modely se nepodařilo smazat. Zkus to prosím znovu.',
+  },
+
+  // Backup and restore
   backup: {
     title: 'Záloha',
-    hint: 'Sbírku si můžeš uložit do souboru a později obnovit.',
-    export: 'Uložit zálohu',
+    hint: 'Ulož si sbírku do jednoho souboru (třeba do iCloudu, na Disk Google nebo do e-mailu). Když telefon vyměníš nebo aplikaci smažeš, ze zálohy obnovíš všechno i s fotkami a nahrávkami.',
+    last: 'Poslední záloha: {date}',
+    never: 'Zatím žádná záloha.',
+    export: 'Zálohovat',
+    exporting: 'Připravuju zálohu…',
+    exportingProgress: 'Připravuju zálohu… {done} z {total}',
+    nothingToBackUp: 'Zatím není co zálohovat. Nejdřív něco chyť.',
+    ready: 'Záloha je hotová. Klepni na tlačítko a vyber, kam se uloží.',
+    save: 'Uložit soubor',
+    shared: 'Hotovo, záloha je uložená.',
+    downloaded: 'Záloha je stažená do telefonu: {file}',
+    cancelled: 'Ukládání bylo zrušeno. Zálohu můžeš připravit znovu.',
+    exportFailed: 'Zálohu se nepodařilo vytvořit. Zkus to prosím znovu.',
     import: 'Obnovit ze zálohy',
+    importHint: 'Vyber soubor zálohy (končí na .zip). Nálezy se přidají k těm, které už máš, nic se nepřepíše.',
+    importing: 'Obnovuju…',
+    importingProgress: 'Obnovuju… {done} z {total}',
+    importChoose: 'Soubor zálohy',
+    result: {
+      title: 'Obnova dokončena',
+      added: 'Přidáno {count} {forms} z {total}.',
+      skipped: '{count} už v telefonu bylo a zůstalo, jak bylo.',
+      media: 'Fotek a nahrávek: {count}.',
+      mediaMissing: '{count} nálezů se obnovilo bez fotky nebo nahrávky, protože je záloha neobsahovala.',
+      nothingNew: 'Všechny nálezy z téhle zálohy už v telefonu jsou. Nic se nezměnilo.',
+    },
+    errors: {
+      notBackup: 'Tohle není záloha z aplikace {appName}. Vyber soubor, který aplikace dřív vytvořila (končí na .zip).',
+      tooNew: 'Tuhle zálohu vytvořila novější verze aplikace. Nejdřív aplikaci aktualizuj: zavři ji a znovu otevři s připojením k internetu.',
+      malformed: 'Záloha je poškozená a nejde přečíst celá. Zkus jiný soubor.',
+      storageFull: 'V telefonu došlo místo. Uvolni trochu paměti a pak obnovu spusť znovu, naváže tam, kde přestala.',
+      storageFullPartial: 'V telefonu došlo místo. Obnoveno bylo {count} nálezů. Uvolni paměť a spusť obnovu znovu, naváže tam, kde přestala.',
+    },
+    reminderTitle: 'Zálohuj si sbírku',
+    reminderText: 'Máš už {count} nálezů, ale zatím žádnou zálohu. Kdyby se telefon ztratil nebo se aplikace smazala, sbírka by byla pryč.',
+    reminderAction: 'Zálohovat teď',
   },
-  about: 'O aplikaci',
-  diagnostics: 'Zkouška telefonu',
-  diagnosticsHint: 'Ověří mikrofon, kameru, polohu a paměť.',
+
+  // Erase everything
+  erase: {
+    title: 'Smazat vše',
+    hint: 'Smaže všechny nálezy, fotky a nahrávky z tohoto telefonu. Stažené modely a nastavení zůstanou.',
+    button: 'Smazat všechna data',
+    firstTitle: 'Smazat všechna data?',
+    firstMessage: 'Zmizí všech {count} nálezů i uložené fotky a nahrávky. Radši nejdřív udělej zálohu.',
+    firstConfirm: 'Pokračovat',
+    secondTitle: 'Opravdu úplně všechno?',
+    secondMessage: 'Tohle už nejde vrátit zpět. Dex zůstane prázdný.',
+    secondConfirm: 'Ano, smazat vše',
+    done: 'Všechna data jsou smazaná. Dex je prázdný.',
+    failed: 'Data se nepodařilo smazat. Zkus to prosím znovu.',
+  },
+
+  // Links and version
+  more: {
+    title: 'O aplikaci',
+  },
+  about: 'O aplikaci a licence',
+  aboutHint: 'Komu patří poděkování a co smíš s aplikací dělat.',
+  diagnostics: 'Zkouška telefonu (pro testery)',
+  diagnosticsHint: 'Ověří mikrofon, kameru, polohu a paměť. Hodí se, když něco nefunguje.',
+  replayWelcome: 'Znovu ukázat úvod',
+  version: 'Verze {version}',
+  built: 'Sestaveno {when}',
 } as const
