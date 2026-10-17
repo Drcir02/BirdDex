@@ -156,20 +156,65 @@ export function buildEngines(loaders: EngineLoaders): Engines {
   }
 }
 
+// Memory on a phone: BirdNET (about 350 MB of WebAssembly) and WingCLIP (230 to 260 MB) must not sit in memory together. Each lets
+// go of itself after an idle time (a minute and three minutes), but going from the photo screen to the sound screen takes seconds,
+// so preparing one engine first gives the other one's model back. Only models that are loaded are touched, and never during a scan:
+// prepare() is called when a screen opens, before anything runs on it.
+interface Releasable {
+  dispose?: () => Promise<void>
+}
+let realSound: Releasable | undefined
+let visionLoaded = false
+
+const releaseSound = (): Promise<void> => realSound?.dispose?.().catch(() => undefined) ?? Promise.resolve()
+async function releaseVision(): Promise<void> {
+  if (!visionLoaded) return
+  try {
+    await (await import('./vision/runtime')).getVisionRuntime().dispose()
+  } catch {
+    // Only memory is at stake.
+  }
+}
+
 /**
  * The loaders of the real engines, written by tasks E1 and E2. The photo engine and the live camera also get BirdNET's
  * location model as their occurrence prior (src/ml/vision/geoPrior.ts), which only does something when the model is on the phone.
  */
 export const realLoaders: EngineLoaders = {
-  sound: () => import('./sound/engine').then((module) => pickEngine(module as Record<string, unknown>, ['createSoundEngine', 'soundEngine', 'default'], isSoundEngine, 'sound engine')),
+  sound: () =>
+    import('./sound/engine')
+      .then((module) => pickEngine(module as Record<string, unknown>, ['createSoundEngine', 'soundEngine', 'default'], isSoundEngine, 'sound engine'))
+      .then((engine): SoundEngine => {
+        realSound = engine as SoundEngine & Releasable
+        // start() is handed through untouched: it has to run inside the tap.
+        return {
+          prepare: async (onProgress) => {
+            await releaseVision()
+            return engine.prepare(onProgress)
+          },
+          start: (options) => engine.start(options),
+        }
+      }),
   photo: () =>
-    Promise.all([import('./vision/engine'), installGeoPriorLater()]).then(([module]) =>
-      pickEngine(module as Record<string, unknown>, ['createPhotoEngine', 'photoEngine', 'default'], isPhotoEngine, 'photo engine'),
-    ),
+    Promise.all([import('./vision/engine'), installGeoPriorLater()])
+      .then(([module]) => pickEngine(module as Record<string, unknown>, ['createPhotoEngine', 'photoEngine', 'default'], isPhotoEngine, 'photo engine'))
+      .then((engine): PhotoEngine => {
+        visionLoaded = true
+        return {
+          prepare: async (onProgress) => {
+            await releaseSound()
+            return engine.prepare(onProgress)
+          },
+          identify: (image, options) => engine.identify(image, options),
+        }
+      }),
   live: () =>
-    Promise.all([import('./vision/live'), installGeoPriorLater()]).then(([module]) =>
-      pickEngine(module as Record<string, unknown>, ['createLiveScanner', 'liveScanner', 'default'], isLiveScanner, 'live scanner'),
-    ),
+    Promise.all([import('./vision/live'), installGeoPriorLater()])
+      .then(([module]) => pickEngine(module as Record<string, unknown>, ['createLiveScanner', 'liveScanner', 'default'], isLiveScanner, 'live scanner'))
+      .then((scanner) => {
+        visionLoaded = true
+        return scanner
+      }),
 }
 
 /** Loads the location prior module (a small chunk of its own) and registers it. A failure to load it must not stop the engine. */

@@ -119,7 +119,7 @@ describe('the guesses', () => {
   })
 
   it('says a guess is too close to another bird when the picture rules block it for that reason', async () => {
-    setPending(pending({ method: 'photo', candidates: [guess('turdus-merula', 0.62), guess('parus-major', 0.58)] }))
+    setPending(pending({ method: 'photo', candidates: [guess('turdus-merula', 0.78), guess('parus-major', 0.74)] }))
     renderResult()
     await waitFor(() => expect(cards()).toHaveLength(2))
     expect(within(cards()[0]).getByTestId('catch-reason').textContent).toMatch(/^Příliš podobné jinému druhu/)

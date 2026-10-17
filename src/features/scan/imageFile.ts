@@ -6,10 +6,12 @@
 //
 // The EXIF rotation of a phone photo is applied while decoding (createImageBitmap with "from-image", or the <img>
 // element, which turns the picture by itself in every current browser), so a photo taken upright is upright here.
-// The original, full-size bitmap lives only for the moment of drawing it small: a 48 megapixel photo would otherwise
-// sit in memory as 190 MB.
+// The browser is asked to decode straight to the working size when the file header says the photo is bigger (imageHeader.ts
+// reads the size and the orientation), so the full-size bitmap (48 MB for 12 megapixels, 190 MB for 48) never exists. A
+// browser that ignores the request (Safari has done so) gives the full bitmap, which lives only for the moment of drawing it small.
 
 import { cropToPixels, type CropRect } from './cropMath'
+import { orientedSize, readImageHeader } from './imageHeader'
 import { fitWithin, looksLikeHeic, planHalvingSteps, SAVED_JPEG_QUALITY, SAVED_SIDE, WORKING_SIDE, type Size } from './imageSizing'
 
 export type ImageFileProblem = 'heic' | 'unreadable'
@@ -26,14 +28,41 @@ export class ImageFileError extends Error {
 
 type Decoded = { source: CanvasImageSource; width: number; height: number; close: () => void }
 
+/** A decoded picture may differ from the requested shape by this much (rounding) before it counts as "the request was ignored". */
+const SHAPE_TOLERANCE = 0.03
+
 async function decode(file: Blob): Promise<Decoded> {
   if (typeof createImageBitmap === 'function') {
-    try {
-      const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
-      return { source: bitmap, width: bitmap.width, height: bitmap.height, close: () => bitmap.close() }
-    } catch {
-      // Some browsers do not know the option or the format: the <img> element below is the second way.
+    const header = await readImageHeader(file)
+    // Decode straight to the working size when the photo is bigger than that. The size asked for is the upright shape; a browser
+    // that applies it to the stored (sideways) shape, or ignores it, shows up as the wrong shape and is decoded again, plainly.
+    if (header) {
+      const upright = orientedSize(header)
+      const target = fitWithin(upright.width, upright.height, WORKING_SIDE)
+      if (target.width < upright.width) {
+        try {
+          const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image', resizeWidth: target.width, resizeHeight: target.height, resizeQuality: 'high' })
+          const wanted = upright.width / upright.height
+          if (bitmap.width > 0 && bitmap.height > 0 && Math.abs(bitmap.width / bitmap.height / wanted - 1) <= SHAPE_TOLERANCE) {
+            return { source: bitmap, width: bitmap.width, height: bitmap.height, close: () => bitmap.close() }
+          }
+          bitmap.close()
+        } catch {
+          // Fall through to the plain decode below.
+        }
+      }
     }
+    for (const options of [{ imageOrientation: 'from-image' as const }, undefined]) {
+      try {
+        const bitmap = await createImageBitmap(file, options)
+        return { source: bitmap, width: bitmap.width, height: bitmap.height, close: () => bitmap.close() }
+      } catch {
+        // An older browser may not know the option: the same call without it, then the <img> element.
+      }
+    }
+    // A JPEG or PNG that has a proper header and still cannot be decoded is damaged (a download that stopped). The <img> element
+    // would show the part that arrived, with a grey bottom; better to say so than to catch a half picture.
+    if (header) throw new ImageFileError('unreadable')
   }
   const url = URL.createObjectURL(file)
   try {

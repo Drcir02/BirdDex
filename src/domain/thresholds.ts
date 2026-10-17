@@ -1,7 +1,14 @@
 // When may the Catch button be pressed? One table of rules per way of identifying (sound, photo, live camera)
 // and per Sensitivity setting, and one pure function that applies them. Screens show the verdict, they do not decide.
 //
-// The numbers are starting values. Engine owners may recommend better ones from their measurements: change them here only.
+// The numbers come from measurements with the real models (docs/notes/integration.md, section 5; the engines' own numbers are in
+// sound-engine.md section 7 and photo-engine.md "Catch thresholds"). What they have to do:
+//   sound: the one false alarm found (perfectly flat synthetic noise) reaches 0.55, a clear bird 0.85 and more, a bird that is
+//          really there but faint, in a busy recording, 0.5 to 0.6. So easy sits just above the false alarm.
+//   photo: a bird the model knows well is 0.98 and more; the same species behind a lookalike (Common and Barrow's Goldeneye) 0.63
+//          without the location filter; the Cormorant 0.75; foreign birds that look like a European one reach 0.67 (geese from
+//          China read as Pink-footed Goose), 0.54 (an unknown tit) and 0.48 (an American woodpecker). Normal is above all of
+//          those, so the foreign geese, the gulls and the unknown tit cannot be caught on the normal setting.
 
 import type { Candidate, CatchMethod, Sensitivity } from './types'
 
@@ -16,16 +23,16 @@ export interface CatchRule {
 // A margin over the second guess would wrongly block that, so sound only needs a high enough score.
 // Photo and live camera: WingCLIP's guesses compete with each other, so a catch also needs a clear lead.
 const PICTURE_RULES: Record<Sensitivity, CatchRule> = {
-  strict: { minConfidence: 0.75, minMargin: 0.25 },
-  normal: { minConfidence: 0.6, minMargin: 0.15 },
-  easy: { minConfidence: 0.45, minMargin: 0.1 },
+  strict: { minConfidence: 0.85, minMargin: 0.3 },
+  normal: { minConfidence: 0.7, minMargin: 0.2 },
+  easy: { minConfidence: 0.55, minMargin: 0.1 },
 }
 
 export const CATCH_RULES: Readonly<Record<CatchMethod, Readonly<Record<Sensitivity, CatchRule>>>> = {
   sound: {
     strict: { minConfidence: 0.85, minMargin: 0 },
     normal: { minConfidence: 0.7, minMargin: 0 },
-    easy: { minConfidence: 0.55, minMargin: 0 },
+    easy: { minConfidence: 0.6, minMargin: 0 },
   },
   photo: PICTURE_RULES,
   live: PICTURE_RULES,

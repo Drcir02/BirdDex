@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi, type Mock } from 'vitest'
 import type { Rarity } from '../../src/domain/types'
 import { createSoundPlayer, notesFor, soundLength, type AudioContextLike, type OscillatorLike, type ParamLike } from '../../src/features/fun/sounds'
 
@@ -8,10 +8,10 @@ function param(): ParamLike {
   return { value: 0, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() }
 }
 
-interface FakeContext extends AudioContextLike {
+interface FakeContext extends Omit<AudioContextLike, 'resume'> {
   oscillators: OscillatorLike[]
   state: string
-  resume: ReturnType<typeof vi.fn>
+  resume: Mock<() => Promise<void>>
   silent: number
 }
 

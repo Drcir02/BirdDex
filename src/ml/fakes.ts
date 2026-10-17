@@ -68,7 +68,7 @@ const SOUND_RESULTS: Record<FakeScenario, Candidate[]> = {
 const PICTURE_RESULTS: Record<FakeScenario, Candidate[]> = {
   clear: [guess(greatTit, 0.88), guess(robin, 0.07), guess(blackbird, 0.03)],
   low: [guess(robin, 0.41), guess(greatTit, 0.23), guess(blackbird, 0.12)],
-  unclear: [guess(blackbird, 0.62), guess(greatTit, 0.58), guess(robin, 0.1)],
+  unclear: [guess(blackbird, 0.78), guess(greatTit, 0.74), guess(robin, 0.1)],
   empty: [],
   'download-error': [guess(greatTit, 0.88), guess(robin, 0.07), guess(blackbird, 0.03)],
   'storage-full': [guess(greatTit, 0.88), guess(robin, 0.07), guess(blackbird, 0.03)],

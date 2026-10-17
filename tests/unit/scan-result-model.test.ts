@@ -40,13 +40,13 @@ describe('buildResultView', () => {
     expect(low.candidates[0]).toMatchObject({ allowed: false, reason: 'low-confidence' })
     expect(low.anyAllowed).toBe(false)
 
-    const close = view('photo', [guess('turdus-merula', 0.62), guess('parus-major', 0.58)])
+    const close = view('photo', [guess('turdus-merula', 0.78), guess('parus-major', 0.64)])
     expect(close.candidates.map((c) => c.reason)).toEqual(['unclear-margin', 'low-confidence'])
     expect(close.candidates.map((c) => c.allowed)).toEqual([false, false])
   })
 
   it('follows the sensitivity setting', () => {
-    const guesses = [guess('parus-major', 0.65), guess('turdus-merula', 0.1)]
+    const guesses = [guess('parus-major', 0.75), guess('turdus-merula', 0.1)]
     expect(view('photo', guesses, 'strict').anyAllowed).toBe(false)
     expect(view('photo', guesses, 'normal').anyAllowed).toBe(true)
     expect(view('photo', guesses, 'easy').anyAllowed).toBe(true)
@@ -60,8 +60,8 @@ describe('buildResultView', () => {
   it('tells how sure the Catch button needs the guess to be, for the notch on the bar', () => {
     expect(view('sound', [guess('parus-major', 0.9)], 'normal').neededConfidence).toBe(0.7)
     expect(view('sound', [guess('parus-major', 0.9)], 'strict').neededConfidence).toBe(0.85)
-    expect(view('photo', [guess('parus-major', 0.9)], 'normal').neededConfidence).toBe(0.6)
-    expect(view('live', [guess('parus-major', 0.9)], 'easy').neededConfidence).toBe(0.45)
+    expect(view('photo', [guess('parus-major', 0.9)], 'normal').neededConfidence).toBe(0.7)
+    expect(view('live', [guess('parus-major', 0.9)], 'easy').neededConfidence).toBe(0.55)
   })
 
   it('counts how often a species is in the Dex already (zero means a new species)', () => {

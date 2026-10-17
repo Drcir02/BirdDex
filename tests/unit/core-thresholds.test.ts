@@ -9,13 +9,13 @@ const reasons = (candidates: Candidate[], method: CatchMethod, sensitivity: Sens
   evaluateCandidates(candidates, method, sensitivity).map((verdict) => verdict.reason)
 
 describe('catch rules', () => {
-  it('uses the starting values from the brief', () => {
+  it('uses the values measured with the real models', () => {
     expect(CATCH_RULES.sound.normal.minConfidence).toBe(0.7)
     expect(CATCH_RULES.sound.strict.minConfidence).toBe(0.85)
-    expect(CATCH_RULES.sound.easy.minConfidence).toBe(0.55)
-    expect(CATCH_RULES.photo.normal.minConfidence).toBe(0.6)
-    expect(CATCH_RULES.photo.strict.minConfidence).toBe(0.75)
-    expect(CATCH_RULES.photo.easy.minConfidence).toBe(0.45)
+    expect(CATCH_RULES.sound.easy.minConfidence).toBe(0.6)
+    expect(CATCH_RULES.photo.normal.minConfidence).toBe(0.7)
+    expect(CATCH_RULES.photo.strict.minConfidence).toBe(0.85)
+    expect(CATCH_RULES.photo.easy.minConfidence).toBe(0.55)
   })
 
   it('asks for a lead over the second guess for pictures but not for sound', () => {
@@ -71,12 +71,12 @@ describe('evaluateCandidates for photos and the live camera', () => {
   })
 
   it('blocks a confident top guess that is too close to the second one', () => {
-    const verdicts = evaluateCandidates(guesses(0.66, 0.6), 'photo', 'normal')
+    const verdicts = evaluateCandidates(guesses(0.78, 0.74), 'photo', 'normal')
     expect(verdicts[0]).toMatchObject({ allowed: false, reason: 'unclear-margin' })
-    expect(verdicts[0].margin).toBeCloseTo(0.06, 10)
+    expect(verdicts[0].margin).toBeCloseTo(0.04, 10)
     // The second guess is confident enough too, but it trails the first one, so it is unclear as well.
     expect(verdicts[1]).toMatchObject({ allowed: false, reason: 'unclear-margin' })
-    expect(verdicts[1].margin).toBeCloseTo(-0.06, 10)
+    expect(verdicts[1].margin).toBeCloseTo(-0.04, 10)
   })
 
   it('names low confidence first when both rules fail', () => {
@@ -91,12 +91,12 @@ describe('evaluateCandidates for photos and the live camera', () => {
   })
 
   it('does not refuse a guess because of floating point noise at the edge of a rule', () => {
-    // 0.7 - 0.55 is 0.1499999999999999 in floating point, yet the lead is exactly the 0.15 that "normal" asks for.
-    expect(0.7 - 0.55).toBeLessThan(0.15)
-    expect(allowed(guesses(0.7, 0.55), 'photo', 'normal')).toEqual([true, false])
+    // 0.7 - 0.5 is 0.19999999999999996 in floating point, yet the lead is exactly the 0.2 that "normal" asks for.
+    expect(0.7 - 0.5).toBeLessThan(0.2)
+    expect(allowed(guesses(0.7, 0.5), 'photo', 'normal')).toEqual([true, false])
     // The same for the confidence itself: a hair below the threshold is noise, a visible gap is not.
-    expect(allowed(guesses(0.6 - 1e-12), 'photo', 'normal')).toEqual([true])
-    expect(allowed(guesses(0.6 - 1e-6), 'photo', 'normal')).toEqual([false])
+    expect(allowed(guesses(0.7 - 1e-12), 'photo', 'normal')).toEqual([true])
+    expect(allowed(guesses(0.7 - 1e-6), 'photo', 'normal')).toEqual([false])
   })
 })
 
@@ -107,12 +107,12 @@ describe('evaluateCandidates edge cases', () => {
   })
 
   it('judges a single guess on its confidence alone, and reports its confidence as the lead', () => {
-    const [verdict] = evaluateCandidates(guesses(0.62), 'photo', 'normal')
-    expect(verdict).toMatchObject({ speciesId: 'species-0', confidence: 0.62, allowed: true })
-    expect(verdict.margin).toBeCloseTo(0.62, 10)
+    const [verdict] = evaluateCandidates(guesses(0.72), 'photo', 'normal')
+    expect(verdict).toMatchObject({ speciesId: 'species-0', confidence: 0.72, allowed: true })
+    expect(verdict.margin).toBeCloseTo(0.72, 10)
     expect(verdict.reason).toBeUndefined()
-    expect(allowed(guesses(0.59), 'photo')).toEqual([false])
-    expect(reasons(guesses(0.59), 'photo')).toEqual(['low-confidence'])
+    expect(allowed(guesses(0.69), 'photo')).toEqual([false])
+    expect(reasons(guesses(0.69), 'photo')).toEqual(['low-confidence'])
   })
 
   it('treats equal scores as a tie: nobody leads, so pictures are blocked and sound is not', () => {

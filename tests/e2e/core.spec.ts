@@ -350,7 +350,7 @@ test.describe('choosing the fake engines in a real browser', () => {
     })
     expect(outcome.mode).toBe('fake')
     expect(outcome.same).toBe(true)
-    expect(outcome.top).toEqual({ speciesId: 'turdus-merula', confidence: 0.62 })
+    expect(outcome.top).toEqual({ speciesId: 'turdus-merula', confidence: 0.78 })
     expect(outcome.verdict).toMatchObject({ allowed: false, reason: 'unclear-margin' })
   })
 

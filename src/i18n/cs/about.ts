@@ -49,7 +49,7 @@ export const about = {
   places: {
     title: 'Názvy míst',
     name: 'OpenStreetMap',
-    text: 'Název místa úlovku se zjišťuje přes službu Nominatim (data © přispěvatelé OpenStreetMap, licence ODbL). Posílá se jen zaokrouhlená poloha a jen když jsi online. Odkaz „Otevřít v mapě“ vede na openstreetmap.org.',
+    text: 'Název místa úlovku se zjišťuje přes službu Nominatim (data: přispěvatelé OpenStreetMap, licence ODbL). Posílá se jen zaokrouhlená poloha a jen když jsi online. Odkaz „Otevřít v mapě“ vede na openstreetmap.org.',
   },
 
   libraries: {

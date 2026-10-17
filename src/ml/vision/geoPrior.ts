@@ -3,8 +3,15 @@
 // What it does: for the place and week of the photo it asks BirdNET's location model how likely each bird is to be reported
 // there, and hands the numbers to the scoring as an OccurrencePrior (prior.ts). A Common Goldeneye in a Czech photo no longer
 // competes with Barrow's Goldeneye from Iceland, and a goose from a Chinese rice field is not forced into "Pink-footed Goose".
-// Measured on the fixture photos with a Prague position: Goldeneye 0.63 to 0.88, foreign geese 0.67 to 0.09, gulls from Seattle
-// 0.39 to 0.08, an American woodpecker 0.48 to 0.20 (docs/notes/integration.md). Without a position there is no prior.
+// Measured on the fixture photos with a Prague position (docs/notes/integration.md): Goldeneye 0.63 to 0.88 (October) or 0.74
+// (May), foreign geese 0.67 to 0.15, gulls from Seattle 0.39 to 0.28 or 0.11, an American woodpecker 0.48 to 0.25, and the right
+// birds that are not especially common in Prague stay put (Cormorant 0.75 to 0.77, Kingfisher 0.985 to 0.98). Without a position
+// there is no prior.
+//
+// The scores are used capped (PRESENT_SCORE): a bird that BirdNET's location model gives 0.2 or more counts as fully expected, only
+// the birds below that are held back. Used as they are, a Cormorant in Prague in May (a score far below the Great Tit's) fell from
+// 0.75 to 0.47 and the correct answer could no longer be caught, because the softmax also holds birds that have no opinion
+// (outside the Dex), which are never held back; with the cap it keeps 0.77.
 //
 // Rules of the road:
 // - It never downloads anything. The 15 MB location model is used when it is on the phone already (the "bird brain" download
@@ -68,12 +75,15 @@ const defaultDeps: GeoPriorDeps = {
   compute: computeGeoInWorker,
 }
 
-/** A prior from BirdNET's 6522 location scores: a bird's weight is the score of its output. */
+/** A location score at or above this counts as "this bird is expected here" (weight 1); below it the weight falls in proportion. */
+export const PRESENT_SCORE = 0.2
+
+/** A prior from BirdNET's 6522 location scores: a bird's weight is the score of its output, capped at PRESENT_SCORE and scaled to 1. */
 export function priorFromGeoScores(scores: ArrayLike<number>, indexOf: ReadonlyMap<string, number>): OccurrencePrior {
   return {
     get(speciesId) {
       const index = indexOf.get(speciesId)
-      return index === undefined ? undefined : scores[index]
+      return index === undefined ? undefined : Math.min(1, scores[index] / PRESENT_SCORE)
     },
   }
 }
