@@ -700,7 +700,8 @@ describe('SpeciesPage', () => {
       fireEvent.click(await screen.findByRole('button', { name: 'Smazat úlovek' }))
       fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Smazat' }))
       expect(await screen.findByText('Tohohle ptáka ještě nemáš')).toBeTruthy()
-      expect(screen.queryByTestId('catch-list')).toBeNull()
+      // The message and the list come from two live queries, so on a busy machine the list can go a moment later.
+      await waitFor(() => expect(screen.queryByTestId('catch-list')).toBeNull())
     })
 
     it('offers the next and previous bird of the list it was opened from, with the same list state', async () => {
