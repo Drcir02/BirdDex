@@ -6,7 +6,7 @@
 // bilinear scaling does not alias; the exact resize to 248 then starts from that. WingDex does the same with a cap of 500
 // pixels on the long side and measured no loss of accuracy; docs/notes/photo-engine.md has our own measurements.
 
-import type { ImageSource } from '../../domain/engines'
+import type { FrameView, ImageSource } from '../../domain/engines'
 import { FRAME, LIVE } from './constants'
 import { CLIP_RESIZE } from './preprocess'
 import type { VisionFrame } from './core'
@@ -23,6 +23,32 @@ export function sourceSize(source: ImageSource): Size {
   const image = source as HTMLImageElement
   if (typeof image.naturalWidth === 'number' && image.naturalWidth > 0) return { width: image.naturalWidth, height: image.naturalHeight }
   return { width: source.width, height: source.height }
+}
+
+/** A rectangle of a picture, in whole pixels. */
+export interface Rect {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+/** The smallest part of a picture worth looking at, in pixels. */
+const MIN_CROP = 32
+
+/**
+ * The part of a picture, in whole pixels, that a view given as fractions selects (the zoomed part of the live camera). No view
+ * gives the whole picture. A tiny or odd view is kept inside the picture and never smaller than MIN_CROP pixels.
+ */
+export function cropRect(size: Size, view?: FrameView): Rect {
+  const whole: Rect = { x: 0, y: 0, width: size.width, height: size.height }
+  if (!view || !(size.width > 0) || !(size.height > 0)) return whole
+  if (![view.x, view.y, view.width, view.height].every(Number.isFinite)) return whole
+  const width = Math.min(size.width, Math.max(Math.min(MIN_CROP, size.width), Math.round(view.width * size.width)))
+  const height = Math.min(size.height, Math.max(Math.min(MIN_CROP, size.height), Math.round(view.height * size.height)))
+  const x = Math.min(size.width - width, Math.max(0, Math.round(view.x * size.width)))
+  const y = Math.min(size.height - height, Math.max(0, Math.round(view.y * size.height)))
+  return { x, y, width, height }
 }
 
 /**
@@ -74,15 +100,22 @@ function release(canvas: HTMLCanvasElement): void {
   canvas.height = 0
 }
 
-/** Draws `source` into a new canvas of the target size, in halving steps. The caller releases the canvas. */
-function drawScaled(source: CanvasImageSource, from: Size, target: Size, readsPixels: boolean): HTMLCanvasElement {
+/**
+ * Draws `source` into a new canvas of the target size, in halving steps. With `rect`, only that part of the source is drawn
+ * (`from` is then the size of the part). The caller releases the canvas.
+ */
+function drawScaled(source: CanvasImageSource, from: Size, target: Size, readsPixels: boolean, rect?: Rect): HTMLCanvasElement {
   let current: CanvasImageSource = source
   let temporary: HTMLCanvasElement | undefined
   let result: HTMLCanvasElement | undefined
+  let first = true
   for (const step of planSteps(from, target)) {
     const canvas = makeCanvas(step.width, step.height)
     const last = step.width === target.width && step.height === target.height
-    context(canvas, readsPixels && last).drawImage(current, 0, 0, step.width, step.height)
+    const ctx = context(canvas, readsPixels && last)
+    if (first && rect) ctx.drawImage(current, rect.x, rect.y, rect.width, rect.height, 0, 0, step.width, step.height)
+    else ctx.drawImage(current, 0, 0, step.width, step.height)
+    first = false
     if (temporary) release(temporary)
     temporary = canvas
     current = canvas
@@ -96,14 +129,18 @@ export interface GrabOptions {
   /** Default FRAME.photoShortSide. */
   shortSide?: number
   maxLongSide?: number
+  /** Only this part of the picture is read (the zoomed part of the live camera). */
+  view?: FrameView
 }
 
 /** Reads a picture (or the current frame of a video) as RGBA pixels at about the size the exact resize starts from. */
 export function grabFrame(source: ImageSource, options: GrabOptions = {}): VisionFrame {
   const size = sourceSize(source)
   if (!(size.width > 0) || !(size.height > 0)) throw new Error('The picture has no pixels yet')
-  const target = planDownscale(size.width, size.height, options.shortSide, options.maxLongSide)
-  const canvas = drawScaled(source as CanvasImageSource, size, target, true)
+  const rect = options.view ? cropRect(size, options.view) : undefined
+  const from: Size = rect ? { width: rect.width, height: rect.height } : size
+  const target = planDownscale(from.width, from.height, options.shortSide, options.maxLongSide)
+  const canvas = drawScaled(source as CanvasImageSource, from, target, true, rect)
   try {
     const { data } = context(canvas, true).getImageData(0, 0, target.width, target.height)
     return { data, width: target.width, height: target.height, channels: 4 }
@@ -113,13 +150,15 @@ export function grabFrame(source: ImageSource, options: GrabOptions = {}): Visio
 }
 
 /** The live camera's version of grabFrame: smaller, because there is a frame every 0.7 seconds. */
-export function grabLiveFrame(video: HTMLVideoElement): VisionFrame {
-  return grabFrame(video, { shortSide: FRAME.liveShortSide })
+export function grabLiveFrame(video: HTMLVideoElement, view?: FrameView): VisionFrame {
+  return grabFrame(video, { shortSide: FRAME.liveShortSide, ...(view ? { view } : {}) })
 }
 
 export interface SnapshotOptions {
   maxSide?: number
   quality?: number
+  /** Only this part of the picture is kept (the zoomed part of the live camera). */
+  view?: FrameView
 }
 
 function toJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
@@ -136,17 +175,19 @@ function toJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
  * Copies a picture (a video frame, a bitmap, ...) into a canvas no bigger than `maxSide` on the long side and returns that
  * canvas. Used to keep the last live frame after the camera is switched off.
  */
-export function copyToCanvas(source: ImageSource, maxSide: number = LIVE.snapshotMaxSide): HTMLCanvasElement {
+export function copyToCanvas(source: ImageSource, maxSide: number = LIVE.snapshotMaxSide, view?: FrameView): HTMLCanvasElement {
   const size = sourceSize(source)
   if (!(size.width > 0) || !(size.height > 0)) throw new Error('The picture has no pixels yet')
-  const scale = Math.min(1, maxSide / Math.max(size.width, size.height))
-  const target = { width: Math.max(1, Math.round(size.width * scale)), height: Math.max(1, Math.round(size.height * scale)) }
-  return drawScaled(source as CanvasImageSource, size, target, false)
+  const rect = view ? cropRect(size, view) : undefined
+  const from: Size = rect ? { width: rect.width, height: rect.height } : size
+  const scale = Math.min(1, maxSide / Math.max(from.width, from.height))
+  const target = { width: Math.max(1, Math.round(from.width * scale)), height: Math.max(1, Math.round(from.height * scale)) }
+  return drawScaled(source as CanvasImageSource, from, target, false, rect)
 }
 
 /** A JPEG of a picture, scaled to at most `maxSide` on the long side. */
 export async function snapshotJpeg(source: ImageSource, options: SnapshotOptions = {}): Promise<Blob> {
-  const canvas = copyToCanvas(source, options.maxSide)
+  const canvas = copyToCanvas(source, options.maxSide, options.view)
   try {
     return await toJpeg(canvas, options.quality ?? LIVE.snapshotQuality)
   } finally {

@@ -133,7 +133,7 @@ describe('before the camera is on', () => {
 })
 
 describe('with the camera on', () => {
-  it('asks for the back camera at 1280x720, shows the reticle, and locks on a bird after a few frames', async () => {
+  it('asks for the back camera in full HD (zooming in needs the pixels), shows the reticle, and locks on a bird after a few frames', async () => {
     // Slow enough to see the moment before the lock.
     window.localStorage.setItem('birddex:fakeDelay', '150')
     resetEngines()
@@ -142,7 +142,7 @@ describe('with the camera on', () => {
     try {
       fireEvent.click(startKey())
       expect(getUserMedia).toHaveBeenCalledWith({
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
         audio: false,
       })
       await screen.findByTestId('reticle')
@@ -362,5 +362,178 @@ describe('when the camera does not work', () => {
       await vi.advanceTimersByTimeAsync(7000)
     })
     expect(screen.getByText('Kamera nic neukazuje')).toBeTruthy()
+  })
+})
+
+/** A camera that has a zoom of its own (an Android phone). */
+function cameraWithZoom(range: { min: number; max: number }, failing = false) {
+  const applyConstraints = vi.fn(async (constraints: { advanced?: Array<{ zoom?: number }> }) => {
+    if (failing) throw new Error('OverconstrainedError')
+    void constraints
+  })
+  getUserMedia = vi.fn(async () => {
+    const track = { stop: vi.fn(), getCapabilities: () => ({ zoom: range }), getSettings: () => ({}), applyConstraints }
+    tracks.push(track as unknown as FakeTrack)
+    const stream = { getTracks: () => [track], getVideoTracks: () => [track] }
+    streams.push(stream as unknown as (typeof streams)[number])
+    return stream
+  })
+  Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia } })
+  return applyConstraints
+}
+
+const videoElement = () => screen.getByTestId('live-video') as HTMLVideoElement
+const readout = () => screen.getByTestId('zoom-readout').textContent
+
+describe('zoom', () => {
+  it('is a full-screen layer over the device frame, and keeps the page behind it for the camera that is off', async () => {
+    await prepared()
+    const layer = screen.getByTestId('live-view')
+    expect(layer.parentElement).toBe(document.body)
+    expect(layer.className).not.toContain('is-on')
+    const stopCamera = runCamera()
+    try {
+      fireEvent.click(startKey())
+      await screen.findByTestId('reticle')
+      expect(layer.className).toContain('is-on')
+      // The start button and the idle card are gone while the camera is on; the layer has the controls.
+      expect(screen.queryByTestId('live-start')).toBeNull()
+      expect(screen.queryByTestId('live-idle')).toBeNull()
+      expect(screen.getByRole('button', { name: 'Vypnout kameru' })).toBeTruthy()
+      expect(screen.getByTestId('live-touch')).toBeTruthy()
+    } finally {
+      stopCamera()
+    }
+  })
+
+  it('zooms the picture when a number is tapped (no zoom of its own: digital), and shows the zoom', async () => {
+    await prepared()
+    const stopCamera = runCamera()
+    try {
+      fireEvent.click(startKey())
+      await screen.findByTestId('reticle')
+      await screen.findByTestId('zoom-controls')
+      expect(readout()).toBe('1×')
+      expect(screen.getByText('Rozevři dva prsty nebo klepni na číslo a přibliž ptáka.')).toBeTruthy()
+      const steps = within(screen.getByTestId('zoom-controls'))
+        .getAllByRole('button')
+        .map((button) => button.textContent)
+      expect(steps).toEqual(['1×', '2×', '3×', '5×'])
+      expect(screen.getByTestId('live-view').getAttribute('data-zoom-mode')).toBe('digital')
+
+      fireEvent.click(screen.getByTestId('zoom-step-3'))
+      expect(videoElement().style.transform).toBe('translate(0%, 0%) scale(3)')
+      await waitFor(() => expect(readout()).toBe('3×'))
+      expect(screen.getByTestId('live-view').getAttribute('data-zoom')).toBe('3.00')
+      expect(screen.getByTestId('zoom-step-3').getAttribute('aria-pressed')).toBe('true')
+      expect(screen.getByTestId('zoom-step-1').getAttribute('aria-pressed')).toBe('false')
+      // The hint goes away once the picture is zoomed.
+      expect(screen.queryByText('Rozevři dva prsty nebo klepni na číslo a přibliž ptáka.')).toBeNull()
+
+      fireEvent.click(screen.getByTestId('zoom-step-1'))
+      expect(videoElement().style.transform).toBe('')
+      await waitFor(() => expect(readout()).toBe('1×'))
+    } finally {
+      stopCamera()
+    }
+  })
+
+  it('lets go of the lock and switches Catch off at once when the view changes', async () => {
+    window.localStorage.setItem('birddex:fakeDelay', '150')
+    resetEngines()
+    await prepared()
+    const stopCamera = runCamera()
+    try {
+      fireEvent.click(startKey())
+      await waitFor(() => expect(screen.getByTestId('live-view').getAttribute('data-locked')).toBe('true'), { timeout: 3000 })
+      expect(catchKey().disabled).toBe(false)
+      fireEvent.click(await screen.findByTestId('zoom-step-2'))
+      expect(screen.getByTestId('live-view').getAttribute('data-locked')).toBeNull()
+      expect(catchKey().disabled).toBe(true)
+      expect(screen.getByTestId('live-status').textContent).toBe('Hledám ptáka…')
+    } finally {
+      stopCamera()
+    }
+  })
+
+  it('goes back to 1x when the camera is switched off', async () => {
+    await prepared()
+    const stopCamera = runCamera()
+    try {
+      fireEvent.click(startKey())
+      await screen.findByTestId('reticle')
+      fireEvent.click(await screen.findByTestId('zoom-step-5'))
+      expect(videoElement().style.transform).toBe('translate(0%, 0%) scale(5)')
+      fireEvent.click(screen.getByRole('button', { name: 'Vypnout kameru' }))
+      expect(videoElement().style.transform).toBe('')
+      await waitFor(() => expect(startKey().disabled).toBe(false))
+      fireEvent.click(startKey())
+      await screen.findByTestId('reticle')
+      expect(readout()).toBe('1×')
+    } finally {
+      stopCamera()
+    }
+  })
+
+  it('uses the zoom of the camera when it has one: the picture itself stays as it is', async () => {
+    const applyConstraints = cameraWithZoom({ min: 1, max: 8 })
+    await prepared()
+    const stopCamera = runCamera()
+    try {
+      fireEvent.click(startKey())
+      await screen.findByTestId('reticle')
+      await screen.findByTestId('zoom-controls')
+      expect(screen.getByTestId('live-view').getAttribute('data-zoom-mode')).toBe('hardware')
+      const steps = within(screen.getByTestId('zoom-controls'))
+        .getAllByRole('button')
+        .map((button) => button.textContent)
+      expect(steps).toEqual(['1×', '2×', '3×', '5×', '8×'])
+      fireEvent.click(screen.getByTestId('zoom-step-5'))
+      await waitFor(() => expect(applyConstraints).toHaveBeenCalledWith({ advanced: [{ zoom: 5 }] }))
+      expect(videoElement().style.transform).toBe('')
+      await waitFor(() => expect(readout()).toBe('5×'))
+    } finally {
+      stopCamera()
+    }
+  })
+
+  it('zooms the picture instead when the camera refuses its own zoom', async () => {
+    const applyConstraints = cameraWithZoom({ min: 1, max: 8 }, true)
+    await prepared()
+    const stopCamera = runCamera()
+    try {
+      fireEvent.click(startKey())
+      await screen.findByTestId('reticle')
+      fireEvent.click(await screen.findByTestId('zoom-step-3'))
+      await waitFor(() => expect(applyConstraints).toHaveBeenCalled())
+      await waitFor(() => expect(screen.getByTestId('live-view').getAttribute('data-zoom-mode')).toBe('digital'))
+      expect(readout()).toBe('1×')
+      fireEvent.click(await screen.findByTestId('zoom-step-2'))
+      expect(videoElement().style.transform).toBe('translate(0%, 0%) scale(2)')
+    } finally {
+      stopCamera()
+    }
+  })
+
+  it('a pinch on the touch layer zooms, and the zoom stays between 1x and 6x', async () => {
+    await prepared()
+    const stopCamera = runCamera()
+    try {
+      fireEvent.click(startKey())
+      await screen.findByTestId('reticle')
+      const layer = screen.getByTestId('live-touch')
+      // jsdom has no pointer capture; the handlers must not need it.
+      fireEvent.pointerDown(layer, { pointerId: 1, clientX: 150, clientY: 400 })
+      fireEvent.pointerDown(layer, { pointerId: 2, clientX: 250, clientY: 400 })
+      fireEvent.pointerMove(layer, { pointerId: 2, clientX: 450, clientY: 400 })
+      expect(videoElement().style.transform).toBe('translate(0%, 0%) scale(3)')
+      fireEvent.pointerMove(layer, { pointerId: 2, clientX: 2500, clientY: 400 })
+      expect(videoElement().style.transform).toBe('translate(0%, 0%) scale(6)')
+      fireEvent.pointerUp(layer, { pointerId: 2 })
+      fireEvent.pointerUp(layer, { pointerId: 1 })
+      await waitFor(() => expect(readout()).toBe('6×'))
+    } finally {
+      stopCamera()
+    }
   })
 })

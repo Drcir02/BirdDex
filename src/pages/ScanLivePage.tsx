@@ -1,34 +1,27 @@
-// Scan with the live camera: the camera picture with a reticle that locks on a bird, and a Catch button that wakes up then.
+// Scan with the live camera. While the camera is off this is a normal screen with a start button; once it is on, the
+// camera takes the whole phone (LiveOverlay): a big picture with a reticle that locks on a bird, zoom, and a Catch button.
 import { useRef } from 'react'
 import { useDeviceActivity } from '../app/deviceStatus'
 import { ROUTES } from '../app/routes'
-import { displayName, getSpeciesById } from '../data/species'
-import { useSpecies } from '../data/useSpecies'
 import { isPermissionError, scanErrorText, type ScanErrorKind } from '../features/scan/errors'
+import { LiveOverlay } from '../features/scan/LiveOverlay'
 import { ModelBanner } from '../features/scan/ModelBanner'
 import { PermissionHelp } from '../features/scan/PermissionHelp'
-import { MIN_SHOWN_CONFIDENCE } from '../features/scan/pendingBuilders'
 import { useLiveScan } from '../features/scan/useLiveScan'
 import { useModelReadiness } from '../features/scan/useModelReadiness'
 import '../features/scan/scan.css'
-import { formatPercent, t } from '../i18n'
-import { Button, ButtonLink, Icon, Notice, Page, PageHeader, Spinner, cx } from '../ui'
+import { t } from '../i18n'
+import { Button, ButtonLink, Icon, Notice, Page, PageHeader } from '../ui'
 
 export default function ScanLivePage() {
   const readiness = useModelReadiness('live')
   const video = useRef<HTMLVideoElement>(null)
-  const scan = useLiveScan(video)
-  const { species } = useSpecies()
+  const box = useRef<HTMLDivElement>(null)
+  const scan = useLiveScan(video, box)
   const { state } = scan
 
-  const starting = state.phase === 'starting'
-  const running = state.phase === 'running'
-  const cameraOn = starting || running
+  const cameraOn = state.phase === 'starting' || state.phase === 'running'
   const ready = readiness.view.phase === 'ready'
-  const lockedId = state.update?.lockedSpeciesId
-  const first = state.update?.candidates[0]
-  const top = first && first.confidence >= MIN_SHOWN_CONFIDENCE ? first : undefined
-  const topBird = top && species ? getSpeciesById(top.speciesId, species) : undefined
 
   useDeviceActivity(cameraOn ? 'busy' : null)
 
@@ -71,56 +64,23 @@ export default function ScanLivePage() {
         </Notice>
       ) : null}
 
-      <div className={cx('bd-scan-cam', cameraOn && 'is-on')} data-locked={lockedId ? 'true' : undefined} data-testid="live-view" data-phase={state.phase}>
-        <video ref={video} className="bd-scan-cam__video" playsInline muted aria-label={t('scan.live.previewLabel')} data-testid="live-video" />
-
-        {!cameraOn ? (
-          <div className="bd-scan-cam__idle">
-            <Icon name="live" size={56} />
-            <p>{t('scan.live.hint')}</p>
+      {!cameraOn ? (
+        <>
+          <div className="bd-scan-cam" data-testid="live-idle">
+            <div className="bd-scan-cam__idle">
+              <Icon name="live" size={56} />
+              <p>{t('scan.live.hint')}</p>
+            </div>
           </div>
-        ) : (
-          <>
-            <div className="bd-scan-reticle" aria-hidden="true" data-testid="reticle">
-              <i />
-              <i />
-              <i />
-              <i />
-            </div>
-            <div className="bd-scan-cam__info" role="status" data-testid="live-info">
-              <span className={cx('bd-scan-cam__status', lockedId && 'is-locked')} data-testid="live-status">
-                {lockedId ? t('scan.live.locked') : starting ? t('scan.live.starting') : t('scan.live.searching')}
-              </span>
-              {top ? (
-                <span className="bd-scan-cam__guess" data-testid="live-guess">
-                  <span className="bd-scan-cam__name">{topBird ? displayName(topBird) : '…'}</span>
-                  <span className="bd-scan-cam__percent">{formatPercent(top.confidence)}</span>
-                </span>
-              ) : (
-                <span className="bd-scan-cam__aim">{starting ? <Spinner size="sm" label={null} /> : t('scan.live.aim')}</span>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+          <div className="bd-scan-actions">
+            <Button size="lg" icon="live" fullWidth disabled={!ready} onClick={scan.start} data-testid="live-start">
+              {t('scan.live.start')}
+            </Button>
+          </div>
+        </>
+      ) : null}
 
-      <div className="bd-scan-actions">
-        {cameraOn ? (
-          <>
-            <Button size="lg" icon="check" fullWidth disabled={!scan.canCatch} busy={state.catching} onClick={scan.catchNow} data-testid="live-catch">
-              {t('scan.live.catch')}
-            </Button>
-            {!lockedId ? <p className="bd-scan-note bd-scan-note--center">{t('scan.live.catchWait')}</p> : null}
-            <Button variant="secondary" icon="close" onClick={scan.stop}>
-              {t('scan.live.stop')}
-            </Button>
-          </>
-        ) : (
-          <Button size="lg" icon="live" fullWidth disabled={!ready} onClick={scan.start} data-testid="live-start">
-            {t('scan.live.start')}
-          </Button>
-        )}
-      </div>
+      <LiveOverlay scan={scan} video={video} box={box} />
     </Page>
   )
 }

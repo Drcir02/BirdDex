@@ -76,9 +76,17 @@ export interface LiveUpdate {
   framesPerSecond: number
 }
 
+/** A part of the camera picture, as fractions (0 to 1) of the width and height of the whole frame. */
+export interface FrameView {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
 export interface LiveSession {
   stop(): void
-  /** A JPEG of the current frame, to save with the catch. */
+  /** A JPEG of the current frame (the zoomed part of it, when the view is zoomed), to save with the catch. */
   snapshot(): Promise<Blob>
 }
 
@@ -94,6 +102,12 @@ export interface LiveScanner {
        * The session has stopped by then. (Added by the live scanner.)
        */
       onError?: (error: unknown) => void
+      /**
+       * Optional. Asked before every frame is analysed and when a snapshot is taken: the part of the camera picture that is
+       * on the screen when the person has zoomed in (digital zoom). Undefined means the whole picture. When the answer
+       * changes, the scanner forgets what it has seen so far.
+       */
+      getView?: () => FrameView | undefined
     },
   ): Promise<LiveSession>
 }

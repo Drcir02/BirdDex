@@ -8,16 +8,26 @@
 //   scan.state.phase, scan.state.update ...
 //   scan.catchNow()                    // snapshot + pending identification + the result screen
 
-import { useCallback, useEffect, useReducer, useRef, type RefObject } from 'react'
+import { useCallback, useEffect, useReducer, useRef, useState, useSyncExternalStore, type RefObject } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ROUTES } from '../../app/routes'
 import type { LiveSession, LiveUpdate } from '../../domain/engines'
 import { getEngines } from '../../ml/engines'
 import { setPending } from '../../state/pending'
 import { classifyScanError } from './errors'
-import { canCatchLive, INITIAL_LIVE_STATE, liveReducer, StallWatch, type LiveScanState } from './liveScan'
+import { canCatchLive, INITIAL_LIVE_STATE, liveReducer, StallWatch, withoutLock, type LiveScanState } from './liveScan'
 import { buildLivePending } from './pendingBuilders'
 import { knownLocation, locationForCatch, warmLocation, warmLocationIfAllowed } from './scanLocation'
+import { ZoomController, type ZoomState } from './zoomController'
+import { createZoomGestures, type ZoomGestures } from './zoomGestures'
+import type { Size } from './zoomMath'
+
+/** What the screen needs to let the person zoom: the state for the buttons, and the handlers for the touch layer. */
+export interface LiveZoom {
+  state: ZoomState
+  setZoom: (zoom: number) => void
+  gestures: ZoomGestures
+}
 
 export interface LiveScan {
   state: LiveScanState
@@ -26,6 +36,7 @@ export interface LiveScan {
   /** Switches the camera off and goes back to the start button. */
   stop: () => void
   catchNow: () => void
+  zoom: LiveZoom
 }
 
 type FrameVideo = HTMLVideoElement & { requestVideoFrameCallback?: (callback: () => void) => number; cancelVideoFrameCallback?: (handle: number) => void }
@@ -33,12 +44,19 @@ type FrameVideo = HTMLVideoElement & { requestVideoFrameCallback?: (callback: ()
 const POLL_MS = 250
 const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now())
 
+// Full HD, not 1280x720: zooming in digitally cuts a part out of the picture, and a bird that is far away needs the pixels.
 export const CAMERA_CONSTRAINTS: MediaStreamConstraints = {
-  video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
+  video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
   audio: false,
 }
 
-export function useLiveScan(videoRef: RefObject<HTMLVideoElement | null>): LiveScan {
+function sizeOf(element: Element | null | undefined): Size | undefined {
+  const rect = element?.getBoundingClientRect()
+  return rect && rect.width > 0 && rect.height > 0 ? { width: rect.width, height: rect.height } : undefined
+}
+
+/** `boxRef` is the box the picture is shown in (the whole screen); without it the video element itself is measured. */
+export function useLiveScan(videoRef: RefObject<HTMLVideoElement | null>, boxRef?: RefObject<HTMLElement | null>): LiveScan {
   const navigate = useNavigate()
   const [state, dispatch] = useReducer(liveReducer, INITIAL_LIVE_STATE)
 
@@ -51,6 +69,28 @@ export function useLiveScan(videoRef: RefObject<HTMLVideoElement | null>): LiveS
   const lastUpdate = useRef<LiveUpdate | undefined>(undefined)
   const poll = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
   const frameLoop = useRef<{ stop: () => void } | undefined>(undefined)
+
+  const [zoomController] = useState(
+    () =>
+      new ZoomController({
+        applyTransform: (transform) => {
+          const video = videoRef.current
+          if (video) video.style.transform = transform === 'none' ? '' : transform
+        },
+        boxSize: () => sizeOf(boxRef?.current ?? videoRef.current),
+        frameSize: () => {
+          const video = videoRef.current
+          return video && video.videoWidth > 0 && video.videoHeight > 0 ? { width: video.videoWidth, height: video.videoHeight } : undefined
+        },
+        onViewChange: () => {
+          // A lock on a bird belongs to what was on the screen before: let go of it at once, also for the Catch button.
+          if (lastUpdate.current?.lockedSpeciesId !== undefined) lastUpdate.current = withoutLock(lastUpdate.current)
+          dispatch({ type: 'viewChanged' })
+        },
+      }),
+  )
+  const [gestures] = useState(() => createZoomGestures(zoomController))
+  const zoomState = useSyncExternalStore(zoomController.subscribe, zoomController.getState)
 
   /** Switches the scanner, the camera and the video off. Safe to call at any time and many times. */
   const teardown = useCallback(() => {
@@ -68,6 +108,7 @@ export function useLiveScan(videoRef: RefObject<HTMLVideoElement | null>): LiveS
     }
     stream.current?.getTracks().forEach((track) => track.stop())
     stream.current = undefined
+    zoomController.detach()
     const video = videoRef.current
     if (video) {
       video.pause()
@@ -76,7 +117,7 @@ export function useLiveScan(videoRef: RefObject<HTMLVideoElement | null>): LiveS
     lastUpdate.current = undefined
     busy.current = false
     catching.current = false
-  }, [videoRef])
+  }, [videoRef, zoomController])
 
   const start = useCallback(() => {
     if (busy.current) return
@@ -97,6 +138,7 @@ export function useLiveScan(videoRef: RefObject<HTMLVideoElement | null>): LiveS
           return
         }
         stream.current = opened
+        zoomController.attach(opened.getVideoTracks?.()[0] ?? opened.getTracks()[0])
         // The camera question has been answered with yes: now is the time for the location question, so the two never compete.
         warmLocation()
         video.srcObject = opened
@@ -139,6 +181,7 @@ export function useLiveScan(videoRef: RefObject<HTMLVideoElement | null>): LiveS
         const scanner = await getEngines().live.start(video, {
           location: knownLocation(),
           date: new Date(),
+          getView: zoomController.getView,
           onUpdate: (update) => {
             if (!current()) return
             lastUpdate.current = update
@@ -161,7 +204,7 @@ export function useLiveScan(videoRef: RefObject<HTMLVideoElement | null>): LiveS
         dispatch({ type: 'failed', error: classifyScanError(error, 'camera') })
       }
     })()
-  }, [teardown, videoRef])
+  }, [teardown, videoRef, zoomController])
 
   const stop = useCallback(() => {
     teardown()
@@ -213,5 +256,7 @@ export function useLiveScan(videoRef: RefObject<HTMLVideoElement | null>): LiveS
     }
   }, [teardown])
 
-  return { state, canCatch: canCatchLive(state), start, stop, catchNow }
+  const setZoom = useCallback((zoom: number) => zoomController.setZoom(zoom), [zoomController])
+
+  return { state, canCatch: canCatchLive(state), start, stop, catchNow, zoom: { state: zoomState, setZoom, gestures } }
 }

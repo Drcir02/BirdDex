@@ -12,12 +12,12 @@
 // progress bar for the download, otherwise start() loads the model itself and takes its time. The guesses of the last
 // five frames are averaged, and a bird is locked when the same one has led for three frames in a row (liveLogic.ts).
 
-import type { ImageSource, LiveScanner, LiveSession, LiveUpdate } from '../../domain/engines'
+import type { FrameView, ImageSource, LiveScanner, LiveSession, LiveUpdate } from '../../domain/engines'
 import type { Candidate } from '../../domain/types'
 import type { VisionFrame } from './core'
 import { LIVE } from './constants'
 import { canvasToJpeg, copyToCanvas, grabLiveFrame, snapshotJpeg } from './frame'
-import { Average, LiveTracker, nextDelayMs } from './liveLogic'
+import { Average, LiveTracker, nextDelayMs, sameView } from './liveLogic'
 import { resolveLogWeights } from './prior'
 import { getVisionRuntime, type VisionRuntime } from './runtime'
 
@@ -26,12 +26,12 @@ export type LiveStartOptions = Parameters<LiveScanner['start']>[1]
 
 export interface LiveScannerDeps {
   runtime?: VisionRuntime
-  /** Reads a frame of the video as pixels. Default: grabLiveFrame. */
-  grab?: (video: HTMLVideoElement) => VisionFrame
-  /** A JPEG of a picture. Default: snapshotJpeg. */
-  snapshot?: (source: ImageSource) => Promise<Blob>
+  /** Reads a frame of the video as pixels (only the zoomed part of it when there is a view). Default: grabLiveFrame. */
+  grab?: (video: HTMLVideoElement, view?: FrameView) => VisionFrame
+  /** A JPEG of a picture (only the zoomed part of it when there is a view). Default: snapshotJpeg. */
+  snapshot?: (source: ImageSource, view?: FrameView) => Promise<Blob>
   /** Copies the picture for later (after stop). Default: copyToCanvas; the result is turned into a JPEG by `encode`. */
-  keep?: (source: ImageSource) => unknown
+  keep?: (source: ImageSource, view?: FrameView) => unknown
   encode?: (kept: unknown) => Promise<Blob>
   now?: () => number
   setTimer?: (callback: () => void, ms: number) => unknown
@@ -55,8 +55,8 @@ export function createLiveScanner(deps: LiveScannerDeps = {}): LiveScanner {
   const setTimer = deps.setTimer ?? ((callback, ms) => setTimeout(callback, ms))
   const clearTimer = deps.clearTimer ?? ((handle) => clearTimeout(handle as ReturnType<typeof setTimeout>))
   const grab = deps.grab ?? grabLiveFrame
-  const takeSnapshot = deps.snapshot ?? snapshotJpeg
-  const keep = deps.keep ?? ((source: ImageSource) => copyToCanvas(source))
+  const takeSnapshot = deps.snapshot ?? ((source: ImageSource, view?: FrameView) => snapshotJpeg(source, view ? { view } : {}))
+  const keep = deps.keep ?? ((source: ImageSource, view?: FrameView) => copyToCanvas(source, undefined, view))
   const encode = deps.encode ?? ((kept: unknown) => canvasToJpeg(kept as HTMLCanvasElement))
   const isHidden = deps.isHidden ?? (() => typeof document !== 'undefined' && document.hidden)
 
@@ -83,6 +83,16 @@ export function createLiveScanner(deps: LiveScannerDeps = {}): LiveScanner {
       let failures = 0
       let lastTime = Number.NaN
       let kept: unknown
+      // The zoomed part of the picture, as the screen asks for it. When it changes, what was seen before belongs to another
+      // scene: the average and the lock start again, and an analysis that was already running is dropped when it comes back.
+      let lastView: FrameView | undefined
+      const readView = (): FrameView | undefined => {
+        try {
+          return options.getView?.()
+        } catch {
+          return undefined
+        }
+      }
       const duration = new Average(0.4)
       const period = new Average(0.4)
       let lastDone: number | undefined
@@ -95,7 +105,7 @@ export function createLiveScanner(deps: LiveScannerDeps = {}): LiveScanner {
         // Keep the last picture so snapshot() still works after the screen has switched the camera off.
         if (kept === undefined && videoHasPicture(video)) {
           try {
-            kept = keep(video)
+            kept = keep(video, readView())
           } catch {
             // No picture to keep: snapshot() will say so.
           }
@@ -152,9 +162,15 @@ export function createLiveScanner(deps: LiveScannerDeps = {}): LiveScanner {
         }
         lastTime = time
 
+        const view = readView()
+        if (!sameView(view, lastView)) {
+          lastView = view
+          tracker.reset()
+        }
+
         let frame: VisionFrame
         try {
-          frame = grab(video)
+          frame = grab(video, view)
         } catch {
           schedule(WAIT_MS)
           return
@@ -178,6 +194,12 @@ export function createLiveScanner(deps: LiveScannerDeps = {}): LiveScanner {
           (scores) => {
             if (stopped) return
             const doneAt = now()
+            if (!sameView(readView(), view)) {
+              // The view changed while this frame was being analysed: its answer is about something else now.
+              failures = 0
+              schedule(nextDelayMs(startedAt, doneAt, duration.add(doneAt - startedAt)))
+              return
+            }
             let took: number
             try {
               took = emit(scores, startedAt, doneAt)
@@ -199,7 +221,7 @@ export function createLiveScanner(deps: LiveScannerDeps = {}): LiveScanner {
       return {
         stop: finish,
         async snapshot() {
-          if (!stopped && videoHasPicture(video)) return takeSnapshot(video)
+          if (!stopped && videoHasPicture(video)) return takeSnapshot(video, readView())
           if (kept !== undefined) return encode(kept)
           throw new Error('The camera has no picture to save yet')
         },

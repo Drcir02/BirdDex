@@ -6,8 +6,20 @@
 // five frames). The scanner locks on a species when it has been the strongest for `lockFrames` frames in a row with a smoothed
 // confidence above `lockConfidence`. A lock is held with some hysteresis, so one blurry frame does not drop it.
 
+import type { FrameView } from '../../domain/engines'
 import { LIVE } from './constants'
 import { isNotABird, topIndices } from './scoring'
+
+/** True when two views of the camera picture (the zoomed part, or undefined for all of it) show practically the same part. */
+export function sameView(a: FrameView | undefined, b: FrameView | undefined, tolerance = 0.004): boolean {
+  if (a === undefined || b === undefined) return a === b
+  return (
+    Math.abs(a.x - b.x) <= tolerance &&
+    Math.abs(a.y - b.y) <= tolerance &&
+    Math.abs(a.width - b.width) <= tolerance &&
+    Math.abs(a.height - b.height) <= tolerance
+  )
+}
 
 export interface LiveTrackerOptions {
   smoothingFrames?: number

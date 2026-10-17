@@ -31,7 +31,15 @@ export type LiveAction =
   | { type: 'failed'; error: ScanErrorKind }
   | { type: 'catching' }
   | { type: 'catchFailed' }
+  /** The person zoomed or moved the view: a lock on a bird belongs to what was on the screen before. */
+  | { type: 'viewChanged' }
   | { type: 'reset' }
+
+/** The same answer without the lock. */
+export function withoutLock(update: LiveUpdate): LiveUpdate {
+  const { lockedSpeciesId: _locked, ...rest } = update
+  return rest
+}
 
 export function liveReducer(state: LiveScanState, action: LiveAction): LiveScanState {
   switch (action.type) {
@@ -52,6 +60,8 @@ export function liveReducer(state: LiveScanState, action: LiveAction): LiveScanS
       return state.phase === 'running' ? { ...state, catching: true, snapshotFailed: false } : state
     case 'catchFailed':
       return { ...state, catching: false, snapshotFailed: true }
+    case 'viewChanged':
+      return state.update?.lockedSpeciesId !== undefined ? { ...state, update: withoutLock(state.update) } : state
     case 'reset':
       return INITIAL_LIVE_STATE
   }

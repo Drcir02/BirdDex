@@ -114,6 +114,11 @@ export const scan = {
     catchWait: 'Tlačítko se odemkne, až ptáka zaměřím.',
     reticle: 'Zaměřovač',
     previewLabel: 'Obraz z kamery',
+    zoom: {
+      label: 'Přiblížení',
+      hint: 'Rozevři dva prsty nebo klepni na číslo a přibliž ptáka.',
+      step: 'Přiblížení {zoom}',
+    },
     snapshotFailed: 'Snímek se nepovedl. Zkus to ještě jednou.',
     paused: 'Kamera se vypnula, když aplikace zmizela z obrazovky. Zapni ji znovu.',
     stalled: {

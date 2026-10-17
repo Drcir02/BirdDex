@@ -12,6 +12,7 @@ the app, both engines, all screens, settings, welcome, credits, the update banne
 ## 2. Expect fixes from the phone test
 
 - Camera in home-screen mode (stall, permission), microphone permission and the AudioContext unlock on iOS.
+- Live camera full screen and zoom (`docs/notes/live-zoom.md`): pinch smoothness and sharpness at 5x on a real iPhone (digital zoom), and the camera's own zoom on Android.
 - Memory and speed of the models on real hardware; WebGPU for WingCLIP is untested (`docs/notes/photo-engine.md`).
 - Storage persistence on iOS; the download resume after a lost connection.
 - Share sheet for the backup file; update banner when a new version is deployed while the app is open.

@@ -41,3 +41,9 @@ export function describePlace(location: GeoPoint | undefined, placeName?: string
   if (location && Number.isFinite(location.lat) && Number.isFinite(location.lon)) return { kind: 'coordinates', text: formatCoordinates(location) }
   return { kind: 'unknown', text: t('result.meta.unknownPlace') }
 }
+
+/** 1 becomes "1×", 2.45 becomes "2,5×": one decimal at most, with a comma, and no ",0". */
+export function formatZoom(zoom: number): string {
+  if (!Number.isFinite(zoom) || zoom <= 0) return '1×'
+  return `${formatNumber(Math.round(zoom * 10) / 10)}×`
+}
