@@ -1,7 +1,6 @@
-# HOW TO SWITCH THIS ON (one time, 1 minute): on GitHub open the repo, Add file, Create new file, type the name
-# .github/workflows/pages.yml and paste this whole file, then Commit. After that open Settings, Pages, and set
-# Source to "GitHub Actions". From then on every push to main builds the app, downloads the bird models, and publishes it.
-# The file lives in deploy/ instead of .github/ because the Claude GitHub App is not allowed to push workflow files.
+# Builds BirdDex and publishes it on GitHub Pages whenever main changes (or on demand: Actions, Build and deploy, Run workflow).
+# One-time switch in the repo settings: Settings, Pages, Source = "GitHub Actions".
+# This file is the same as .github/workflows/pages.yml. Keep the two identical: the copy in deploy/ is the one the Claude GitHub App can edit.
 name: Build and deploy
 
 on:
