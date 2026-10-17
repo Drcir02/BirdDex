@@ -100,6 +100,28 @@ export function scoreSpecies(sims: Float32Array, dexRows: ArrayLike<number>, dex
   return { probs, outsideMass: Math.max(0, 1 - inside) }
 }
 
+/**
+ * How sure the plain model is about the most likely species outside the Dex: the largest probability of a non-Dex row in the
+ * softmax over all rows with no penalty and no prior. This is the model's own opinion, before the Dex is allowed to win.
+ * High (0.35 and up is where the normal Catch rule stops) means that the picture probably shows a bird we do not have: an
+ * American woodpecker or gull reaches 0.8 to 0.9. It is not a clean detector of look-alikes: the right Great Cormorant reads
+ * 0.27 because of its American cousins, as much as a Palm Warbler (0.28) that the penalised softmax calls a Water Pipit.
+ */
+export function outsideDexTop(sims: Float32Array, dexMask: Uint8Array, temperature: number = CALIBRATION.temperature): number {
+  let max = -Infinity
+  for (let r = 0; r < sims.length; r++) if (sims[r] > max) max = sims[r]
+  if (!Number.isFinite(max)) return 0
+  let total = 0
+  let best = 0
+  for (let r = 0; r < sims.length; r++) {
+    const e = Math.exp((sims[r] - max) / temperature)
+    total += e
+    if (!dexMask[r] && e > best) best = e
+  }
+  const share = best / total
+  return Number.isFinite(share) ? share : 0
+}
+
 /** Indexes of the k largest values, strongest first. Equal values keep their order. */
 export function topIndices(values: ArrayLike<number>, k: number): number[] {
   const best: number[] = []

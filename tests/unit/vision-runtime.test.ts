@@ -10,7 +10,7 @@ import { makeSpecies } from './helpers/vision-fixtures'
 const info: InitInfo = { build: 'wasm', ortVersion: 'test', initMs: 5, dexSize: 3 }
 
 function scores(): VisionScores {
-  return { pBird: 0.9, pRaw: 0.8, probs: Float32Array.from([0.5, 0.3, 0.1]), outsideMass: 0.1, bestSimilarity: 0.5, bestDexSimilarity: 0.5, blank: false, timings: { preprocessMs: 1, inferMs: 2, scoreMs: 3 } }
+  return { pBird: 0.9, pRaw: 0.8, probs: Float32Array.from([0.5, 0.3, 0.1]), outsideMass: 0.1, outsideTop: 0.05, bestSimilarity: 0.5, bestDexSimilarity: 0.5, blank: false, timings: { preprocessMs: 1, inferMs: 2, scoreMs: 3 } }
 }
 
 function frame(): VisionFrame {

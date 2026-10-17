@@ -128,6 +128,21 @@ async function hear(seconds: number, rms = 0.05): Promise<void> {
   }
 }
 
+/** Pushes `seconds` of flat white noise (a hiss), in 0.1 second blocks. */
+async function hearHiss(seconds: number): Promise<void> {
+  let state = 12345
+  const uniform = () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0
+    return state / 4294967296
+  }
+  for (let block = 0; block < seconds * 10; block++) {
+    const samples = new Float32Array(4800)
+    for (let i = 0; i < samples.length; i++) samples[i] = (uniform() - 0.5) * 0.1
+    world.handlers!.onBlock(samples, 0.03, 0.05, 48000)
+    await tick()
+  }
+}
+
 /** A model that is sure about one species in every window. */
 const sure = (index: number, score = 0.9) => () => {
   const scores = new Float32Array(6522)
@@ -246,6 +261,27 @@ describe('start', () => {
     expect(world.captureStop).toHaveBeenCalledTimes(1)
     expect(await session.stop()).toBe(result) // asking again gives the same answer, no second release
     expect(world.captureStop).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not even ask the model about a window that is only hiss, so noise cannot become a woodpecker', async () => {
+    world.scoresFor = sure(10, 0.57) // what BirdNET really answers for flat noise
+    await engine.prepare()
+    const session = await engine.start({ onUpdate })
+    await hearHiss(6.5)
+    expect(world.modelCalls).toBe(0)
+    expect(updates.at(-1)!.hearingBird).toBe(false)
+    expect(updates.at(-1)!.analysedSeconds).toBeGreaterThan(3) // the windows were looked at, they just had nothing in them
+    expect((await session.stop()).candidates).toEqual([])
+  })
+
+  it('asks the model about the hiss when the check is switched off', async () => {
+    world.scoresFor = sure(10, 0.57)
+    engine = createSoundEngine({ flatLimit: Infinity })
+    await engine.prepare()
+    const session = await engine.start({ onUpdate })
+    await hearHiss(5.5)
+    expect(world.modelCalls).toBeGreaterThan(0)
+    await session.stop()
   })
 
   it('never reports birds that are not in the Dex', async () => {

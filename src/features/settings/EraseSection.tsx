@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { clearPhotoCache, deleteAllCatches, useCaughtSummary } from '../../db'
 import { t } from '../../i18n'
+import { catchesText } from './backupFlow'
 import { Button, ConfirmDialog, LcdPanel, useToast } from '../../ui'
 import { forgetAllThumbnails } from '../dex/thumbnails'
 import { forgetBackup } from './backupReminder'
@@ -49,7 +50,7 @@ export function EraseSection({ onErased }: EraseSectionProps) {
         open={step === 'first'}
         tone="danger"
         title={t('settings.erase.firstTitle')}
-        message={<p>{t('settings.erase.firstMessage', { count: catchCount })}</p>}
+        message={<p>{t('settings.erase.firstMessage', { catches: catchesText(catchCount) })}</p>}
         confirmLabel={t('settings.erase.firstConfirm')}
         onConfirm={() => setStep('second')}
         onCancel={() => setStep('idle')}

@@ -110,21 +110,21 @@ describe('the backup flow', () => {
   it('summarises a restore, most important line first', () => {
     const lines = importSummaryLines({ total: 30, added: 28, skipped: 2, mediaAdded: 26, mediaMissing: 2 })
     expect(lines).toEqual([
-      'Přidáno 28 nálezů z 30.',
+      'Přidáno 28 úlovků z 30.',
       '2 už v telefonu bylo a zůstalo, jak bylo.',
       'Fotek a nahrávek: 26.',
-      '2 nálezů se obnovilo bez fotky nebo nahrávky, protože je záloha neobsahovala.',
+      'Bez fotky nebo nahrávky se obnovilo: 2 úlovky. Záloha je neobsahovala.',
     ])
   })
 
   it('uses the right Czech plural and leaves out lines that do not apply', () => {
-    expect(importSummaryLines({ total: 1, added: 1, skipped: 0, mediaAdded: 0, mediaMissing: 0 })).toEqual(['Přidáno 1 nález z 1.'])
-    expect(importSummaryLines({ total: 3, added: 3, skipped: 0, mediaAdded: 0, mediaMissing: 0 })).toEqual(['Přidáno 3 nálezy z 3.'])
+    expect(importSummaryLines({ total: 1, added: 1, skipped: 0, mediaAdded: 0, mediaMissing: 0 })).toEqual(['Přidáno 1 úlovek z 1.'])
+    expect(importSummaryLines({ total: 3, added: 3, skipped: 0, mediaAdded: 0, mediaMissing: 0 })).toEqual(['Přidáno 3 úlovky z 3.'])
   })
 
   it('says so when there was nothing new', () => {
     expect(importSummaryLines({ total: 30, added: 0, skipped: 30, mediaAdded: 0, mediaMissing: 0 })).toEqual([
-      'Všechny nálezy z téhle zálohy už v telefonu jsou. Nic se nezměnilo.',
+      'Všechny úlovky z téhle zálohy už v telefonu jsou. Nic se nezměnilo.',
     ])
   })
 
@@ -134,7 +134,7 @@ describe('the backup flow', () => {
     expect(importErrorText(new BackupError('too-new', 'x'))).toContain('novější verze')
     expect(importErrorText(new BackupError('malformed', 'x'))).toContain('poškozená')
     expect(importErrorText(new BackupError('storage-full', 'x'))).toContain('došlo místo')
-    expect(importErrorText(new BackupError('storage-full', 'x', { report: { total: 9, added: 4, skipped: 0, mediaAdded: 4, mediaMissing: 0 } }))).toContain('Obnoveno bylo 4 nálezů')
+    expect(importErrorText(new BackupError('storage-full', 'x', { report: { total: 9, added: 4, skipped: 0, mediaAdded: 4, mediaMissing: 0 } }))).toContain('Obnoveno: 4 úlovky.')
     expect(importErrorText(new Error('boom'))).toContain('Zkus to prosím ještě jednou')
   })
 
@@ -144,9 +144,10 @@ describe('the backup flow', () => {
   })
 
   it('writes a count of catches with the right plural', () => {
-    expect(catchesText(1)).toBe('1 nález')
-    expect(catchesText(2)).toBe('2 nálezy')
-    expect(catchesText(5)).toBe('5 nálezů')
+    expect(catchesText(1)).toBe('1 úlovek')
+    expect(catchesText(2)).toBe('2 úlovky')
+    expect(catchesText(5)).toBe('5 úlovků')
+    expect(catchesText(0)).toBe('0 úlovků')
   })
 })
 

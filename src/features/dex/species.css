@@ -547,3 +547,20 @@
     opacity: 0;
   }
 }
+
+/* A phone lying on its side: the picture fills the whole width of its panel at a fixed height, instead of a 4:3 box that
+   shrinks to a strip with an empty dark panel beside it. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .bd-spphoto__screen {
+    aspect-ratio: auto;
+    width: 100%;
+    height: max(190px, 56vh);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .bd-spphoto__sil {
+    width: auto;
+    height: 84%;
+  }
+}

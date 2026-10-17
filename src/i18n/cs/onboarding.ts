@@ -27,8 +27,8 @@ export const onboarding = {
   device: {
     title: 'Stáhne se jen jednou',
     download: 'Při prvním skenování si {appName} stáhne „ptačí mozek“, asi {size} MB. Nejlíp to udělej přes Wi-Fi. Potom funguje i bez internetu.',
-    local: 'Rozpoznávání běží přímo v tvém telefonu. Fotky, nahrávky ani poloha ho neopouštějí.',
-    noTracking: 'Žádné účty, žádná reklama, žádné sledování. Z internetu se kromě mozku dotahují jen ukázkové fotky ptáků z Wikipedie a název místa.',
+    local: 'Rozpoznávání běží přímo v tvém telefonu. Fotky a nahrávky z něj nikam neodcházejí.',
+    noTracking: 'Žádné účty, žádná reklama, žádné sledování. Z internetu se kromě mozku dotahují jen ukázkové fotky ptáků z Wikipedie. Název místa se zjišťuje jen při chycení ptáka: do OpenStreetMap se pošle poloha zaokrouhlená na asi 1 km.',
   },
 
   permissions: {
@@ -39,7 +39,7 @@ export const onboarding = {
     camera: 'Fotoaparát',
     cameraWhy: 'Pro focení ptáků a živý záběr. Obraz se nikam neposílá.',
     location: 'Poloha',
-    locationWhy: 'Uloží místo úlovku a pomůže odhadnout, kteří ptáci tam právě žijí. Zůstává v telefonu.',
+    locationWhy: 'Uloží místo úlovku a pomůže odhadnout, kteří ptáci tam právě žijí. Poloha se ukládá jen v telefonu. Jen když něco chytíš, pošle se zaokrouhlená poloha (asi 1 km) do OpenStreetMap, aby se zjistil název místa.',
     allow: 'Povolit',
     granted: 'Povoleno',
     denied: 'Zablokováno. Povolit to jde později v nastavení prohlížeče nebo telefonu.',

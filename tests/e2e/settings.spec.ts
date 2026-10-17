@@ -33,6 +33,9 @@ test('sound effects can be switched and the links work', async ({ page }) => {
   await page.getByTestId('link-about').click()
   await expect(page).toHaveURL(/#\/about$/)
   await page.goBack()
+  // The phone test page is for testers: its link appears after seven taps on the version line.
+  await expect(page.getByTestId('link-field-check')).toHaveCount(0)
+  for (let tap = 0; tap < 7; tap += 1) await page.getByTestId('app-version').click()
   await page.getByTestId('link-field-check').click()
   await expect(page).toHaveURL(/#\/field-check$/)
 })

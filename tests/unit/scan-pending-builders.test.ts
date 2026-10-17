@@ -106,3 +106,19 @@ describe('buildLivePending', () => {
     expect(pending.createdAt).toBeLessThanOrEqual(Date.now())
   })
 })
+
+describe('the numbers about the picture', () => {
+  it('copies pBird and outsideDexTop of a photo and of a live update onto the pending identification', () => {
+    const photo = buildPhotoPending({ candidates: [guess('anas-platyrhynchos', 0.9)], pBird: 0.93, outsideDexTop: 0.31 }, new Blob(['x']), undefined)
+    expect(photo).toMatchObject({ pBird: 0.93, outsideDexTop: 0.31 })
+    const live = buildLivePending({ candidates: [guess('anas-platyrhynchos', 0.9)], pBird: 0.97, outsideDexTop: 0.02 }, new Blob(['x']), undefined)
+    expect(live).toMatchObject({ pBird: 0.97, outsideDexTop: 0.02 })
+  })
+
+  it('leaves them out when the engine gave none or a broken number (fakes), and for sound', () => {
+    const plain = buildPhotoPending({ candidates: [guess('anas-platyrhynchos', 0.9)], pBird: Number.NaN }, new Blob(['x']), undefined)
+    expect('pBird' in plain).toBe(false)
+    expect('outsideDexTop' in plain).toBe(false)
+    expect('pBird' in buildSoundPending({ candidates: [guess('anas-platyrhynchos', 0.9)] }, undefined)).toBe(false)
+  })
+})

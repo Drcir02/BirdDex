@@ -4,6 +4,7 @@ import { useSpecies } from '../../data/useSpecies'
 import { getDb, useLiveQuery } from '../../db'
 import type { CatchRecord, CatchMethod } from '../../domain/types'
 import { formatDate, formatPercent, plural, t } from '../../i18n'
+import { catchesText } from './backupFlow'
 import { ButtonLink, Chip, Icon, LcdPanel, Spinner } from '../../ui'
 import { computeTrainerStats, type RegionProgress } from './stats'
 import './settings.css'
@@ -83,7 +84,7 @@ function CardBody({ catches, species }: { catches: readonly CatchRecord[]; speci
         <div>
           <p>{t('settings.trainer.species')}</p>
           <p className="bd-set-trainer__sub" data-testid="stat-catches">
-            {t('settings.trainer.speciesDetail', { catches: stats.totalCatches })}
+            {t('settings.trainer.speciesDetail', { catches: catchesText(stats.totalCatches) })}
           </p>
         </div>
       </div>

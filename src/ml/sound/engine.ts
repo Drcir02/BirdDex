@@ -16,6 +16,8 @@ import type { ProgressCallback, SoundEngine, SoundSession } from '../../domain/e
 import type { ModelProgress } from '../../domain/types'
 import { loadSpecies } from '../../data/species'
 import { SoundCaptureError, startCapture, type CaptureSettings } from '../audio/capture'
+import { FLAT_LIMIT, isOnlyHiss } from '../audio/flatness'
+import { TARGET_SAMPLE_RATE } from '../audio/resample'
 import { getModelBytes, getModelManifest, ensureModels, MODEL_FILE_IDS } from '../runtime/modelStore'
 import { AGGREGATE_DEFAULTS, type AggregateOptions, type WindowScores } from './aggregate'
 import { createGeoPrior, GEO_MIN_SPECIES, GEO_THRESHOLD, type GeoPrior } from './geo'
@@ -55,6 +57,8 @@ export interface SoundEngineOptions {
   aggregate?: Partial<AggregateOptions>
   /** Seconds after which a scan stops by itself. */
   maxScanSeconds?: number
+  /** Windows whose spectrum is flatter than this are only hiss and are not analysed (flatness.ts). Infinity switches the check off. */
+  flatLimit?: number
 }
 
 /** The engine, plus a way to free its memory (tests and the developer page use it; screens need not). */
@@ -203,6 +207,8 @@ export function createSoundEngine(options: SoundEngineOptions = {}): DisposableS
       lookupPromise.catch(() => undefined) // a failed start is reported through readyPromise; this copy must not be "unhandled"
 
       const analyse = async (window: Float32Array, end: number): Promise<WindowScores> => {
+        // BirdNET hears a woodpecker in flat noise at any loudness (0.55), the same score as a faint real bird: skip such windows.
+        if (isOnlyHiss(window, TARGET_SAMPLE_RATE, options.flatLimit ?? FLAT_LIMIT)) return { end, top: [] }
         const [{ scorer }, lookup] = await Promise.all([readyPromise, lookupPromise])
         const scores = await scorer.scores(window)
         const top = topScores(scores, lookup.indices, topPerWindow, lookup.weights).map((entry) => ({

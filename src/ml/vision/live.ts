@@ -109,7 +109,7 @@ export function createLiveScanner(deps: LiveScannerDeps = {}): LiveScanner {
         const confidences = new Float32Array(length)
         const pBird = scores.blank || !Number.isFinite(scores.pBird) ? 0 : scores.pBird
         for (let i = 0; i < length; i++) confidences[i] = pBird * scores.probs[i]
-        const state = tracker.update({ confidences, pBird })
+        const state = tracker.update({ confidences, pBird, outsideDexTop: scores.outsideTop })
         const took = duration.add(doneAt - startedAt)
         // Between two results; for the first one there is no earlier result, so the pace the loop is set to stands in.
         const gap = lastDone === undefined ? Math.max(doneAt - startedAt, LIVE.minIntervalMs) : doneAt - lastDone
@@ -119,6 +119,7 @@ export function createLiveScanner(deps: LiveScannerDeps = {}): LiveScanner {
         const update: LiveUpdate = {
           candidates,
           pBird: state.pBird,
+          outsideDexTop: state.outsideDexTop,
           framesPerSecond: averageGap > 0 ? 1000 / averageGap : 0,
           ...(state.lockedIndex !== undefined ? { lockedSpeciesId: speciesIds[state.lockedIndex] } : {}),
         }

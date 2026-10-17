@@ -25,6 +25,8 @@ export interface LiveFrameInput {
   /** P(bird) * P(species) for each Dex species in Dex order. */
   confidences: ArrayLike<number>
   pBird: number
+  /** The plain model's best species outside the Dex (VisionScores.outsideTop). Missing counts as 0. */
+  outsideDexTop?: number
 }
 
 export interface LiveGuess {
@@ -38,6 +40,8 @@ export interface LiveState {
   guesses: LiveGuess[]
   /** Smoothed P(bird). */
   pBird: number
+  /** Smoothed outsideDexTop. */
+  outsideDexTop: number
   /** The species the scanner has locked on, as a position in the Dex order. */
   lockedIndex: number | undefined
   /** Frames seen since the start or the last reset. */
@@ -47,6 +51,7 @@ export interface LiveState {
 export class LiveTracker {
   private readonly smoothed: Float64Array
   private pBird = 0
+  private outsideDexTop = 0
   private frames = 0
   private streakIndex = -1
   private streakCount = 0
@@ -76,6 +81,7 @@ export class LiveTracker {
   reset(): void {
     this.smoothed.fill(0)
     this.pBird = 0
+    this.outsideDexTop = 0
     this.frames = 0
     this.streakIndex = -1
     this.streakCount = 0
@@ -86,13 +92,16 @@ export class LiveTracker {
   update(frame: LiveFrameInput): LiveState {
     if (frame.confidences.length !== this.smoothed.length) throw new RangeError('The frame has the wrong number of species')
     const pBird = Number.isFinite(frame.pBird) ? frame.pBird : 0
+    const outside = frame.outsideDexTop !== undefined && Number.isFinite(frame.outsideDexTop) ? frame.outsideDexTop : 0
     if (this.frames === 0) {
       for (let i = 0; i < this.smoothed.length; i++) this.smoothed[i] = frame.confidences[i]
       this.pBird = pBird
+      this.outsideDexTop = outside
     } else {
       const a = this.alpha
       for (let i = 0; i < this.smoothed.length; i++) this.smoothed[i] += a * (frame.confidences[i] - this.smoothed[i])
       this.pBird += a * (pBird - this.pBird)
+      this.outsideDexTop += a * (outside - this.outsideDexTop)
     }
     this.frames++
 
@@ -124,7 +133,7 @@ export class LiveTracker {
     }
 
     const guesses = notABird ? [] : topIndices(this.smoothed, this.candidateCount).map((index) => ({ index, confidence: this.smoothed[index] }))
-    return { guesses, pBird: this.pBird, lockedIndex: this.lockedIndex, frames: this.frames }
+    return { guesses, pBird: this.pBird, outsideDexTop: this.outsideDexTop, lockedIndex: this.lockedIndex, frames: this.frames }
   }
 }
 

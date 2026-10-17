@@ -1,8 +1,8 @@
 // The name of the place of a catch ("Praha", "Hostivice"), looked up when the phone is online. Optional and best effort:
 // without a name the catch simply shows its coordinates.
 //
-// Privacy: only a coarse position leaves the phone (rounded to two decimals, about a kilometre), and only when a bird
-// can be caught. The service is OpenStreetMap's Nominatim (data (c) OpenStreetMap contributors, ODbL), asked in Czech.
+// Privacy: only a coarse position leaves the phone (rounded to two decimals, about a kilometre), and only at the moment
+// the person confirms a catch (resolvePlaceName is called from the confirm handler of the result screen, never earlier). The service is OpenStreetMap's Nominatim (data (c) OpenStreetMap contributors, ODbL), asked in Czech.
 // It allows light use from an app like this one; the usage policy asks for one request at a time, which one catch is.
 
 import type { GeoPoint } from '../../domain/types'
@@ -85,4 +85,18 @@ export function rememberPlaceName(point: Pick<GeoPoint, 'lat' | 'lon'>, name: st
 /** For tests. */
 export function forgetPlaceNames(): void {
   known.clear()
+}
+
+/**
+ * The name of the place for a catch that is being saved right now: the remembered one, else one question to the service
+ * (skipped offline). Never throws; undefined means "no name", and the catch then shows its coordinates.
+ */
+export async function resolvePlaceName(point: Pick<GeoPoint, 'lat' | 'lon'> | undefined, options: LookupOptions = {}): Promise<string | undefined> {
+  if (!point) return undefined
+  const remembered = rememberedPlaceName(point)
+  if (remembered !== undefined) return remembered ?? undefined
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return undefined
+  const name = await lookupPlaceName(point, { timeoutMs: 3000, ...options })
+  rememberPlaceName(point, name)
+  return name
 }

@@ -141,7 +141,7 @@ describe('the settings screen', () => {
     await addCatch({ speciesId: 'alca-torda', method: 'live', confidence: 0.9, caughtAt: new Date(2026, 9, 2, 10).getTime() })
     render(app('/settings', h(SettingsPage)))
     expect((await screen.findByTestId('stat-species')).textContent).toBe('2')
-    expect(screen.getByTestId('stat-catches').textContent).toBe('3 nálezů celkem')
+    expect(screen.getByTestId('stat-catches').textContent).toBe('3 úlovky celkem')
     expect(screen.getByTestId('stat-czechia').textContent).toContain('1 z 3')
     expect(screen.getByTestId('stat-czechia-percent').textContent).toMatch(/^33\s%$/)
     expect(screen.getByTestId('stat-europe-percent').textContent).toMatch(/^50\s%$/)
@@ -178,7 +178,30 @@ describe('the settings screen', () => {
     expect(screen.getByTestId('sound-preview')).toBeTruthy()
   })
 
+  it('says "1 úlovek" for a single catch (Czech plural)', async () => {
+    await addCatch({ speciesId: 'parus-major', method: 'sound', confidence: 0.9 })
+    render(app('/settings', h(SettingsPage)))
+    await screen.findByTestId('stat-species')
+    expect(screen.getByTestId('stat-catches').textContent).toBe('1 úlovek celkem')
+  })
+
+  it('hides the English phone test page until the version line is tapped seven times', () => {
+    render(app('/settings', h(SettingsPage)))
+    expect(screen.queryByTestId('link-field-check')).toBeNull()
+    const version = screen.getByTestId('app-version')
+    for (let tap = 0; tap < 6; tap += 1) fireEvent.click(version)
+    expect(screen.queryByTestId('link-field-check')).toBeNull()
+    fireEvent.click(version)
+    expect(screen.getByTestId('link-field-check')).toBeTruthy()
+    // The choice is remembered on the phone.
+    expect(window.localStorage.getItem('birddex:tester')).toBe('1')
+    cleanup()
+    render(app('/settings', h(SettingsPage)))
+    expect(screen.getByTestId('link-field-check')).toBeTruthy()
+  })
+
   it('links to the About page and the Field check (named for testers), and shows the version', () => {
+    window.localStorage.setItem('birddex:tester', '1')
     render(app('/settings', h(SettingsPage)))
     expect(screen.getByTestId('link-about').getAttribute('href')).toBe('/about')
     const check = screen.getByTestId('link-field-check')
@@ -320,7 +343,7 @@ describe('the backup section', () => {
     const file = new NodeFile([await zip.arrayBuffer()], 'backup.zip', { type: 'application/zip' })
     fireEvent.change(screen.getByTestId('backup-file'), { target: { files: [file] } })
     const message = await screen.findByTestId('backup-message')
-    await waitFor(() => expect(message.textContent).toContain('Přidáno 2 nálezy z 2.'))
+    await waitFor(() => expect(message.textContent).toContain('Přidáno 2 úlovky z 2.'))
     expect(message.getAttribute('data-tone')).toBe('success')
     expect((await listCatches()).map((record) => record.speciesId).sort()).toEqual(['bubo-bubo', 'parus-major', 'turdus-merula'])
 
@@ -349,7 +372,7 @@ describe('the backup reminder', () => {
   it('appears after 10 catches without a backup', async () => {
     await addMany(10)
     render(app('/settings', h(SettingsPage)))
-    expect((await screen.findByTestId('backup-reminder')).textContent).toContain('10 nálezů')
+    expect((await screen.findByTestId('backup-reminder')).textContent).toContain('Máš už 10 úlovků')
   })
 
   it('does not appear with 9 catches', async () => {
@@ -377,7 +400,7 @@ describe('erasing everything', () => {
 
     fireEvent.click(screen.getByTestId('erase-start'))
     const first = screen.getByRole('alertdialog', { name: 'Smazat všechna data?' })
-    expect(first.textContent).toContain('všech 2 nálezů')
+    expect(first.textContent).toContain('Zmizí 2 úlovky i uložené')
     // The first button the finger lands on is the safe one.
     expect(document.activeElement?.textContent).toBe('Zrušit')
     fireEvent.click(within(first).getByRole('button', { name: 'Zrušit' }))
@@ -419,8 +442,13 @@ describe('the About page', () => {
     expect(wing).toContain('BioCLIP 2')
     expect(screen.getByTestId('credit-wikimedia').textContent).toMatch(/Wikipedi.*Wikimedia Commons.*autora a licenci/s)
     expect(screen.getByTestId('credit-osm').textContent).toContain('OpenStreetMap')
+    expect(wing).toContain('TinyCLIP')
+    expect(wing).toContain('WingCLIP-0.1')
+    const taxonomy = screen.getByTestId('credit-taxonomy').textContent ?? ''
+    expect(taxonomy).toContain('eBird/Clements')
+    expect(taxonomy).toContain('Cornell Lab of Ornithology')
     const libraries = screen.getByTestId('credit-libraries').textContent ?? ''
-    for (const name of ['React', 'Vite', 'Dexie', 'LiteRT.js', 'ONNX Runtime Web', 'fflate', 'SIL Open Font License']) expect(libraries).toContain(name)
+    for (const name of ['React', 'Vite', 'Dexie', 'LiteRT.js', 'ONNX Runtime Web', 'fflate', 'Workbox', 'SIL Open Font License']) expect(libraries).toContain(name)
   })
 
   it('says that the app is a gift, not for sale, and that nothing is tracked', () => {

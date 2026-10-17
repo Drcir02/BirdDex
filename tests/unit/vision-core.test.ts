@@ -67,6 +67,8 @@ describe('VisionCore', () => {
     expect(scores.probs[0] + scores.probs[1] + scores.probs[2] + scores.outsideMass).toBeCloseTo(1, 5)
     expect(scores.bestSimilarity).toBeCloseTo(1, 2)
     expect(scores.bestDexSimilarity).toBeCloseTo(1, 2)
+    // the best species of the whole classifier is a Dex species, so no foreign bird competes
+    expect(scores.outsideTop).toBeLessThan(0.01)
     expect(scores.timings.inferMs).toBeGreaterThanOrEqual(0)
     expect(scores.embedding).toBeUndefined()
   })

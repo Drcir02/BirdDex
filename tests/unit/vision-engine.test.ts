@@ -16,6 +16,7 @@ function scoresOf(partial: Partial<VisionScores>): VisionScores {
     pRaw: 0.9,
     probs: Float32Array.from([0.05, 0.8, 0.1, 0.02]),
     outsideMass: 0.03,
+    outsideTop: 0.02,
     bestSimilarity: 0.6,
     bestDexSimilarity: 0.6,
     blank: false,
@@ -67,6 +68,11 @@ describe('toPhotoResult', () => {
     expect(result.candidates.map((c) => c.speciesId)).toEqual(['b', 'c', 'a'])
     expect(result.candidates[0].confidence).toBeCloseTo(0.9 * 0.8, 6)
     expect(result.pBird).toBe(0.9)
+  })
+
+  it('passes on how sure the plain model is of a bird outside the Dex, so the Catch rules can use it', () => {
+    expect(toPhotoResult(scoresOf({ outsideTop: 0.32 }), ids).outsideDexTop).toBe(0.32)
+    expect(toPhotoResult(scoresOf({ outsideTop: Number.NaN }), ids).outsideDexTop).toBe(0)
   })
 
   it('gives no candidates, but still the probability, when the picture shows no bird', () => {

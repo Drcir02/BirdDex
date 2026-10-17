@@ -13,6 +13,7 @@ import { getEngines } from '../../ml/engines'
 import { setPending } from '../../state/pending'
 import { FULL_CROP, type CropRect } from './cropMath'
 import { classifyScanError } from './errors'
+import { photoContext, readExifMeta, type ExifMeta } from './exifMeta'
 import { canvasToJpeg, cropToCanvas, ImageFileError, openImageFile, releaseCanvas } from './imageFile'
 import { checkImageFile } from './imageSizing'
 import { buildPhotoPending } from './pendingBuilders'
@@ -38,6 +39,8 @@ export function usePhotoScan(): PhotoScan {
   const disposed = useRef(false)
   const opening = useRef(0)
   const identifying = useRef(false)
+  // The date and place inside the chosen photo (EXIF). A picture from the library is not from here and now.
+  const exif = useRef<ExifMeta>({})
 
   const open = useCallback((file: File | undefined | null) => {
     if (!file || identifying.current) return
@@ -49,6 +52,10 @@ export function usePhotoScan(): PhotoScan {
     // The person is about to catch something: this is the moment the browser may ask about the location.
     warmLocation()
     const mine = ++opening.current
+    exif.current = {}
+    void readExifMeta(file).then((meta) => {
+      if (opening.current === mine) exif.current = meta
+    })
     dispatch({ type: 'opening' })
     void (async () => {
       let canvas: HTMLCanvasElement | undefined
@@ -90,11 +97,13 @@ export function usePhotoScan(): PhotoScan {
       let part: HTMLCanvasElement | undefined
       try {
         part = cropToCanvas(picture, crop.current)
-        const result = await getEngines().photo.identify(part, { location: knownLocation(), date: new Date() })
+        const context = photoContext(exif.current, Date.now(), knownLocation())
+        const result = await getEngines().photo.identify(part, { location: context.location, date: new Date(context.at) })
         const jpeg = await canvasToJpeg(part)
-        const location = await locationForCatch()
+        // Only a fresh photo without a place of its own gets the phone's place; an old picture is saved without one.
+        const location = context.usePhoneLocation ? await locationForCatch() : context.location
         if (disposed.current) return
-        setPending(buildPhotoPending(result, jpeg, location))
+        setPending(buildPhotoPending(result, jpeg, location, context.at))
         navigate(ROUTES.result)
       } catch (error) {
         if (!disposed.current) dispatch({ type: 'failed', error: classifyScanError(error) })

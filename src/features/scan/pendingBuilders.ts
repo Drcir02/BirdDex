@@ -7,6 +7,16 @@ import type { Candidate, GeoPoint, PendingIdentification } from '../../domain/ty
 
 export const MAX_CANDIDATES = 3
 
+/** What the engines know about the whole picture besides the guesses; the Catch rules use it (src/domain/thresholds.ts). */
+type PictureFacts = Partial<Pick<PhotoResult, 'pBird' | 'outsideDexTop'>>
+
+/** Copies the numbers about the picture that are real numbers onto the pending identification. */
+function withPictureFacts(pending: PendingIdentification, facts: PictureFacts): PendingIdentification {
+  if (typeof facts.pBird === 'number' && Number.isFinite(facts.pBird)) pending.pBird = facts.pBird
+  if (typeof facts.outsideDexTop === 'number' && Number.isFinite(facts.outsideDexTop)) pending.outsideDexTop = facts.outsideDexTop
+  return pending
+}
+
 /** A guess that would be shown as "0 %" is noise, not a guess: it is left out of the lists. */
 export const MIN_SHOWN_CONFIDENCE = 0.005
 
@@ -42,7 +52,7 @@ export function buildSoundPending(result: SoundResult, location: GeoPoint | unde
 }
 
 /** Photo: the guesses for the picture, and the picture itself (already scaled down and saved as JPEG). */
-export function buildPhotoPending(result: Pick<PhotoResult, 'candidates'>, image: Blob, location: GeoPoint | undefined, now: number = Date.now()): PendingIdentification {
+export function buildPhotoPending(result: Pick<PhotoResult, 'candidates'> & PictureFacts, image: Blob, location: GeoPoint | undefined, now: number = Date.now()): PendingIdentification {
   const pending: PendingIdentification = {
     method: 'photo',
     candidates: normalizeCandidates(result.candidates),
@@ -50,11 +60,11 @@ export function buildPhotoPending(result: Pick<PhotoResult, 'candidates'>, image
     createdAt: now,
   }
   if (location) pending.location = location
-  return pending
+  return withPictureFacts(pending, result)
 }
 
 /** Live camera: what the scanner thought when the person pressed Catch, and the snapshot of that moment. */
-export function buildLivePending(update: Pick<LiveUpdate, 'candidates'>, snapshot: Blob, location: GeoPoint | undefined, now: number = Date.now()): PendingIdentification {
+export function buildLivePending(update: Pick<LiveUpdate, 'candidates'> & PictureFacts, snapshot: Blob, location: GeoPoint | undefined, now: number = Date.now()): PendingIdentification {
   const pending: PendingIdentification = {
     method: 'live',
     candidates: normalizeCandidates(update.candidates),
@@ -62,5 +72,5 @@ export function buildLivePending(update: Pick<LiveUpdate, 'candidates'>, snapsho
     createdAt: now,
   }
   if (location) pending.location = location
-  return pending
+  return withPictureFacts(pending, update)
 }

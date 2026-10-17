@@ -16,7 +16,8 @@ vi.mock('../../src/db', () => ({
 }))
 vi.mock('../../src/features/scan/useReferencePhoto', () => ({ useReferencePhoto: () => ({ status: 'none' }) }))
 let placeName: string | undefined
-vi.mock('../../src/features/scan/usePlaceName', () => ({ usePlaceName: () => placeName }))
+const resolvePlaceName = vi.fn(async (_point: unknown) => placeName)
+vi.mock('../../src/features/scan/placeName', () => ({ resolvePlaceName: (point: unknown) => resolvePlaceName(point) }))
 
 import ResultPage from '../../src/pages/ResultPage'
 import { clearPending, getPending, getPendingCatchId, setPending } from '../../src/state/pending'
@@ -40,6 +41,7 @@ beforeEach(() => {
   }))
   caught = new Map()
   placeName = undefined
+  resolvePlaceName.mockClear()
   window.localStorage.clear()
   resetSettings()
   clearPending()
@@ -154,11 +156,14 @@ describe('what will be saved', () => {
     expect(screen.getByTestId('result-audio')).toBeTruthy()
   })
 
-  it('prefers the name of the place once it is known', async () => {
+  it('sends nothing about the position until the catch is confirmed', async () => {
     placeName = 'Praha'
     setPending(pending())
     renderResult()
-    await waitFor(() => expect(screen.getByTestId('result-where').textContent).toBe('Praha'))
+    await waitFor(() => expect(cards()).toHaveLength(3))
+    // The result is on screen with its coordinates; the place name has not been asked for (also not if it is discarded).
+    expect(screen.getByTestId('result-where').textContent).toBe('50,08° S, 14,43° V')
+    expect(resolvePlaceName).not.toHaveBeenCalled()
   })
 
   it('says when there is no place, and shows the photo of a photo scan', async () => {
@@ -166,7 +171,7 @@ describe('what will be saved', () => {
     renderResult()
     await waitFor(() => expect(cards()).toHaveLength(3))
     expect(screen.getByTestId('result-where').textContent).toBe('Místo neznámé')
-    expect(screen.getByText(/Poloha není povolená/)).toBeTruthy()
+    expect(screen.getByText(/poloha není povolená, nebo ho fotka neobsahuje/)).toBeTruthy()
     expect(screen.getByTestId('result-image')).toBeTruthy()
   })
 })
@@ -248,6 +253,8 @@ describe('catching', () => {
     })
 
     expect(addCatch).toHaveBeenCalledTimes(1)
+    expect(resolvePlaceName).toHaveBeenCalledTimes(1)
+    expect(resolvePlaceName).toHaveBeenCalledWith({ lat: 50.08, lon: 14.43 })
     const [input, media] = addCatch.mock.calls[0] as [Record<string, unknown>, Record<string, unknown>]
     expect(input).toEqual({
       id: catchId,
@@ -304,7 +311,7 @@ describe('catching', () => {
     await act(async () => {
       fireEvent.click(within(dialog).getByRole('button', { name: 'Chytit' }))
     })
-    expect(await screen.findByText('Další nález tohoto druhu.')).toBeTruthy()
+    expect(await screen.findByText('Další úlovek tohoto druhu.')).toBeTruthy()
   })
 
   it('saves a photo catch with the picture and without a place when there is none', async () => {

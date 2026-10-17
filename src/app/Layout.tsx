@@ -10,6 +10,7 @@ import { ErrorBoundary } from './ErrorBoundary'
 import { Leds } from './Leds'
 import { Lens } from './Lens'
 import { ROUTES } from './routes'
+import { UpdateBanner } from './UpdateBanner'
 import { useDocumentTitle, useScrollMemory } from './useShell'
 import '../styles/shell.css'
 
@@ -65,6 +66,7 @@ export function Layout() {
                   </Suspense>
                 </ErrorBoundary>
               </div>
+              <UpdateBanner />
               <ToastViewport />
             </div>
             <div className="bd-bezel__foot" aria-hidden="true">

@@ -22,7 +22,7 @@ How the decisions are made (the long version is in docs/notes/species-data.md)
   2. Europe and Czechia: the geo model is run for every week at EUROPE_POINTS and CZECHIA_POINTS. Thresholds on those
      scores pick the candidates; short, commented override tables (EUROPE_EXCLUDE, ...) fix what an ornithologist
      sees is wrong; SENTINELS at the bottom make the script fail when a well known bird is on the wrong side.
-  3. Rarity: from the Czech scores (RARITY_PK) for Czech birds; Europe-only birds are epic or legendary by range size.
+  3. Rarity: from the Czech scores (RARITY_PK, then the hand-made RARITY_OVERRIDES) for Czech birds; Europe-only birds are epic or legendary by range size.
   4. WingCLIP row, Wikipedia title and Dex order come from the WingDex taxonomy. A BirdNET bird whose name or species
      concept differs there is listed in WINGCLIP_PINS with the reason; anything unresolved stops the script.
   5. Czech names come straight from labels_cs.txt (only where they differ from the English label) with the first letter
@@ -161,6 +161,27 @@ CZECHIA_MIN_POINT_SCORE = 0.005
 
 # Rarity of Czech birds from "pk", the best week of the average over the Czech points. Each pair is (minimum pk, tier).
 RARITY_PK = ((0.25, "common"), (0.08, "uncommon"), (0.02, "rare"), (0.0045, "epic"))  # below the last: legendary
+# The reporting-frequency measure (pk) says how often a bird is reported, not how easy it is to meet. Waterbody, reed-bed and
+# raptor birds are reported by many observers because they sit on well-watched ponds, so they land in "common" although a
+# garden birder meets a Dunnock, a Treecreeper or a Mistle Thrush far more easily. These corrections (a Czech-user view, set by
+# hand) move the worst cases one tier. check_tables() keeps the table honest: an entry must be a Czech bird whose computed
+# tier it really changes.
+RARITY_OVERRIDES: dict[str, str] = {
+    # reported a lot, but not a bird of the garden or the park path
+    "Mergus merganser": "uncommon",  # Common Merganser
+    "Larus cachinnans": "uncommon",  # Caspian Gull
+    "Circus aeruginosus": "uncommon",  # Western Marsh Harrier
+    "Ardea alba": "uncommon",  # Great Egret
+    "Coccothraustes coccothraustes": "uncommon",  # Hawfinch, shy and high in the canopy
+    "Acrocephalus arundinaceus": "uncommon",  # Great Reed Warbler, reed beds only
+    "Acrocephalus palustris": "uncommon",  # Marsh Warbler
+    "Oriolus oriolus": "uncommon",  # Eurasian Golden Oriole, heard far more than seen
+    # easy to meet, but reported less often
+    "Prunella modularis": "common",  # Dunnock
+    "Certhia familiaris": "common",  # Eurasian Treecreeper
+    "Certhia brachydactyla": "common",  # Short-toed Treecreeper
+    "Turdus viscivorus": "common",  # Mistle Thrush
+}
 # Europe-only birds are epic when they reach 0.03 at this many Europe points (about 1 in 8), otherwise legendary.
 EUROPE_ONLY_EPIC_MIN_POINTS = 20
 
@@ -291,7 +312,15 @@ ORDER_ANCHORS: dict[str, str] = {
 
 # BirdNET scientific name -> Czech name, for the rare label that is wrong or missing. Written in the same lower case
 # style as labels_cs.txt; the first letter is capitalised like every other name.
-CZECH_NAME_OVERRIDES: dict[str, str] = {}
+CZECH_NAME_OVERRIDES: dict[str, str] = {
+    # BirdNET's Czech labels follow older nomenclature here. The current names of the Czech Society for Ornithology, written
+    # from memory and agreeing with an independent reviewer's memory; a Czech speaker should confirm them (docs/notes/species-data.md).
+    "Calidris minuta": "jespáček malý",  # BirdNET: jespák malý
+    "Calidris temminckii": "jespáček Temminckův",  # BirdNET: jespák šedý
+    "Larus fuscus": "racek tmavohřbetý",  # BirdNET: racek žlutonohý
+    "Cecropis daurica": "vlaštovka červenořitá",  # BirdNET: vlaštovka skalní
+    # Not changed although they look dated too (not sure enough): Larus hyperboreus "racek šedý", Larus glaucoides "racek polární".
+}
 
 # Latin family names (eBird / Clements classification, the one the WingDex order follows), written as
 # "Family: genus genus ...". The taxonomy file has no family column, so this table is the family source.
@@ -601,16 +630,39 @@ def check_tables(labels: list[Label], geo: GeoStats) -> list[str]:
             }[name]
             if redundant:
                 problems.append(f"{name} has {sci!r}, but the rules already give that answer: remove the entry")
+    for sci, tier in RARITY_OVERRIDES.items():
+        label = by_sci.get(sci)
+        if label is None or is_non_bird(label):
+            problems.append(f"RARITY_OVERRIDES names {sci!r}, which is not a BirdNET bird")
+            continue
+        in_europe, in_czechia = decide(label, geo)
+        if not in_czechia:
+            problems.append(f"RARITY_OVERRIDES has {sci!r}, which is not a Czech bird in the Dex (Europe-only birds are epic or legendary by range)")
+        elif tier not in {name for _, name in RARITY_PK} | {"legendary"}:
+            problems.append(f"RARITY_OVERRIDES gives {sci!r} the unknown tier {tier!r}")
+        elif measured_rarity(True, float(geo.cz_pk[label.index]), int(geo.b03[label.index])) == tier:
+            problems.append(f"RARITY_OVERRIDES has {sci!r}, but the numbers already give {tier!r}: remove the entry")
+    for sci, name in CZECH_NAME_OVERRIDES.items():
+        label = by_sci.get(sci)
+        if label is None or is_non_bird(label):
+            problems.append(f"CZECH_NAME_OVERRIDES names {sci!r}, which is not a BirdNET bird")
+        elif name[:1].upper() + name[1:] == label.czech_raw[:1].upper() + label.czech_raw[1:]:
+            problems.append(f"CZECH_NAME_OVERRIDES has {sci!r}, but BirdNET already says {name!r}: remove the entry")
     return problems
 
 
-def rarity_for(in_czechia: bool, pk: float, b03: int) -> str:
+def measured_rarity(in_czechia: bool, pk: float, b03: int) -> str:
+    """The tier the numbers give, before RARITY_OVERRIDES."""
     if not in_czechia:
         return "epic" if b03 >= EUROPE_ONLY_EPIC_MIN_POINTS else "legendary"
     for minimum, tier in RARITY_PK:
         if pk >= minimum:
             return tier
     return "legendary"
+
+
+def rarity_for(sci: str, in_czechia: bool, pk: float, b03: int) -> str:
+    return RARITY_OVERRIDES.get(sci) or measured_rarity(in_czechia, pk, b03)
 
 
 # ----- WingDex matching -----
@@ -739,7 +791,7 @@ def build(args: argparse.Namespace) -> int:
             "family": rec["family"],
             "inCzechia": rec["in_czechia"],
             "inEurope": True,
-            "rarity": rarity_for(rec["in_czechia"], float(geo.cz_pk[i]), int(geo.b03[i])),
+            "rarity": rarity_for(label.sci, rec["in_czechia"], float(geo.cz_pk[i]), int(geo.b03[i])),
             "birdnetIndex": i,
             "wingclipIndex": taxon.row if taxon is not None else None,
             "wikiTitle": taxon.wiki if taxon is not None else label.sci,

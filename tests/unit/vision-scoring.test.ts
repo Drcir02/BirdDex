@@ -6,6 +6,7 @@ import {
   isNotABird,
   logit,
   makeDexMask,
+  outsideDexTop,
   scoreSpecies,
   sigmoid,
   toCandidates,
@@ -61,6 +62,29 @@ describe('makeDexMask', () => {
     expect(() => makeDexMask(6, [6])).toThrow(RangeError)
     expect(() => makeDexMask(6, [-1])).toThrow(RangeError)
     expect(() => makeDexMask(6, [1.5])).toThrow(RangeError)
+  })
+})
+
+describe('outsideDexTop', () => {
+  const mask = makeDexMask(5, [0, 1])
+
+  it('is the share of the strongest species outside the Dex in the plain softmax (no penalty)', () => {
+    const sims = Float32Array.from([0.5, 0.45, 0.52, 0.2, 0.1])
+    const T = CALIBRATION.temperature
+    const exps = Array.from(sims).map((s) => Math.exp((s - 0.52) / T))
+    const sum = exps.reduce((a, b) => a + b, 0)
+    expect(outsideDexTop(sims, mask)).toBeCloseTo(1 / sum, 4)
+  })
+
+  it('is small when a Dex bird clearly wins, and not softened by the penalty the other scoring uses', () => {
+    expect(outsideDexTop(Float32Array.from([0.6, 0.3, 0.2, 0.2, 0.2]), mask)).toBeLessThan(0.001)
+    // a foreign bird 0.003 behind the Dex bird (0.4 temperature units) is a real rival
+    expect(outsideDexTop(Float32Array.from([0.6, 0.3, 0.597, 0.2, 0.2]), mask)).toBeGreaterThan(0.3)
+  })
+
+  it('is 0 for garbage input and for a model that sees no foreign bird at all', () => {
+    expect(outsideDexTop(new Float32Array(5).fill(Number.NaN), mask)).toBe(0)
+    expect(outsideDexTop(Float32Array.from([0.6, 0.5]), makeDexMask(2, [0, 1]))).toBe(0)
   })
 })
 

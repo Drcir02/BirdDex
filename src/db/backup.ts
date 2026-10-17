@@ -7,6 +7,7 @@
 // written until the whole file has been checked, so a damaged or foreign file changes nothing.
 
 import { strFromU8, strToU8, unzipSync, Zip, ZipDeflate, ZipPassThrough, type UnzipFileInfo } from 'fflate'
+import { getLoadedSpecies, loadSpecies } from '../data/species'
 import type { CatchMethod, CatchRecord, GeoPoint, MediaRecord } from '../domain/types'
 import { getDb } from './database'
 import { isQuotaExceededError } from './errors'
@@ -50,6 +51,11 @@ export interface ImportReport {
   mediaAdded: number
   /** New catches saved without their photo or clip, because the file did not have it. */
   mediaMissing: number
+  /**
+   * Catches of birds that are not in this version's Dex (an id that was renamed or removed by a Dex update). They are left out:
+   * the Dex could neither show nor delete them, and they would push "caught of 423" over the total. Only set when there are some.
+   */
+  unknownSpecies?: number
 }
 
 interface BackupMediaEntry {
@@ -80,6 +86,14 @@ const CATCHES_FILE = 'catches.json'
 const MAX_JSON_BYTES = 64 * 1024 * 1024
 const MAX_MEDIA_BYTES = 256 * 1024 * 1024
 const MAX_CATCHES = 200_000
+/**
+ * The largest backup file that is read. The whole zip is held in memory (and each photo again while it is unpacked), which a
+ * phone tab survives for a few hundred catches (a backup of 2000 catches with 150 KB photos is 308 MB, and that took 5 s and a
+ * lot of memory on a desktop) but not for a huge file picked by mistake. Anything bigger gets the calm "not a backup" message.
+ */
+export const MAX_BACKUP_FILE_BYTES = 300 * 1024 * 1024
+/** How long importing waits for the Dex list (to check the species) before it goes on without checking. */
+const SPECIES_WAIT_MS = 4000
 const METHODS: readonly CatchMethod[] = ['sound', 'photo', 'live']
 
 const appVersion = (): string => (typeof __APP_VERSION__ === 'undefined' ? 'dev' : __APP_VERSION__)
@@ -306,14 +320,40 @@ function unpack(zipBytes: Uint8Array, directory: Map<string, UnzipFileInfo>, nam
   }
 }
 
+/** The ids of the Dex, or undefined when the list cannot be had quickly (offline on the very first visit): then nothing is checked. */
+async function dexSpeciesIds(): Promise<ReadonlySet<string> | undefined> {
+  try {
+    const loaded = getLoadedSpecies()
+    if (loaded) return new Set(loaded.map((species) => species.id))
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const list = await Promise.race([
+      loadSpecies(),
+      new Promise<undefined>((resolve) => {
+        timer = setTimeout(() => resolve(undefined), SPECIES_WAIT_MS)
+      }),
+    ])
+    if (timer !== undefined) clearTimeout(timer)
+    return list ? new Set(list.map((species) => species.id)) : undefined
+  } catch {
+    return undefined
+  }
+}
+
 /**
  * Restores catches from a backup file. Merges with what is already on the phone: existing catches (same id) stay as
  * they are. Throws a BackupError for a file that is not a good BirdDex backup; in that case nothing has been changed.
  */
 export async function importBackup(
   file: Blob,
-  options: { onProgress?: (done: number, total: number) => void } = {},
+  options: {
+    onProgress?: (done: number, total: number) => void
+    /** The ids of the birds in the Dex; catches of other birds are skipped. Default: the Dex list of the app. `null` checks nothing. */
+    knownSpeciesIds?: ReadonlySet<string> | null
+  } = {},
 ): Promise<ImportReport> {
+  if (file.size > MAX_BACKUP_FILE_BYTES) {
+    throw new BackupError('not-a-zip', `The file is ${Math.round(file.size / 1048576)} MB, far more than a BirdDex backup holds`)
+  }
   let zipBytes: Uint8Array
   try {
     zipBytes = await blobToBytes(file)
@@ -352,6 +392,8 @@ export async function importBackup(
     seen.add(record.id)
   }
 
+  const known = options.knownSpeciesIds === undefined ? await dexSpeciesIds() : options.knownSpeciesIds
+
   // ----- Merge, one catch at a time (each with its media in one transaction) -----
   const db = getDb()
   const report: ImportReport = { total: records.length, added: 0, skipped: 0, mediaAdded: 0, mediaMissing: 0 }
@@ -359,7 +401,9 @@ export async function importBackup(
   let done = 0
   try {
     for (const record of ordered) {
-      if (await db.catches.get(record.id)) {
+      if (known && !known.has(record.speciesId)) {
+        report.unknownSpecies = (report.unknownSpecies ?? 0) + 1
+      } else if (await db.catches.get(record.id)) {
         report.skipped++
       } else {
         let media: MediaRecord | undefined

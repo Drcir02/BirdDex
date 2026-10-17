@@ -1,5 +1,5 @@
 import { chromium, test, type Browser, type Page } from '@playwright/test'
-import { copyFileSync, existsSync, mkdirSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import {
   chooseSyntheticPicture,
@@ -18,6 +18,7 @@ import {
   VISION_FIXTURES,
 } from './scan-helpers'
 import { collectErrors } from './shell-helpers'
+import { buildExifSegment } from '../unit/helpers/exif-jpeg'
 
 // The scan screens with the pretend engines (?engines=fake): the hub, the sound, photo and live screens, the result screen,
 // the catch, and what the Dex shows afterwards. Every flow runs in real Chromium, with a fake microphone and camera.
@@ -157,6 +158,10 @@ test.describe('the scan hub', () => {
 test.describe('scan by sound', () => {
   test('listens, shows the level and the top guesses, and after Done the catch goes into the Dex with the clip', async ({ page }, testInfo) => {
     const errors = collectErrors(page)
+    const placeLookups: string[] = []
+    page.on('request', (request) => {
+      if (request.url().includes('nominatim.openstreetmap.org')) placeLookups.push(request.url())
+    })
     await openApp(page, '/scan/sound', { delay: 120 })
     await expect(page.getByTestId('sound-start')).toBeDisabled()
     await shot(page, testInfo, 'sound-needed')
@@ -194,7 +199,9 @@ test.describe('scan by sound', () => {
     // What will be saved: the clip, the time and the place.
     await expect(page.getByTestId('result-audio')).toBeVisible()
     await expect(page.getByTestId('result-when')).toContainText(new Date().getFullYear().toString())
-    await expect(page.getByTestId('result-where')).toHaveText('Praha')
+    // The coordinates for now: the name of the place is looked up only when the catch is confirmed (privacy).
+    await expect(page.getByTestId('result-where')).toHaveText(/50,08° S, 14,43° V/)
+    expect(placeLookups).toEqual([])
     await shot(page, testInfo, 'result-sound')
 
     // The question, in Czech, before anything is saved.
@@ -345,7 +352,7 @@ test.describe('scan by photo', () => {
     await expect(cards(page)).toHaveCount(3)
     await expect(cards(page).first().getByTestId('candidate-name')).toHaveText('Sýkora koňadra')
     await expect(page.getByTestId('result-image')).toBeVisible()
-    await expect(page.getByTestId('result-where')).toHaveText('Praha')
+    await expect(page.getByTestId('result-where')).toHaveText(/50,08° S, 14,43° V/)
     await shot(page, testInfo, 'result-photo')
 
     await catchFirst(page)
@@ -375,6 +382,25 @@ test.describe('scan by photo', () => {
     await catchFirst(page)
     const saved = await readDatabase(page)
     expect([saved.media[0].width, saved.media[0].height]).toEqual([960, 640])
+  })
+
+  test('an old photo from the gallery is saved with its own date and without the place of the phone', async ({ page }) => {
+    await openApp(page, '/scan/photo', { delay: 30 })
+    await downloadBrain(page)
+    // A photo from 2 May 2020 with no GPS: the EXIF block goes right after the start of the JPEG.
+    const original = readFileSync(MALLARD)
+    const exif = Buffer.from(buildExifSegment({ date: '2020:05:02 08:15:00' }))
+    const old = Buffer.concat([original.subarray(0, 2), exif, original.subarray(2)])
+    await page.getByTestId('photo-pick').setInputFiles({ name: 'old.jpg', mimeType: 'image/jpeg', buffer: old })
+    await expect(page.getByTestId('photo-preview')).toBeVisible()
+    await page.getByTestId('photo-identify').click()
+    await expect(page).toHaveURL(/#\/result$/)
+    await expect(page.getByTestId('result-when')).toContainText('2. 5. 2020')
+    await expect(page.getByTestId('result-where')).toHaveText('Místo neznámé')
+    await catchFirst(page)
+    const saved = await readDatabase(page)
+    expect(saved.catches[0].location).toBeUndefined()
+    expect(new Date(saved.catches[0].caughtAt).getFullYear()).toBe(2020)
   })
 
   test('scales a huge photo down before it is identified and saved: at most 1280 pixels, JPEG', async ({ page }) => {
@@ -720,7 +746,7 @@ test.describe('the result screen', () => {
       await page.getByTestId('sound-stop').click()
       if (round === 2) await expect(cards(page).first()).toContainText('Už v Dexu')
       await catchFirst(page)
-      if (round === 2) await expect(page.getByTestId('catch-success')).toContainText('Další nález tohoto druhu.')
+      if (round === 2) await expect(page.getByTestId('catch-success')).toContainText('Další úlovek tohoto druhu.')
     }
     const saved = await readDatabase(page)
     expect(saved.catches).toHaveLength(2)

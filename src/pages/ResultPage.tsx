@@ -13,7 +13,7 @@ import { buildResultView, confirmTextKey, scanPathFor, type CandidateView } from
 import { ResultCard } from '../features/scan/ResultCard'
 import { ResultMeta } from '../features/scan/ResultMeta'
 import { SuccessView } from '../features/scan/SuccessView'
-import { usePlaceName } from '../features/scan/usePlaceName'
+import { resolvePlaceName } from '../features/scan/placeName'
 import { useScrollIntoViewWhen } from '../features/scan/useScroll'
 import '../features/scan/scan.css'
 import '../features/scan/result.css'
@@ -61,9 +61,6 @@ export default function ResultPage() {
     [pending, species, settings.sensitivity, caughtCounts],
   )
 
-  // The name of the place is only looked up when a bird can be caught: nothing leaves the phone for a scan that found nothing.
-  const placeName = usePlaceName(pending?.location, Boolean(view?.anyAllowed))
-
   if (outcome) return <SuccessView view={outcome.view} wasNew={outcome.wasNew} media={outcome.media} />
   // Nothing to decide about (the page was reloaded, or the result was already dealt with).
   if (!pending) return <Navigate to={ROUTES.scan} replace />
@@ -81,6 +78,9 @@ export default function ResultPage() {
     setSaving(true)
     setSaveError(null)
     try {
+      // The name of the place is looked up only now, when the person has confirmed the catch: until then nothing about
+      // the position leaves the phone, also not for a result that is discarded.
+      const placeName = await resolvePlaceName(pending.location)
       await addCatch(
         {
           // One id per identification: a second tap on the button saves nothing new.
@@ -157,7 +157,7 @@ export default function ResultPage() {
             </section>
           ) : null}
 
-          <ResultMeta createdAt={pending.createdAt} location={pending.location} placeName={placeName} media={pending.media} />
+          <ResultMeta createdAt={pending.createdAt} location={pending.location} media={pending.media} />
 
           <div className="bd-scan-actions">
             <Button variant="secondary" icon="trash" onClick={discard} data-testid="discard">

@@ -6,6 +6,7 @@ import {
   placeLookupUrl,
   rememberedPlaceName,
   rememberPlaceName,
+  resolvePlaceName,
 } from '../../src/features/scan/placeName'
 
 describe('placeLookupUrl', () => {
@@ -109,5 +110,36 @@ describe('the memory of looked-up places', () => {
     expect(rememberedPlaceName({ lat: 49.5, lon: 14.4 })).toBeUndefined()
     rememberPlaceName({ lat: 49.5, lon: 14.4 }, undefined)
     expect(rememberedPlaceName({ lat: 49.5, lon: 14.4 })).toBeNull()
+  })
+})
+
+describe('resolvePlaceName (the lookup at the moment of the catch)', () => {
+  const where = { lat: 50.08, lon: 14.43 }
+  const answer = (): typeof fetch =>
+    vi.fn(async () => new Response(JSON.stringify({ address: { city: 'Praha' } }), { status: 200, headers: { 'Content-Type': 'application/json' } })) as unknown as typeof fetch
+  beforeEach(() => forgetPlaceNames())
+
+  it('asks once, remembers the answer and does not ask again for the same place', async () => {
+    const fetchImpl = answer()
+    await expect(resolvePlaceName(where, { fetchImpl })).resolves.toBe('Praha')
+    await expect(resolvePlaceName({ lat: 50.081, lon: 14.434 }, { fetchImpl })).resolves.toBe('Praha')
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+  })
+
+  it('asks nothing when there is no position', async () => {
+    const fetchImpl = answer()
+    await expect(resolvePlaceName(undefined, { fetchImpl })).resolves.toBeUndefined()
+    expect(fetchImpl).not.toHaveBeenCalled()
+  })
+
+  it('does not ask while the phone is offline', async () => {
+    const fetchImpl = answer()
+    vi.stubGlobal('navigator', { onLine: false })
+    try {
+      await expect(resolvePlaceName(where, { fetchImpl })).resolves.toBeUndefined()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+    expect(fetchImpl).not.toHaveBeenCalled()
   })
 })

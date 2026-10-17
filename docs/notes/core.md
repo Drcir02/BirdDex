@@ -39,6 +39,10 @@ exactly when `allowed` is false. If both rules fail, `low-confidence` wins.
 - Comparisons have 1e-9 of slack, so a score exactly on a threshold is allowed (`0.7 - 0.55` is `0.1499999999999999`).
 - The table is `CATCH_RULES`; engine owners who measure better numbers change it there (and the tests that name numbers).
 - The live camera uses the photo rules for the current frame.
+- **Changed after the review (docs/notes/fix-ml.md):** photo and live also ask for `pBird` (0.97 / 0.95 / 0.85) and for a limit
+  on `outsideDexTop`, the plain model's best species outside the Dex (0.30 / 0.35 / 0.60); `evaluateCandidates` takes the numbers as a
+  4th argument (`PictureEvidence`) and has two more reasons, `not-a-clear-bird` and `maybe-outside-dex`. The table above shows the
+  confidence and lead only; the sound thresholds are 0.85 / 0.70 / 0.60 now.
 
 ## Database (`src/db`)
 
@@ -97,6 +101,9 @@ phone) running it again continues. It throws `BackupError` with `code`:
 | `storage-full` | no room while restoring; `error.report` says what was restored | `commonErrorKey` gives `storageFull` |
 
 A catch whose photo or clip is missing from the file is still restored, without it (counted in `mediaMissing`).
+Added after the review: a file over 300 MB (`MAX_BACKUP_FILE_BYTES`) is rejected as `not-a-zip` before it is read (the whole zip is
+held in memory, so about 2000 catches with 150 KB photos is the practical limit), and catches of birds that are not in the Dex are
+skipped and counted in `report.unknownSpecies` (only set when there are some; `options.knownSpeciesIds` overrides the check).
 Unknown fields are dropped; sizes, paths and numbers are validated.
 
 ## State (`src/state`)

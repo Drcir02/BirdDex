@@ -1,6 +1,8 @@
-import { existsSync, readFileSync } from 'node:fs'
-import { basename } from 'node:path'
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { basename, join } from 'node:path'
 import { expect, test as base, type Page } from '@playwright/test'
+import { encodeWav } from '../../src/ml/audio/wav'
 
 // The sound engine on the real BirdNET model, in real Chromium, through the developer page /#/dev/sound.
 //
@@ -849,6 +851,42 @@ liveTest.describe('live scan with the North American soundscape as the microphon
     note('Black-capped Chickadee confidence in New York / in Prague', `${newYork.toFixed(3)} / ${prague.toFixed(3)}`)
     expect(prague / newYork).toBeGreaterThan(0.7)
     expect(prague / newYork).toBeLessThan(0.9)
+    expect(errors).toEqual([])
+  })
+})
+
+// ---------- 3. Flat noise is not a woodpecker ----------
+
+/** Eight seconds of flat white noise (a hiss) as a WAV file, for the fake microphone. */
+function hissFile(): string {
+  let state = 987654321
+  const uniform = () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0
+    return state / 4294967296
+  }
+  const samples = new Float32Array(48000 * 8)
+  for (let i = 0; i < samples.length; i++) samples[i] = (uniform() + uniform() + uniform() + uniform() - 2) * 0.1
+  const file = join(mkdtempSync(join(tmpdir(), 'birddex-hiss-')), 'hiss.wav')
+  writeFileSync(file, encodeWav(samples, 48000))
+  return file
+}
+
+liveTest.describe('live scan with flat noise as the microphone', () => {
+  liveTest.use({ fakeAudioFile: hissFile() })
+
+  // BirdNET itself answers Lesser Spotted Woodpecker 0.5 to 0.58 for such a hiss, window after window (checked in Python with
+  // the same model); src/ml/audio/flatness.ts keeps the hiss away from the model.
+  liveTest('hears nothing: no woodpecker, no "I hear a bird", nothing to catch', async ({ page }) => {
+    const errors = await openHarness(page)
+    await prepared(page)
+    await listenUntil(page, (snap) => (snap.last?.analysedSeconds ?? 0) >= 8, 20)
+    const live = await snapshot(page)
+    note('hiss', `analysed ${live.last!.analysedSeconds} s, candidates ${JSON.stringify(live.last!.candidates)}, hearingBird ${live.last!.hearingBird}`)
+    expect(live.last!.candidates).toEqual([])
+    expect(live.last!.hearingBird).toBe(false)
+    expect(Math.max(...live.levels)).toBeGreaterThan(0.05) // the microphone does carry sound
+    const result = await stopAndRead(page)
+    expect(result.candidates).toEqual([])
     expect(errors).toEqual([])
   })
 })

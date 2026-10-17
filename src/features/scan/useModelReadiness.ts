@@ -11,6 +11,7 @@
 
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react'
 import { getEngineMode, getEngines } from '../../ml/engines'
+import { ensureModels } from '../../ml/runtime/modelStore'
 import { useModelStatus } from '../../state/modelStatus'
 import { requestPersistentStorage } from '../../state/storage'
 import { classifyScanError } from './errors'
@@ -95,6 +96,7 @@ export function useModelReadiness(kind: ReadinessKind, options: ModelReadinessOp
             if (isCurrent()) dispatch({ type: 'progress', ...progress })
           },
           { sound: sizeOf('sound'), photo: sizeOf('photo') },
+          fake ? undefined : (fileIds) => ensureModels(fileIds),
         )
         markPrepared(kind)
         // The phone may clear the cache of an app it considers unimportant. After the big download, ask it not to.
@@ -104,7 +106,7 @@ export function useModelReadiness(kind: ReadinessKind, options: ModelReadinessOp
         if (isCurrent()) dispatch({ type: 'failed', error: classifyScanError(error) })
       }
     })()
-  }, [kind])
+  }, [kind, fake])
 
   useEffect(() => {
     if (view.startNow && run.run === 'idle') start()

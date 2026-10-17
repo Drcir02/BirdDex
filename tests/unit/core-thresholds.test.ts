@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CATCH_RULES, catchRule, evaluateCandidates } from '../../src/domain/thresholds'
+import { CATCH_RULES, catchRule, evaluateCandidates, type PictureEvidence } from '../../src/domain/thresholds'
 import type { Candidate, CatchMethod, Sensitivity } from '../../src/domain/types'
 
 const guesses = (...scores: number[]): Candidate[] => scores.map((confidence, index) => ({ speciesId: `species-${index}`, confidence }))
@@ -168,5 +168,75 @@ describe('evaluateCandidates edge cases', () => {
         }
       }
     }
+  })
+})
+
+describe('what the picture itself says (pBird and the plain model\'s best foreign species)', () => {
+  const verdictOf = (confidence: number, evidence: PictureEvidence, sensitivity: Sensitivity = 'normal', method: CatchMethod = 'photo') =>
+    evaluateCandidates(guesses(confidence, 0.05), method, sensitivity, evidence)[0]
+
+  it('blocks a confident guess for a picture that is hardly a bird, with its own reason', () => {
+    expect(verdictOf(0.9, { pBird: 0.89 })).toMatchObject({ allowed: false, reason: 'not-a-clear-bird' })
+    expect(verdictOf(0.9, { pBird: 0.95 }).allowed).toBe(true)
+    expect(verdictOf(0.9, { pBird: 0.98 }, 'strict').allowed).toBe(true)
+    expect(verdictOf(0.9, { pBird: 0.96 }, 'strict')).toMatchObject({ allowed: false, reason: 'not-a-clear-bird' })
+  })
+
+  it('blocks a confident guess when the plain model thinks of a bird outside the Dex, with its own reason', () => {
+    expect(verdictOf(0.9, { outsideDexTop: 0.4 })).toMatchObject({ allowed: false, reason: 'maybe-outside-dex' })
+    expect(verdictOf(0.9, { outsideDexTop: 0.35 }).allowed).toBe(true)
+    expect(verdictOf(0.9, { outsideDexTop: 0.3 }, 'strict').allowed).toBe(true)
+    expect(verdictOf(0.9, { outsideDexTop: 0.34 }, 'strict').allowed).toBe(false)
+  })
+
+  it('names the confidence first, then the lead, then the picture, then the foreign bird', () => {
+    const evidence = { pBird: 0.5, outsideDexTop: 0.9 }
+    expect(verdictOf(0.4, evidence).reason).toBe('low-confidence')
+    expect(evaluateCandidates(guesses(0.8, 0.7), 'photo', 'normal', evidence)[0].reason).toBe('unclear-margin')
+    expect(verdictOf(0.9, evidence).reason).toBe('not-a-clear-bird')
+    expect(verdictOf(0.9, { outsideDexTop: 0.9 }).reason).toBe('maybe-outside-dex')
+  })
+
+  it('is looser on easy, but easy still refuses a picture the model reads as a foreign bird', () => {
+    expect(verdictOf(0.9, { pBird: 0.88, outsideDexTop: 0.5 }, 'easy').allowed).toBe(true)
+    expect(verdictOf(0.9, { pBird: 0.8 }, 'easy').allowed).toBe(false)
+    expect(verdictOf(0.9, { outsideDexTop: 0.79 }, 'easy').reason).toBe('maybe-outside-dex')
+  })
+
+  it('does nothing for sound, whatever evidence is passed', () => {
+    for (const sensitivity of ['strict', 'normal', 'easy'] as const) {
+      expect(verdictOf(0.95, { pBird: 0.1, outsideDexTop: 0.99 }, sensitivity, 'sound').allowed).toBe(true)
+    }
+  })
+
+  it('skips a check whose number is missing or broken (fakes, old engines)', () => {
+    expect(verdictOf(0.9, {}).allowed).toBe(true)
+    expect(verdictOf(0.9, { pBird: Number.NaN, outsideDexTop: Number.NaN }).allowed).toBe(true)
+    expect(evaluateCandidates(guesses(0.9, 0.05), 'photo', 'normal')[0].allowed).toBe(true)
+  })
+
+  it('treats the live camera like a photo', () => {
+    expect(verdictOf(0.9, { pBird: 0.8 }, 'normal', 'live').reason).toBe('not-a-clear-bird')
+  })
+
+  // Measured with the real WingCLIP weights on the 26 photos of WingDex and of the project (scratch script, 512 px, penalty 6;
+  // docs/notes/photo-engine.md "Foreign look-alikes"): the guess, its confidence, pBird and the plain model's best foreign species.
+  const photos: Array<[string, number, number, number, boolean]> = [
+    ['Mallard (right)', 1.0, 1.0, 0.0, true],
+    ['Common Kingfisher (right)', 0.98, 1.0, 0.0, true],
+    ['Rock Pigeon (right)', 0.98, 0.98, 0.08, true],
+    ['Sanderling (right)', 0.99, 1.0, 0.0, true],
+    ['Great Cormorant, Lake Como (right)', 0.8, 1.0, 0.2, true],
+    ['Common Goldeneye (right)', 0.76, 1.0, 0.0, true],
+    ['Great Blue Heron (Drayton Harbor, full size) read as Purple Heron 0.90', 0.9, 1.0, 0.38, false],
+    ['Hairy Woodpecker (American) read as Eurasian Three-toed 0.70', 0.72, 1.0, 0.87, false],
+    // KNOWN GAP: the plain model is only 0.28 to 0.37 sure of the Palm Warbler itself, which is no more than for the right Great
+    // Cormorant (0.20 to 0.27), so no limit separates them and the wrong Water Pipit (0.97) is offered. See photo-engine.md.
+    ['Palm Warbler read as Water Pipit 0.97 (known gap, gets through)', 0.97, 1.0, 0.28, true],
+    ['House Sparrow in a mosaic read as Mandarin Duck 0.79', 0.79, 0.89, 0.0, false],
+    ['Cormorants on a marker read as European Starling 0.76', 0.76, 0.91, 0.18, false],
+  ]
+  it.each(photos)('on the normal setting: %s', (_name, confidence, pBird, outsideDexTop, right) => {
+    expect(verdictOf(confidence, { pBird, outsideDexTop }).allowed).toBe(right)
   })
 })

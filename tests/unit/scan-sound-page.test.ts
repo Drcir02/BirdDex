@@ -401,3 +401,48 @@ describe('when things go wrong', () => {
     expect(startKey().classList.contains('is-off')).toBe(false)
   })
 })
+
+describe('Done pressed while the engine is still getting ready', () => {
+  it('is not lost: the scan stops as soon as the session exists, and the microphone is released', async () => {
+    await prepared()
+    let finish: (session: SoundSession) => void = () => undefined
+    const stop = vi.fn(async () => ({ candidates: [{ speciesId: 'parus-major', confidence: 0.9 }] }))
+    let options: Parameters<ReturnType<typeof getEngines>['sound']['start']>[0] | undefined
+    // The microphone is open and levels arrive, but the session (the model reloading after the idle release) comes later.
+    vi.spyOn(getEngines().sound, 'start').mockImplementation(
+      (given) =>
+        new Promise<SoundSession>((resolve) => {
+          options = given
+          finish = resolve
+        }),
+    )
+    fireEvent.click(startKey())
+    act(() => options?.onUpdate({ candidates: [], level: 0.3, analysedSeconds: 0, hearingBird: false }))
+    const stopKey = await screen.findByTestId('sound-stop')
+
+    fireEvent.click(stopKey)
+    expect(stop).not.toHaveBeenCalled()
+    expect(screen.queryByTestId('where')).toBeNull()
+
+    await act(async () => finish({ stop }))
+    await waitFor(() => expect(screen.getByTestId('where').textContent).toBe('/result'))
+    expect(stop).toHaveBeenCalledTimes(1)
+    expect(getPending()?.candidates[0]?.speciesId).toBe('parus-major')
+  })
+
+  it('keeps no microphone open when the screen is left before the session exists', async () => {
+    await prepared()
+    let finish: (session: SoundSession) => void = () => undefined
+    const stop = vi.fn(async () => ({ candidates: [] }))
+    vi.spyOn(getEngines().sound, 'start').mockImplementation(
+      () =>
+        new Promise<SoundSession>((resolve) => {
+          finish = resolve
+        }),
+    )
+    fireEvent.click(startKey())
+    cleanup()
+    await act(async () => finish({ stop }))
+    expect(stop).toHaveBeenCalledTimes(1)
+  })
+})

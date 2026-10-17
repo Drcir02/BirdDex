@@ -74,6 +74,13 @@ export interface PendingIdentification {
   /** The picture or audio clip to save if the user confirms the catch. */
   media?: { kind: 'image' | 'audio'; blob: Blob; mime: string; durationS?: number }
   location?: GeoPoint
+  /**
+   * Photo and live camera only: how sure the engine is that the picture shows a bird at all, and how sure the plain model is
+   * of its best species outside the Dex (a look-alike we do not have). Both feed the Catch rules (thresholds.ts); a guess
+   * that scores high but comes from an unclear picture or from a possibly foreign bird is not offered for catching.
+   */
+  pBird?: number
+  outsideDexTop?: number
   createdAt: number
 }
 

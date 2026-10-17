@@ -1,0 +1,24 @@
+.bd-update {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  left: var(--space-3);
+  z-index: var(--z-toast);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  color: var(--lcd-bg-hi);
+  background: var(--lcd-deep);
+  border: 3px solid #0b1a11;
+  border-left: 8px solid var(--lens-blue-hi);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadow-pixel);
+}
+
+.bd-update__text {
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.2;
+}

@@ -52,6 +52,11 @@ export interface PhotoResult {
   candidates: Candidate[]
   /** Probability that the picture shows a bird at all, from 0 to 1. */
   pBird: number
+  /**
+   * How sure the plain model is of its best species outside the Dex, from 0 to 1 (a bird we do not have in the Dex that looks
+   * like one we have). Absent from fakes and from engines that cannot tell. High values make the Catch button wait.
+   */
+  outsideDexTop?: number
 }
 
 export interface PhotoEngine {
@@ -64,6 +69,8 @@ export interface PhotoEngine {
 export interface LiveUpdate {
   candidates: Candidate[]
   pBird: number
+  /** Smoothed like the confidences; see PhotoResult. */
+  outsideDexTop?: number
   /** Set when the same species has been first for several frames in a row. */
   lockedSpeciesId?: string
   framesPerSecond: number

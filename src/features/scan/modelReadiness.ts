@@ -16,6 +16,9 @@ export type ReadinessKind = 'sound' | 'photo' | 'live' | 'all'
 const SOUND_FILES: readonly string[] = [MODEL_FILE_IDS.birdnet, MODEL_FILE_IDS.birdnetGeo]
 const PHOTO_FILES: readonly string[] = [MODEL_FILE_IDS.wingclipGraph, MODEL_FILE_IDS.wingclipData, MODEL_FILE_IDS.wingclipText]
 
+/** Used by the photo and live screens when present (the occurrence prior), fetched quietly after the main model. */
+export const PHOTO_EXTRA_FILES: readonly string[] = [MODEL_FILE_IDS.birdnetGeo]
+
 /** The model files a screen needs. The live camera shares the model of the photo screen. */
 export function modelFilesFor(kind: ReadinessKind): readonly string[] {
   switch (kind) {
@@ -225,9 +228,18 @@ export async function prepareKind(
   engines: Pick<Engines, 'sound' | 'photo'>,
   onProgress: (progress: PrepareProgress) => void,
   totals: { sound: number; photo: number },
+  /**
+   * Fetches files in the background, for nothing the screen waits for: the 15 MB location model, which improves photo
+   * answers (a Common Goldeneye against Barrow's Goldeneye) but is not needed for them. Real engines only; failures are ignored.
+   */
+  fetchInBackground?: (fileIds: readonly string[]) => Promise<void>,
 ): Promise<void> {
   if (kind === 'sound') return engines.sound.prepare((progress) => onProgress(toProgress(progress)))
-  if (kind === 'photo' || kind === 'live') return engines.photo.prepare((progress) => onProgress(toProgress(progress)))
+  if (kind === 'photo' || kind === 'live') {
+    await engines.photo.prepare((progress) => onProgress(toProgress(progress)))
+    if (fetchInBackground) void fetchInBackground(PHOTO_EXTRA_FILES).catch(() => undefined)
+    return
+  }
 
   let soundTotal = totals.sound
   let photoTotal = totals.photo

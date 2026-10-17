@@ -25,7 +25,7 @@ export const result = {
     when: 'Kdy',
     where: 'Kde',
     unknownPlace: 'Místo neznámé',
-    noLocation: 'Poloha není povolená, takže ptáka uložím bez místa.',
+    noLocation: 'Místo neznám (poloha není povolená, nebo ho fotka neobsahuje), takže ptáka uložím bez místa.',
     coordinates: '{lat}, {lon}',
     north: 'S',
     south: 'J',
@@ -48,6 +48,8 @@ export const result = {
   reason: {
     lowConfidence: 'Zatím to není dost jisté. Potřebuju aspoň {needed}.',
     unclear: 'Příliš podobné jinému druhu. Zkus to ještě jednou, třeba z jiného úhlu.',
+    notBird: 'Ptáka nevidím dost zřetelně. Zkus ho vyfotit blíž a v lepším světle.',
+    outsideDex: 'Tohle může být pták, kterého v Dexu nemám. Zkus to ještě jednou, třeba z jiného úhlu.',
   },
 
   // Nothing sure enough to catch
@@ -81,7 +83,7 @@ export const result = {
   // After the catch
   success: {
     newSpecies: 'Nový druh v tvém Dexu!',
-    again: 'Další nález tohoto druhu.',
+    again: 'Další úlovek tohoto druhu.',
     toDex: 'Zobrazit v Dexu',
     scanNext: 'Skenovat dál',
     celebration: 'Oslava chycení',

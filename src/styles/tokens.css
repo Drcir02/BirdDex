@@ -47,7 +47,7 @@
   --btn-blue: #2f6fe8;
   --btn-blue-hi: #5b98ff;
   --btn-blue-edge: #173f99;
-  --btn-red: #e03a45;
+  --btn-red: #d6303b;
   --btn-red-hi: #f4636c;
   --btn-red-edge: #8f1620;
   --btn-light: #eef7df;
@@ -55,9 +55,9 @@
   --btn-light-edge: #7aa06d;
 
   /* ---- Status colours (on the LCD) ---- */
-  --ok: #1e7a3a;
+  --ok: #17692f;
   --ok-bg: #b9efc5;
-  --warn: #946a00;
+  --warn: #7d5a00;
   --warn-bg: #ffe9a3;
   --bad: #a3121f;
   --bad-bg: #ffcdd1;

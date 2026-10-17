@@ -48,7 +48,7 @@ type Clock = ReturnType<typeof fakeClock>
 function scores(index: number, confidence: number, pBird = 0.98): VisionScores {
   const probs = new Float32Array(SIZE).fill(0.01)
   probs[index] = confidence / pBird
-  return { pBird, pRaw: 0.9, probs, outsideMass: 0, bestSimilarity: 0.5, bestDexSimilarity: 0.5, blank: false, timings: { preprocessMs: 1, inferMs: 1, scoreMs: 1 } }
+  return { pBird, pRaw: 0.9, probs, outsideMass: 0, outsideTop: 0, bestSimilarity: 0.5, bestDexSimilarity: 0.5, blank: false, timings: { preprocessMs: 1, inferMs: 1, scoreMs: 1 } }
 }
 
 function makeVideo() {
@@ -224,6 +224,13 @@ describe('what the screens get', () => {
     expect(update.candidates).toHaveLength(3)
     expect(update.pBird).toBeCloseTo(0.98, 5)
     expect(update.lockedSpeciesId).toBeUndefined()
+  })
+
+  it('carries the smoothed outsideDexTop of the plain model', async () => {
+    const { state, start } = setup({ answer: () => ({ ...scores(3, 0.7), outsideTop: 0.3 }) })
+    await start()
+    await state.clock.advance(0)
+    expect(state.updates[0].outsideDexTop).toBeCloseTo(0.3, 6)
   })
 
   it('locks on the bird after three steady frames, and says which', async () => {

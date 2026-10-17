@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { chromium, expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test'
 import type { Candidate } from '../../src/domain/types'
 import type { DevRow, DevStatus } from '../../src/ml/vision/DevPhotoPage'
+import { evaluateCandidates } from '../../src/domain/thresholds'
 import { skipWelcome } from './shell-helpers'
 
 // The photo engine and the live scanner on the real WingCLIP model, in real Chromium, through the developer page
@@ -175,6 +176,38 @@ test.describe('photos', () => {
       expect(row.diagnostics.timings.scoreMs).toBeLessThan(500)
       expect(row.diagnostics.backend).toBe('worker')
     }
+  })
+
+  test('the Catch rules keep the confident wrong answers away and let the clear right ones through', async () => {
+    const rows = (await page.evaluate(() => window.birddexPhotoDev!.getState())).rows
+    const lines: string[] = []
+    const verdict = (name: string, sensitivity: 'strict' | 'normal' | 'easy' = 'normal') => {
+      const row = rowOf(rows, name)
+      const first = evaluateCandidates(row.candidates, 'photo', sensitivity, { pBird: row.pBird, outsideDexTop: row.diagnostics.outsideDexTop })[0]
+      lines.push(`${name} (${sensitivity}): ${row.candidates[0].speciesId} ${row.candidates[0].confidence.toFixed(2)}, pBird ${row.pBird.toFixed(2)}, foreign ${row.diagnostics.outsideDexTop.toFixed(2)} -> ${verdictLabel(first)}`)
+      return first
+    }
+    const verdictLabel = (v: { allowed: boolean; reason?: string }) => (v.allowed ? 'CATCH' : `blocked (${v.reason})`)
+    // right answers stay catchable
+    const right = ['Common_kingfisher_at_Taipei_Zoo.jpg', 'Mallard_drake_on_Union_Bay_Natural_Area.jpg', 'Pigeons_near_Museumplein_Amsterdam.jpg', 'Cormorant_on_mooring_post_Lake_Como.jpg']
+    const outcomes = right.map((name) => verdict(name).allowed)
+    console.log(`catch rules:\n${lines.join('\n')}`)
+    expect(outcomes, lines.join('\n')).toEqual(right.map(() => true))
+    // the House Sparrow in the mosaic (read as a Mandarin Duck 0.78): pBird is 0.84 to 0.91
+    expect(rowOf(rows, 'House_sparrow_bathing_in_mosaic_fountain_Park_Ridge.jpg').pBird).toBeLessThan(0.95)
+    expect(verdict('House_sparrow_bathing_in_mosaic_fountain_Park_Ridge.jpg')).toMatchObject({ allowed: false, reason: 'not-a-clear-bird' })
+    // an American bird the Dex does not have: the plain model is sure of its own species (0.89), so even a guess that passed the
+    // confidence bar would be refused
+    const hairy = rowOf(rows, 'Hairy_woodpecker_on_mossy_tree_Carkeek_Park.jpg')
+    expect(hairy.diagnostics.outsideDexTop).toBeGreaterThan(0.6)
+    expect(evaluateCandidates([{ speciesId: hairy.candidates[0].speciesId, confidence: 0.9 }], 'photo', 'easy', { pBird: hairy.pBird, outsideDexTop: hairy.diagnostics.outsideDexTop })[0].reason).toBe('maybe-outside-dex')
+    // European birds of the Dex see no strong foreign rival (the Cormorant is the closest, with its American cousins)
+    for (const name of ['Common_kingfisher_at_Taipei_Zoo.jpg', 'Mallard_drake_on_Union_Bay_Natural_Area.jpg', 'Pigeons_near_Museumplein_Amsterdam.jpg']) {
+      expect(rowOf(rows, name).diagnostics.outsideDexTop, name).toBeLessThan(0.15)
+    }
+    expect(rowOf(rows, 'Cormorant_on_mooring_post_Lake_Como.jpg').diagnostics.outsideDexTop).toBeLessThan(0.3) // 0.265: the limit has to stay above it
+    test.info().annotations.push({ type: 'catch rules', description: lines.join('\n') })
+    console.log(`catch rules:\n${lines.join('\n')}`)
   })
 
   test('birds that are not in the Dex, or that nobody could name, never come out sure of themselves', async () => {
@@ -510,6 +543,7 @@ test.describe('live camera', () => {
       expect(last.update.candidates[0].confidence).toBeGreaterThan(0.8)
       expect(last.update.candidates).toHaveLength(3)
       expect(last.update.pBird).toBeGreaterThan(0.9)
+      expect(last.update.outsideDexTop, 'the live scanner passes on the smoothed foreign-bird number').toBeLessThan(0.15) // a Mallard
       expect(last.update.framesPerSecond).toBeGreaterThan(0.2)
       // at most one frame every 700 ms, so at most 1.43 per second (the average moves a little with the length of each analysis)
       expect(last.update.framesPerSecond).toBeLessThan(1.7)

@@ -7,7 +7,7 @@ import { createImageEncoder, ModelLoadError, type ImageEncoder } from '../runtim
 import { decodeClassifier, probeDot, similarities, ClassifierFormatError, type Classifier } from './classifier'
 import { SCORING, WINGCLIP } from './constants'
 import { preprocessWithStats } from './preprocess'
-import { birdProbability, makeDexMask, scoreSpecies } from './scoring'
+import { birdProbability, makeDexMask, outsideDexTop, scoreSpecies } from './scoring'
 
 /** What the core needs to start: the three model files and which classifier rows are species of the Dex (in Dex order). */
 export interface VisionInit {
@@ -53,6 +53,11 @@ export interface VisionScores {
   probs: Float32Array
   /** The probability that the bird is one of the species outside the Dex. */
   outsideMass: number
+  /**
+   * The strongest species outside the Dex in the plain softmax over all species (no penalty, no prior). Unlike outsideMass it
+   * is not softened by the penalty, so it shows a look-alike the Dex does not have (outsideDexTop in scoring.ts).
+   */
+  outsideTop: number
   /** Best cosine similarity over all species, and over the Dex species. */
   bestSimilarity: number
   bestDexSimilarity: number
@@ -138,6 +143,7 @@ export class VisionCore {
         pRaw: 0,
         probs: new Float32Array(this.dexRows.length),
         outsideMass: 1,
+        outsideTop: 0,
         bestSimilarity: 0,
         bestDexSimilarity: 0,
         blank: true,
@@ -154,6 +160,7 @@ export class VisionCore {
     const sims = similarities(this.classifier, embedding, this.sims)
     const { pRaw, pBird } = birdProbability(probeDot(this.classifier, embedding))
     const { probs, outsideMass } = scoreSpecies(sims, this.dexRows, this.dexMask, { logPrior: options.logPrior })
+    const outsideTop = outsideDexTop(sims, this.dexMask)
     let bestSimilarity = -Infinity
     for (let r = 0; r < sims.length; r++) if (sims[r] > bestSimilarity) bestSimilarity = sims[r]
     let bestDexSimilarity = -Infinity
@@ -165,6 +172,7 @@ export class VisionCore {
       pRaw,
       probs,
       outsideMass,
+      outsideTop,
       bestSimilarity,
       bestDexSimilarity,
       blank: false,

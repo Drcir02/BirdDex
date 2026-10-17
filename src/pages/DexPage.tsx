@@ -1,5 +1,6 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useHref, useNavigate, useSearchParams } from 'react-router-dom'
+import { DEV_ROUTES_ENABLED } from '../app/devRoutes'
 import { ROUTES } from '../app/routes'
 import { normalizeForSearch, SpeciesLoadError, useSpecies, type Region } from '../data'
 import { useCaughtSummary } from '../db'
@@ -136,7 +137,7 @@ export default function DexPage() {
     taps.current = [...taps.current.filter((time) => now - time < SECRET_WINDOW_MS), now]
     if (taps.current.length >= SECRET_TAPS) {
       taps.current = []
-      navigate('/dev/demo')
+      if (DEV_ROUTES_ENABLED) navigate('/dev/demo')
     }
   }
 

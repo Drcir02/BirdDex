@@ -28,6 +28,13 @@ const N_BIRDNET = 6522
 const N_WINGCLIP_SPECIES = 10994
 const bySci = new Map(species.map((s) => [s.scientificName, s]))
 const upperFirst = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
+// Same as CZECH_NAME_OVERRIDES in scripts/build-species.py: BirdNET's Czech label is older nomenclature, the Dex shows the current name.
+const CZECH_NAME_OVERRIDES: Record<string, string> = {
+  'Calidris minuta': 'jespáček malý',
+  'Calidris temminckii': 'jespáček Temminckův',
+  'Larus fuscus': 'racek tmavohřbetý',
+  'Cecropis daurica': 'vlaštovka červenořitá',
+}
 
 // Same lists as in scripts/build-species.py (the script also stops when one of these is wrong).
 const SOUND_CLASSES = ['Dog', 'Engine', 'Environmental', 'Fireworks', 'Gun', 'Human non-vocal', 'Human vocal', 'Human whistle', 'Noise', 'Power tools', 'Siren']
@@ -130,8 +137,17 @@ describe('BirdNET', () => {
   it('uses the Czech label where BirdNET has one, with a capital letter, and nothing where it only has English', () => {
     for (const s of species) {
       const czech = labelsCs[s.birdnetIndex].slice(s.scientificName.length + 1)
-      expect(s.czechName, s.id).toBe(czech === s.englishName ? null : upperFirst(czech))
+      const override = CZECH_NAME_OVERRIDES[s.scientificName]
+      expect(s.czechName, s.id).toBe(override ? upperFirst(override) : czech === s.englishName ? null : upperFirst(czech))
     }
+  })
+
+  it('corrects the Czech names where BirdNET follows older nomenclature (the sandpiper pair, the Lesser Black-backed Gull, the Red-rumped Swallow)', () => {
+    expect(bySci.get('Calidris minuta')?.czechName).toBe('Jespáček malý')
+    expect(bySci.get('Calidris temminckii')?.czechName).toBe('Jespáček Temminckův')
+    expect(bySci.get('Larus fuscus')?.czechName).toBe('Racek tmavohřbetý')
+    expect(bySci.get('Cecropis daurica')?.czechName).toBe('Vlaštovka červenořitá')
+    for (const sci of Object.keys(CZECH_NAME_OVERRIDES)) expect(labelsCs.some((line) => line.startsWith(`${sci}_`)), sci).toBe(true)
   })
 
   it('has a Czech name for at least 95 percent of the birds', () => {
@@ -184,6 +200,17 @@ describe('rarity', () => {
     for (const s of europeOnly) expect(['epic', 'legendary'], s.id).toContain(s.rarity)
     expect(count(europeOnly, 'epic')).toBeGreaterThan(20)
     expect(count(europeOnly, 'legendary')).toBeGreaterThan(20)
+  })
+
+  it('puts the birds of ponds, reed beds and the canopy above the garden birds only where a garden birder would say so', () => {
+    // RARITY_OVERRIDES in scripts/build-species.py: the reporting frequency alone put these in "common" ...
+    for (const sci of ['Mergus merganser', 'Larus cachinnans', 'Circus aeruginosus', 'Ardea alba', 'Coccothraustes coccothraustes', 'Acrocephalus arundinaceus', 'Acrocephalus palustris', 'Oriolus oriolus']) {
+      expect(bySci.get(sci)?.rarity, sci).toBe('uncommon')
+    }
+    // ... and these, which a garden birder meets all the time, in "uncommon"
+    for (const sci of ['Prunella modularis', 'Certhia familiaris', 'Certhia brachydactyla', 'Turdus viscivorus']) {
+      expect(bySci.get(sci)?.rarity, sci).toBe('common')
+    }
   })
 
   it('spreads the Czech birds over all tiers, mostly reachable ones', () => {

@@ -14,16 +14,20 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+    // The developer pages are in the test build only (the end-to-end tests use them): see src/app/devRoutes.ts.
+    __DEV_ROUTES__: JSON.stringify(Boolean(process.env.E2E_PORT || process.env.BIRDDEX_DEV_ROUTES)),
   },
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt': a new version waits until src/app/appUpdate.ts says the app is idle. With 'autoUpdate' the page reloaded
+      // by itself, also in the middle of a scan or on the result screen.
+      registerType: 'prompt',
       includeAssets: ['icons/*.png', 'worklets/*.js'],
       manifest: {
         name: 'BirdDex',
         short_name: 'BirdDex',
-        description: 'Ptačí pokédex pro ptáky České republiky a Evropy.',
+        description: 'Ptačí atlas a sbírka ptáků České republiky a Evropy.',
         lang: 'cs',
         display: 'standalone',
         orientation: 'portrait',
@@ -42,6 +46,8 @@ export default defineConfig({
         globIgnores: ['vendor/**', 'models/**'],
         navigateFallback: `${base}index.html`,
         cleanupOutdatedCaches: true,
+        // The first visit takes control of the page at once (offline use works without a second visit).
+        clientsClaim: true,
         // These rules are regular expressions on purpose. A function would be copied into the service worker as text,
         // where the variable `base` does not exist: the rule would throw on every request and never cache anything
         // (so the model runtimes in vendor/ were not available offline).

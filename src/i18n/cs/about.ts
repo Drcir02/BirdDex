@@ -3,7 +3,7 @@
 
 export const about = {
   title: 'O aplikaci',
-  intro: 'Ptačí atlas, který se vejde do kapsy. Žádné účty, žádný server, všechno zůstává v tvém telefonu.',
+  intro: 'Ptačí atlas, který se vejde do kapsy. Žádné účty, žádný server, rozpoznávání i sbírka zůstávají v tvém telefonu.',
   credits: 'Poděkování',
   licences: 'Licence',
   version: 'Verze {version}',
@@ -37,7 +37,14 @@ export const about = {
     name: 'WingCLIP a WingDex',
     by: 'projekt WingDex',
     text: 'Ptáky na fotkách i v živém záběru pozná WingCLIP z projektu WingDex. Váhy modelu mají licenci CC BY-NC 4.0 (jen nekomerčně, s uvedením původu), kód je pod licencí MIT.',
-    teacher: 'WingCLIP se učil od většího modelu BioCLIP 2, který je pod licencí MIT.',
+    teacher: 'WingCLIP je zmenšený model TinyCLIP (licence MIT), který se učil od větších modelů WingCLIP-0.1 a BioCLIP 2 (licence MIT).',
+  },
+
+  taxonomy: {
+    title: 'Seznam ptáků',
+    name: 'eBird / Clements',
+    by: 'Cornell Lab of Ornithology',
+    text: 'Pořadí druhů v Dexu, jejich vědecké a anglické názvy a odkazy na Wikipedii vycházejí z taxonomie eBird/Clements, kterou přebírá projekt WingDex. České názvy doplňuje BirdNET.',
   },
 
   images: {
@@ -62,6 +69,7 @@ export const about = {
     litert: 'LiteRT.js (Apache-2.0)',
     onnx: 'ONNX Runtime Web (MIT)',
     fflate: 'fflate (MIT)',
+    workbox: 'Workbox (MIT), díky kterému aplikace funguje bez internetu',
     fonts: 'Písma Press Start 2P, VT323 a Silkscreen (SIL Open Font License)',
   },
 

@@ -72,7 +72,7 @@ Edit only the files your task owns. If you must touch something else, make the s
 - **Database** (`src/db`): `addCatch`, `listCatches`, `catchesBySpecies`, `deleteCatch`, `getMedia`, a hook for the caught summary per species, `exportBackup()` and `importBackup()` (zip with JSON and media, using `fflate`). F1b defines exact signatures; read the code.
 - **Species data**: `src/data/species.ts` loads `public/data/species.json` and offers lookup, search and filter helpers. Built by `scripts/build-species.py`.
 - **Models**: `scripts/fetch-models.mjs` writes `public/models/manifest.json` (version 2): `{ version: 2, files: [{ id, file, bytes, sha256, label }], benchmarks: [{ id, label, runtime: 'litert'|'ort', file, input: { shape, dtype } }] }`. The app reads it through `src/ml/runtime/modelStore.ts`, which downloads with progress, checks the checksum, and keeps files in Cache Storage so the app works offline afterwards. Engines ask the model store for bytes; they never fetch model files themselves.
-- **Thresholds**: `src/domain/thresholds.ts` holds the catch rules per method and `Sensitivity`. Starting values: sound normal 0.70, strict 0.85, easy 0.55; photo normal 0.60 with a margin over the second guess, strict 0.75, easy 0.45. Engine owners may recommend better numbers from measurements in their notes.
+- **Thresholds**: `src/domain/thresholds.ts` holds the catch rules per method and `Sensitivity`. Starting values (the shipped ones differ, see `thresholds.ts` and `docs/notes/photo-engine.md`): sound normal 0.70, strict 0.85, easy 0.55; photo normal 0.60 with a margin over the second guess, strict 0.75, easy 0.45. Engine owners may recommend better numbers from measurements in their notes.
 
 ## 5. Quality bar and conventions
 

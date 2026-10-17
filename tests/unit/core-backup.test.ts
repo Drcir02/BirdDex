@@ -16,7 +16,7 @@ import {
   listCatches,
 } from '../../src/db'
 import type { BackupErrorCode } from '../../src/db'
-import { extensionForMime, parseCatchRecord } from '../../src/db/backup'
+import { extensionForMime, MAX_BACKUP_FILE_BYTES, parseCatchRecord } from '../../src/db/backup'
 
 const bytesOf = async (blob: Blob) => new Uint8Array(await blob.arrayBuffer())
 const pattern = (length: number, seed: number) => Uint8Array.from({ length }, (_, i) => (i * 31 + seed) & 0xff)
@@ -251,6 +251,21 @@ describe('importBackup rejects bad files without changing anything', () => {
     await rejectsWith(new Blob([JSON.stringify([goodCatch()])], { type: 'application/json' }), 'not-a-zip')
   })
 
+  it('rejects a file far bigger than any backup before reading a byte of it (a huge file chosen by mistake must not kill the tab)', async () => {
+    await seed()
+    const huge = new Blob(['x'])
+    Object.defineProperty(huge, 'size', { value: MAX_BACKUP_FILE_BYTES + 1 })
+    const read = vi.spyOn(huge, 'arrayBuffer')
+    const error = await rejectsWith(huge, 'not-a-zip')
+    expect(error.message).toMatch(/MB/)
+    expect(read).not.toHaveBeenCalled()
+    // exactly at the limit is still read (and rejected here only because it is not a zip)
+    const atLimit = new Blob(['x'])
+    Object.defineProperty(atLimit, 'size', { value: MAX_BACKUP_FILE_BYTES })
+    await rejectsWith(atLimit, 'not-a-zip')
+    expect(MAX_BACKUP_FILE_BYTES).toBeGreaterThanOrEqual(256 * 1024 * 1024) // a backup of a big collection still fits
+  })
+
   it('rejects a damaged zip', async () => {
     await seed()
     const bytes = await bytesOf(await exportBackup())
@@ -310,6 +325,58 @@ describe('importBackup rejects bad files without changing anything', () => {
       await rejectsWith(craft({ manifest: goodManifest(media), catches: [goodCatch({ mediaId: 'm' })] }), 'malformed')
     }
     await rejectsWith(craft({ manifest: goodManifest([{ id: 'm', kind: 'video', mime: 'x', createdAt: 1, file: 'media/m.bin', bytes: 3 }]), catches: [] }), 'malformed')
+  })
+})
+
+describe('importBackup and birds that are not in the Dex', () => {
+  const blob = () =>
+    craft({
+      manifest: goodManifest(),
+      catches: [
+        goodCatch({ id: 'a', speciesId: 'parus-major', caughtAt: 10 }),
+        goodCatch({ id: 'b', speciesId: 'does-not-exist', caughtAt: 20 }),
+        goodCatch({ id: 'c', speciesId: 'old-renamed-id', caughtAt: 30 }),
+        goodCatch({ id: 'd', speciesId: 'turdus-merula', caughtAt: 40 }),
+      ],
+    })
+
+  it('leaves out catches of unknown birds and says how many, so "caught of 423" cannot exceed the total', async () => {
+    const report = await importBackup(blob(), { knownSpeciesIds: new Set(['parus-major', 'turdus-merula']) })
+    expect(report).toEqual({ total: 4, added: 2, skipped: 0, mediaAdded: 0, mediaMissing: 0, unknownSpecies: 2 })
+    expect((await listCatches()).map((c) => c.id).sort()).toEqual(['a', 'd'])
+    expect(await getCatch('b')).toBeUndefined()
+  })
+
+  it('does not count unknown birds as skipped duplicates, and still reports progress for them', async () => {
+    const steps: number[] = []
+    await importBackup(blob(), { knownSpeciesIds: new Set(['parus-major']), onProgress: (done) => steps.push(done) })
+    expect(steps).toEqual([1, 2, 3, 4])
+  })
+
+  it('checks nothing when told not to, and sets no field when every bird is known', async () => {
+    const all = await importBackup(blob(), { knownSpeciesIds: null })
+    expect(all).toEqual({ total: 4, added: 4, skipped: 0, mediaAdded: 0, mediaMissing: 0 })
+    await deleteAllCatches()
+    const known = await importBackup(blob(), { knownSpeciesIds: new Set(['parus-major', 'does-not-exist', 'old-renamed-id', 'turdus-merula']) })
+    expect('unknownSpecies' in known).toBe(false)
+  })
+
+  it('goes on without checking when the Dex list cannot be had (offline on the first visit)', async () => {
+    // no fetch for /data/species.json works in this test: the default check is skipped, the import still works
+    const report = await importBackup(blob())
+    expect(report.added).toBe(4)
+  })
+
+  it('uses the Dex list the app already loaded', async () => {
+    const { resetSpeciesCache } = await import('../../src/data/species')
+    const species = (id: string) => ({ id, dexNumber: 1, scientificName: id, czechName: null, englishName: id, family: null, inCzechia: true, inEurope: true, rarity: 'common' as const, birdnetIndex: 0, wingclipIndex: null, wikiTitle: null })
+    resetSpeciesCache([species('parus-major'), species('turdus-merula')])
+    try {
+      const report = await importBackup(blob())
+      expect(report).toMatchObject({ added: 2, unknownSpecies: 2 })
+    } finally {
+      resetSpeciesCache()
+    }
   })
 })
 

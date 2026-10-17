@@ -36,6 +36,8 @@ export interface IdentifyOptions {
 export interface PhotoDiagnostics {
   /** The probability that the bird is one of the species outside the Dex. High: a bird we do not have in the Dex. */
   outsideDexMass: number
+  /** Same as PhotoResult.outsideDexTop: the plain model's best species outside the Dex. 0 for a blank picture. */
+  outsideDexTop: number
   /** The picture was flat, the model was not run. */
   blank: boolean
   /** The probe before its calibration. */
@@ -73,7 +75,8 @@ const clock = () => (typeof performance !== 'undefined' ? performance.now() : Da
 export function toPhotoResult(scores: VisionScores, speciesIds: readonly string[]): PhotoResult {
   const pBird = scores.blank || !Number.isFinite(scores.pBird) ? 0 : scores.pBird
   if (isNotABird(pBird)) return { candidates: [], pBird }
-  return { candidates: toCandidates(scores.probs, pBird, (index) => speciesIds[index], SCORING.candidateCount), pBird }
+  const outsideDexTop = Number.isFinite(scores.outsideTop) ? scores.outsideTop : 0
+  return { candidates: toCandidates(scores.probs, pBird, (index) => speciesIds[index], SCORING.candidateCount), pBird, outsideDexTop }
 }
 
 export function createPhotoEngine(options: PhotoEngineOptions = {}): VisionPhotoEngine {
@@ -101,6 +104,7 @@ export function createPhotoEngine(options: PhotoEngineOptions = {}): VisionPhoto
         ...result,
         diagnostics: {
           outsideDexMass: scores.outsideMass,
+          outsideDexTop: Number.isFinite(scores.outsideTop) ? scores.outsideTop : 0,
           blank: scores.blank,
           pRaw: scores.pRaw,
           bestSimilarity: scores.bestSimilarity,

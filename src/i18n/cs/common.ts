@@ -31,6 +31,11 @@ export const common = {
   unknown: 'Neznámý',
   underConstruction: 'Tahle obrazovka se ještě staví.',
 
+  // A new version of the app is ready (shown only when nothing would be lost by reloading)
+  update: {
+    available: 'Je tu nová verze BirdDexu.',
+  },
+
   // Bottom navigation
   nav: {
     label: 'Hlavní nabídka',
@@ -85,7 +90,7 @@ export const common = {
     micMissing: 'Mikrofon se nepodařilo najít. Zkontroluj, jestli ho nepoužívá jiná aplikace.',
     cameraDenied: 'Kamera je zablokovaná. Povol ji v nastavení prohlížeče nebo telefonu a zkus to znovu.',
     cameraStalled: 'Kamera přestala posílat obraz. Zavři ji a zapni znovu.',
-    locationDenied: 'Poloha není povolená. Ptáky uložím i bez ní, jen u nich nebude místo nálezu.',
+    locationDenied: 'Poloha není povolená. Ptáky uložím i bez ní, jen u nich nebude místo úlovku.',
     modelDownload: 'Nepodařilo se stáhnout rozpoznávací model. Zkontroluj připojení a zkus to znovu.',
     modelLoad: 'Rozpoznávací model se nepodařilo spustit. Zkus to znovu, případně aplikaci zavři a otevři.',
     unsupported: 'Tohle tvůj prohlížeč neumí. Zkus novější verzi nebo jiný prohlížeč.',
@@ -214,7 +219,7 @@ export const common = {
       strict: 'Přísná',
       normal: 'Běžná',
       easy: 'Shovívavá',
-      switchLabel: 'Ukládat místo nálezu',
+      switchLabel: 'Ukládat místo úlovku',
       switchHint: 'Poloha zůstane jen v telefonu.',
       searchLabel: 'Hledat ptáka',
       searchPlaceholder: 'Hledej ptáka…',

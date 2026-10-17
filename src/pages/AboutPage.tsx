@@ -56,6 +56,10 @@ export default function AboutPage() {
         <p>{t('about.photo.teacher')}</p>
       </Credit>
 
+      <Credit title={t('about.taxonomy.title')} name={t('about.taxonomy.name')} by={t('about.taxonomy.by')} testId="credit-taxonomy">
+        <p>{t('about.taxonomy.text')}</p>
+      </Credit>
+
       <Credit title={t('about.images.title')} name={t('about.images.name')} testId="credit-wikimedia">
         <p>{t('about.images.text')}</p>
       </Credit>
@@ -75,6 +79,7 @@ export default function AboutPage() {
             <li>{t('about.libraries.litert')}</li>
             <li>{t('about.libraries.onnx')}</li>
             <li>{t('about.libraries.fflate')}</li>
+            <li>{t('about.libraries.workbox')}</li>
             <li>{t('about.libraries.fonts')}</li>
           </ul>
         </div>

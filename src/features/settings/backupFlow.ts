@@ -32,13 +32,13 @@ export function importSummaryLines(report: ImportReport): string[] {
   const lines = [
     t('settings.backup.result.added', {
       count: report.added,
-      forms: plural(report.added, ['nález', 'nálezy', 'nálezů']),
+      forms: plural(report.added, ['úlovek', 'úlovky', 'úlovků']),
       total: report.total,
     }),
   ]
   if (report.skipped > 0) lines.push(t('settings.backup.result.skipped', { count: report.skipped }))
   if (report.mediaAdded > 0) lines.push(t('settings.backup.result.media', { count: report.mediaAdded }))
-  if (report.mediaMissing > 0) lines.push(t('settings.backup.result.mediaMissing', { count: report.mediaMissing }))
+  if (report.mediaMissing > 0) lines.push(t('settings.backup.result.mediaMissing', { catches: catchesText(report.mediaMissing) }))
   return lines
 }
 
@@ -55,7 +55,7 @@ export function importErrorText(error: unknown): string {
         return t('settings.backup.errors.malformed')
       case 'storage-full':
         return error.report && error.report.added > 0
-          ? t('settings.backup.errors.storageFullPartial', { count: error.report.added })
+          ? t('settings.backup.errors.storageFullPartial', { catches: catchesText(error.report.added) })
           : t('settings.backup.errors.storageFull')
     }
   }
@@ -68,7 +68,7 @@ export function exportErrorText(error: unknown): string {
   return key === 'storageFull' ? t('common.errors.storageFull') : t('settings.backup.exportFailed')
 }
 
-/** "3 nálezy" style helper kept here so the page does not repeat the plural forms. */
+/** "3 úlovky" style helper kept here so the pages do not repeat the plural forms. One word for a catch everywhere: úlovek. */
 export function catchesText(count: number): string {
-  return `${formatNumber(count)} ${plural(count, ['nález', 'nálezy', 'nálezů'])}`
+  return `${formatNumber(count)} ${plural(count, ['úlovek', 'úlovky', 'úlovků'])}`
 }

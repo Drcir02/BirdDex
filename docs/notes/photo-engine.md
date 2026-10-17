@@ -221,29 +221,44 @@ brightness of the 224x224 crop varies by less than 3 (of 255), the model is not 
 that the top confidence stays far below any catch threshold: **the largest top confidence of any non-bird picture I tried is 0.22**
 (a crop of sky, Python) and 0.10 in the browser tests (the spec asserts below 0.25).
 
-### Catch thresholds (recommendation from the fixture distribution)
+### Catch thresholds (as shipped in `src/domain/thresholds.ts`)
 
-What each sensitivity of `thresholds.ts` does with these results (`evaluateCandidates(..., 'photo', ...)`; CATCH = the button works):
+The first version of this note recommended the starting values (strict 0.75 / lead 0.25, normal 0.60 / 0.15, easy 0.45 / 0.10).
+Integration (task I1) raised them after the measurements, and these are the values now in `PICTURE_RULES` (photo and live camera;
+each rule also needs a bird probability and a limit for "probably a bird outside the Dex", see `thresholds.ts`):
 
-| Photo (top guess, confidence) | strict 0.75 / lead 0.25 | normal 0.60 / 0.15 | easy 0.45 / 0.10 |
+| Sensitivity | confidence at least | lead over the second guess at least |
+|---|---|---|
+| strict | 0.85 | 0.30 |
+| normal | 0.70 | 0.20 |
+| easy | 0.55 | 0.10 |
+
+What each does with the fixture photos (CATCH = the button works). The table follows the confidence and the bird probability that
+were measured; the lead over the second guess was not recorded for every photo, so a CATCH in a row with a close second guess
+may still be blocked by the lead rule. "No prior" is the engine alone; "Prague prior" is with
+BirdNET's location model for a position in Prague (the shipped cap, `integration.md`):
+
+| Photo (top guess, confidence without prior) | strict | normal | easy |
 |---|---|---|---|
 | Kingfisher 0.985, Mallard 0.996, Rock Pigeon 0.986 (all right) | CATCH | CATCH | CATCH |
-| Great Cormorant 0.750 (right) | CATCH (only just) | CATCH | CATCH |
-| Common Goldeneye 0.631 (right, Barrow's 0.319 second) | - | CATCH | CATCH |
-| House Sparrow, read as Mandarin Duck 0.782 (**wrong**) | CATCH | CATCH | CATCH |
-| Geese from Fujian, read as Pink-footed Goose 0.672 (probably wrong) | - | CATCH | CATCH |
-| Hairy Woodpecker, read as Eurasian Three-toed 0.479 (wrong, not in the Dex) | - | - | CATCH |
-| Unknown tit, read as Marsh Tit 0.541 | - | - | CATCH |
+| Great Cormorant 0.750 (right; 0.77 with the prior) | - (lead too small for 0.85) | CATCH | CATCH |
+| Common Goldeneye 0.631 (right, Barrow's 0.319 second) | - | - | CATCH |
+| Common Goldeneye with the Prague prior (0.88 October, 0.74 May; Barrow's 0.01 to 0.07) | October only | CATCH | CATCH |
+| House Sparrow, read as Mandarin Duck 0.782 (**wrong**; pBird 0.86, under the 0.95 that strict and normal ask for) | - | - | CATCH |
+| Geese from Fujian, read as Pink-footed Goose 0.672 | - | - | CATCH (if the lead is 0.10) |
+| Hairy Woodpecker, Eurasian Three-toed 0.479 (wrong, not in the Dex) | - | - | - |
+| Unknown tit, Marsh Tit 0.541 | - | - | - |
 | Gulls from Seattle, Herring Gull 0.385 | - | - | - |
 
-Right answers lie between 0.63 and 1.00, confident wrong ones at 0.67 and 0.78: **no threshold separates them on this set**, so I
-recommend leaving the starting values (strict 0.75, normal 0.60, easy 0.45) and relying on the confirmation step, with these two remarks:
-(1) `easy` lets every foreign bird through, which is what "easy" means; (2) a normal threshold of 0.70 would keep 4 of the 5 right catches
-(it loses the ambiguous Goldeneye) and drop the Fujian geese. One more cheap guard has some evidence behind it: all five right
-answers have pBird of 0.987 or more while the only confident wrong answer (the sparrow in the mosaic) has 0.86, so the Catch button
-could also require `pBird >= 0.95`. That is n = 1; I did not build it in.
-For the live camera: the lock rule (below) needs a smoothed confidence above 0.4 for three frames, then the photo rules apply to the
-current frame as the brief says.
+**The Common Goldeneye without a position (0.63) cannot be caught on `normal`** (it needs 0.70): the old table said it could. That
+photo is only caught when the phone knows where it is, because the location prior lifts it to 0.74 or more. This is deliberate: with
+no position the engine cannot tell Common from Barrow's Goldeneye, and the screen shows both guesses with the reason. The sound
+rules are strict 0.85, normal 0.70 and easy 0.60 (the sound note's 0.60 for easy is applied, not just recommended).
+
+**Later (docs/notes/fix-ml.md section 1): the Catch rules now also use pBird and `outsideDexTop`; the Palm Warbler / Water Pipit case is a known gap.**
+Right answers lie between 0.63 and 1.00, confident wrong ones at 0.67 and 0.78: **no threshold separates them on this set**, so the
+confirmation step stays the real guard. For the live camera, the lock rule (below) needs a smoothed confidence above 0.4 for three
+frames, then the photo rules apply to the current frame as the brief says.
 
 ### The occurrence prior
 

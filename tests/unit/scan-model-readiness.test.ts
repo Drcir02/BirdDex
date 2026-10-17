@@ -10,6 +10,7 @@ import {
   isRealDownload,
   markPrepared,
   modelFilesFor,
+  PHOTO_EXTRA_FILES,
   prepareKind,
   resetFakePrepared,
   runReducer,
@@ -19,7 +20,7 @@ import {
   type RunState,
   type StatusSummary,
 } from '../../src/features/scan/modelReadiness'
-import type { ModelFileStatus, ModelStoreStatus } from '../../src/ml/runtime/modelStore'
+import { MODEL_FILE_IDS, type ModelFileStatus, type ModelStoreStatus } from '../../src/ml/runtime/modelStore'
 
 const MB = 1_000_000
 
@@ -259,6 +260,27 @@ describe('prepareKind', () => {
       await prepareKind(kind, engines, () => undefined, totals)
       expect(calls).toEqual(['photo'])
     }
+  })
+
+  it('fetches the location model quietly after the photo model, and never for sound', async () => {
+    for (const kind of ['photo', 'live'] as const) {
+      const { engines } = stubEngines()
+      const fetched: Array<readonly string[]> = []
+      await prepareKind(kind, engines, () => undefined, totals, async (ids) => void fetched.push(ids))
+      expect(fetched).toEqual([PHOTO_EXTRA_FILES])
+    }
+    expect(PHOTO_EXTRA_FILES).toEqual([MODEL_FILE_IDS.birdnetGeo])
+    const { engines } = stubEngines()
+    const fetched: Array<readonly string[]> = []
+    await prepareKind('sound', engines, () => undefined, totals, async (ids) => void fetched.push(ids))
+    expect(fetched).toEqual([])
+  })
+
+  it('does not wait for the background fetch, and ignores its failure', async () => {
+    const { engines } = stubEngines()
+    const failing = () => Promise.reject(new Error('no network'))
+    await expect(prepareKind('photo', engines, () => undefined, totals, failing)).resolves.toBeUndefined()
+    await new Promise((resolve) => setTimeout(resolve, 0))
   })
 
   it('prepares both for the hub, one after the other, with one bar for all of it', async () => {

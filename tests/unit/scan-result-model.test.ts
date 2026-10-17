@@ -100,6 +100,19 @@ describe('texts and routes of the result', () => {
   it('picks the Czech sentence for a blocked guess', () => {
     expect(reasonKey('low-confidence')).toBe('result.reason.lowConfidence')
     expect(reasonKey('unclear-margin')).toBe('result.reason.unclear')
+    expect(reasonKey('not-a-clear-bird')).toBe('result.reason.notBird')
+    expect(reasonKey('maybe-outside-dex')).toBe('result.reason.outsideDex')
+  })
+
+  it('keeps a confident guess off the Catch button when the picture is unclear or may show a bird outside the Dex', () => {
+    const guesses = [guess('anas-platyrhynchos', 0.9), guess('parus-major', 0.05)]
+    const catchable = (extra: { pBird?: number; outsideDexTop?: number }) =>
+      buildResultView({ pending: { method: 'photo', candidates: guesses, ...extra }, species, sensitivity: 'normal', caughtCounts: NONE })
+    expect(catchable({ pBird: 0.99, outsideDexTop: 0.01 }).candidates[0].allowed).toBe(true)
+    expect(catchable({ pBird: 0.88 }).candidates[0]).toMatchObject({ allowed: false, reason: 'not-a-clear-bird' })
+    expect(catchable({ pBird: 0.99, outsideDexTop: 0.4 }).candidates[0]).toMatchObject({ allowed: false, reason: 'maybe-outside-dex' })
+    expect(catchable({}).candidates[0].allowed).toBe(true) // fakes and old results carry no such numbers
+    expect(catchable({ pBird: 0.88 }).anyAllowed).toBe(false)
   })
 
   it('sends "try again" back to the screen that made the scan', () => {

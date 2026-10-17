@@ -224,6 +224,7 @@ which is what the Catch button looks at.
   out at **0.50 to 0.58** after the two-window rule (0.46 weighed down in Prague).
 - Voices and engines make BirdNET shout its non-bird classes ("Human vocal" up to 0.67, "Siren" 0.97, "Engine" 0.84, "Fireworks"
   0.94); those are never reported and the Dex birds stay under 0.07. In the soundscape "Engine" appears in two windows at 0.02 to 0.05.
+- **Fixed later (docs/notes/fix-ml.md section 2):** windows whose spectrum is flat (`src/ml/audio/flatness.ts`, limit 0.95) are not analysed.
 - The one false alarm found is a quirk: perfectly flat, full-band noise makes BirdNET see a Lesser Spotted Woodpecker at 0.5 to 0.58.
   Real microphone noise is not flat to 24 kHz (every filtered version scored nothing), so I expect it only from synthetic hiss. It also
   lights `hearingBird`.

@@ -37,7 +37,7 @@ export interface ResultView {
 }
 
 export interface ResultInput {
-  pending: Pick<PendingIdentification, 'method' | 'candidates'>
+  pending: Pick<PendingIdentification, 'method' | 'candidates'> & Partial<Pick<PendingIdentification, 'pBird' | 'outsideDexTop'>>
   species: readonly Species[]
   sensitivity: Sensitivity
   /** Species id to how many times it is caught. */
@@ -47,7 +47,7 @@ export interface ResultInput {
 export function buildResultView({ pending, species, sensitivity, caughtCounts }: ResultInput): ResultView {
   const guesses = normalizeCandidates(pending.candidates)
   // The verdicts compare every guess with the others, so they are worked out for the whole list before any is left out.
-  const verdicts = evaluateCandidates(guesses, pending.method, sensitivity)
+  const verdicts = evaluateCandidates(guesses, pending.method, sensitivity, { pBird: pending.pBird, outsideDexTop: pending.outsideDexTop })
   const candidates: CandidateView[] = []
   guesses.forEach((guess, index) => {
     const bird = getSpeciesById(guess.speciesId, species)
@@ -76,8 +76,17 @@ export function buildResultView({ pending, species, sensitivity, caughtCounts }:
 }
 
 /** The text key for a blocked guess. */
-export function reasonKey(reason: BlockReason): 'result.reason.lowConfidence' | 'result.reason.unclear' {
-  return reason === 'low-confidence' ? 'result.reason.lowConfidence' : 'result.reason.unclear'
+export function reasonKey(reason: BlockReason): 'result.reason.lowConfidence' | 'result.reason.unclear' | 'result.reason.notBird' | 'result.reason.outsideDex' {
+  switch (reason) {
+    case 'low-confidence':
+      return 'result.reason.lowConfidence'
+    case 'unclear-margin':
+      return 'result.reason.unclear'
+    case 'not-a-clear-bird':
+      return 'result.reason.notBird'
+    case 'maybe-outside-dex':
+      return 'result.reason.outsideDex'
+  }
 }
 
 /** Which scan screen the person goes back to to try again. */

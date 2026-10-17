@@ -43,6 +43,8 @@ export function useSoundScan(): SoundScan {
   const limitTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const earlyPause = useRef<PauseReason | undefined>(undefined)
   const partial = useRef<SoundResult | undefined>(undefined)
+  // Done was tapped while the engine was still getting ready (the first level already showed the Stop button): stop as soon as it is.
+  const stopWanted = useRef(false)
 
   const clearLimit = () => {
     if (limitTimer.current !== undefined) clearTimeout(limitTimer.current)
@@ -60,6 +62,11 @@ export function useSoundScan(): SoundScan {
 
   const stop = useCallback(() => {
     const current = session.current
+    if (!current && busy.current && !finishing.current) {
+      stopWanted.current = true
+      dispatch({ type: 'stopping' })
+      return
+    }
     if (!current || finishing.current) return
     finishing.current = true
     clearLimit()
@@ -113,6 +120,7 @@ export function useSoundScan(): SoundScan {
     partial.current = undefined
     earlyPause.current = undefined
     startedAt.current = undefined
+    stopWanted.current = false
     dispatch({ type: 'start' })
     // Everything from here to the call of the engine runs inside the tap, which is what lets iOS open the microphone.
     let opening: Promise<SoundSession>
@@ -122,6 +130,7 @@ export function useSoundScan(): SoundScan {
         date: new Date(),
         onUpdate: (update) => {
           if (!current()) return
+          if (stopWanted.current) return
           if (startedAt.current === undefined) {
             startedAt.current = now()
             dispatch({ type: 'listening', startedAt: startedAt.current })
@@ -155,6 +164,11 @@ export function useSoundScan(): SoundScan {
         }
         session.current = opened
         startedAt.current ??= now()
+        if (stopWanted.current) {
+          stopWanted.current = false
+          stop()
+          return
+        }
         dispatch({ type: 'listening', startedAt: startedAt.current })
         limitTimer.current = setTimeout(stop, SOUND_LIMIT_MS)
         // The microphone question has been answered with yes: now is the time for the location question, so the two never compete.

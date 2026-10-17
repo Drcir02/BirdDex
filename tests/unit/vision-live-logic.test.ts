@@ -39,6 +39,14 @@ describe('smoothing', () => {
     expect(state.pBird).toBeCloseTo(1 + (0.4 - 1) / 3, 6)
   })
 
+  it('smooths outsideDexTop like pBird, and counts a missing value as 0', () => {
+    const tracker = new LiveTracker(2)
+    expect(tracker.update({ ...frame(2, { 0: 0.9 }), outsideDexTop: 0.6 }).outsideDexTop).toBeCloseTo(0.6, 6)
+    expect(tracker.update({ ...frame(2, { 0: 0.9 }), outsideDexTop: 0 }).outsideDexTop).toBeCloseTo(0.6 - 0.6 / 3, 6)
+    tracker.reset()
+    expect(tracker.update(frame(2, { 0: 0.9 })).outsideDexTop).toBe(0)
+  })
+
   it('reports the three strongest guesses, strongest first', () => {
     const tracker = new LiveTracker(6)
     const state = tracker.update(frame(6, { 1: 0.2, 3: 0.6, 4: 0.3, 5: 0.25 }))

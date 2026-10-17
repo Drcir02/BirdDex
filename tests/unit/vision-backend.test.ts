@@ -10,6 +10,7 @@ const scores: VisionScores = {
   pRaw: 0.8,
   probs: Float32Array.from([0.7, 0.2]),
   outsideMass: 0.1,
+  outsideTop: 0.05,
   bestSimilarity: 0.6,
   bestDexSimilarity: 0.6,
   blank: false,
