@@ -28,6 +28,10 @@ half done, and what is left, so the work can be picked up by anyone (a new sessi
 - First end-to-end flow tests with the real models (`tests/e2e/flows.spec.ts`, `tests/e2e/flows-helpers.ts`) and a measuring
   spec (`tests/e2e/zz-measure-i1.spec.ts`, temporary: delete when finished).
 
+Known problem in the saved state: `tests/unit/fun-sounds.test.ts` does not type-check (the fake `AudioContext` in the test does
+not match `AudioContextLike`), so `npm run build` and the GitHub build fail until that is fixed. The live site is not affected:
+it was built from `181852e`, and the pushes since then carry `[skip ci]`. Fix this first, before any push without `[skip ci]`.
+
 ## Left to do
 
 1. Finish and verify the half-done items above (run tsc, vitest, the e2e suite, the production build).
