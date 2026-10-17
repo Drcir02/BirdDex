@@ -735,7 +735,8 @@
 
 /* ---------- Live camera ---------- */
 
-/* The camera takes all the height the buttons leave, whatever the phone. */
+/* The card that shows while the camera is off takes all the height the button leaves, whatever the phone. The camera itself,
+   once it is on, is the full-screen layer of live.css. */
 .bd-scan-live .bd-scan-cam {
   flex: 1 1 280px;
 }
@@ -750,20 +751,6 @@
     0 0 0 3px var(--ink),
     var(--shadow-pixel);
   isolation: isolate;
-}
-
-.bd-scan-cam__video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  background: #000;
-  visibility: hidden;
-}
-
-.bd-scan-cam.is-on .bd-scan-cam__video {
-  visibility: visible;
 }
 
 .bd-scan-cam__idle {
