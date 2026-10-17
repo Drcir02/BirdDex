@@ -120,6 +120,13 @@
   cursor: pointer;
 }
 
+.bd-live__times {
+  margin-left: 1px;
+  font-size: 1.3em;
+  line-height: 0;
+  vertical-align: -0.06em;
+}
+
 .bd-live__zoomstep.is-active {
   color: #08140d;
   background: var(--led-green);

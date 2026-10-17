@@ -21,6 +21,17 @@ export interface LiveOverlayProps {
   box: RefObject<HTMLDivElement | null>
 }
 
+/** "2,5×" with the multiplication sign drawn bigger: the pixel font has a tiny one that looks like a raised x. */
+function ZoomLabel({ zoom }: { zoom: number }) {
+  const text = formatZoom(zoom)
+  return (
+    <>
+      {text.slice(0, -1)}
+      <span className="bd-live__times">×</span>
+    </>
+  )
+}
+
 export function LiveOverlay({ scan, video, box }: LiveOverlayProps) {
   const { species } = useSpecies()
   const { state, zoom } = scan
@@ -60,7 +71,7 @@ export function LiveOverlay({ scan, video, box }: LiveOverlayProps) {
           <div className="bd-live__top">
             <IconButton icon="close" label={t('scan.live.stop')} onClick={scan.stop} />
             <span className={cx('bd-live__readout', zoomed && 'is-zoomed')} data-testid="zoom-readout" aria-label={t('scan.live.zoom.step', { zoom: formatZoom(zoom.state.zoom) })}>
-              {formatZoom(zoom.state.zoom)}
+              <ZoomLabel zoom={zoom.state.zoom} />
             </span>
           </div>
 
@@ -91,7 +102,7 @@ export function LiveOverlay({ scan, video, box }: LiveOverlayProps) {
                     data-testid={`zoom-step-${step}`}
                     onClick={() => zoom.setZoom(step)}
                   >
-                    {formatZoom(step)}
+                    <ZoomLabel zoom={step} />
                   </button>
                 ))}
               </div>

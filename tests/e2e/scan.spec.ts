@@ -607,7 +607,11 @@ test.describe('scan with the live camera', () => {
     await expect(page.getByTestId('live-view')).toHaveAttribute('data-phase', 'running')
     const live = () => page.evaluate(() => (window as unknown as { __streams: MediaStream[] }).__streams.flatMap((s) => s.getTracks()).filter((track) => track.readyState === 'live').length)
     expect(await live()).toBeGreaterThan(0)
-    await page.getByTestId('nav-dex').click()
+    // The camera covers the whole phone, so the navigation bar is not there to tap: leaving works as the Back button does it.
+    await page.evaluate(() => {
+      window.location.hash = '/'
+    })
+    await expect(page.getByTestId('nav-dex')).toBeVisible()
     await expect.poll(live).toBe(0)
   })
 
