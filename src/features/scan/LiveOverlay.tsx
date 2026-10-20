@@ -37,7 +37,6 @@ export function LiveOverlay({ scan, video, box }: LiveOverlayProps) {
   const { state, zoom } = scan
   const starting = state.phase === 'starting'
   const cameraOn = starting || state.phase === 'running'
-  const lockedId = state.update?.lockedSpeciesId
   const first = state.update?.candidates[0]
   const top = first && first.confidence >= MIN_SHOWN_CONFIDENCE ? first : undefined
   const topBird = top && species ? getSpeciesById(top.speciesId, species) : undefined
@@ -50,7 +49,7 @@ export function LiveOverlay({ scan, video, box }: LiveOverlayProps) {
       className={cx('bd-live', cameraOn && 'is-on')}
       data-testid="live-view"
       data-phase={state.phase}
-      data-locked={lockedId ? 'true' : undefined}
+      data-locked={scan.canCatch ? 'true' : undefined}
       data-zoom={zoom.state.zoom.toFixed(2)}
       data-zoom-mode={zoom.state.mode}
     >
@@ -77,8 +76,8 @@ export function LiveOverlay({ scan, video, box }: LiveOverlayProps) {
 
           <div className="bd-live__bottom">
             <div className="bd-scan-cam__info" role="status" data-testid="live-info">
-              <span className={cx('bd-scan-cam__status', lockedId && 'is-locked')} data-testid="live-status">
-                {lockedId ? t('scan.live.locked') : starting ? t('scan.live.starting') : t('scan.live.searching')}
+              <span className={cx('bd-scan-cam__status', scan.canCatch && 'is-locked')} data-testid="live-status">
+                {scan.canCatch ? t('scan.live.locked') : scan.lockedUnsure ? t('scan.live.lockedUnsure') : starting ? t('scan.live.starting') : t('scan.live.searching')}
               </span>
               {top ? (
                 <span className="bd-scan-cam__guess" data-testid="live-guess">
@@ -112,7 +111,7 @@ export function LiveOverlay({ scan, video, box }: LiveOverlayProps) {
             <Button size="lg" icon="check" fullWidth disabled={!scan.canCatch} busy={state.catching} onClick={scan.catchNow} data-testid="live-catch">
               {t('scan.live.catch')}
             </Button>
-            {!lockedId ? <p className="bd-live__hint">{t('scan.live.catchWait')}</p> : null}
+            {!scan.canCatch ? <p className="bd-live__hint">{scan.lockedUnsure ? t('scan.live.unsureHint') : t('scan.live.catchWait')}</p> : null}
           </div>
         </>
       ) : null}

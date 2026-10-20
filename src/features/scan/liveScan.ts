@@ -2,6 +2,8 @@
 // Pure, so both are unit-tested without a camera. The hook that drives them with the real camera is useLiveScan.ts.
 
 import type { LiveUpdate } from '../../domain/engines'
+import { evaluateCandidates } from '../../domain/thresholds'
+import type { Sensitivity } from '../../domain/types'
 import type { ScanErrorKind } from './errors'
 
 /** A camera that has sent no new picture for this long is called stalled (it is a known bug of iPhone home-screen apps). */
@@ -106,4 +108,14 @@ export class StallWatch {
     if (now - this.lastProgressAt >= this.timeoutMs) return 'stalled'
     return this.seenFrame ? 'running' : 'waiting'
   }
+}
+
+/**
+ * The locked bird must also pass the same catch rules as the result screen (confidence, lead over the other guesses, how clearly
+ * the picture shows a bird, no foreign look-alike). Otherwise the Catch button would open a result screen that refuses the catch.
+ */
+export function liveCatchAllowed(update: LiveUpdate | undefined, sensitivity: Sensitivity): boolean {
+  if (!update || update.lockedSpeciesId === undefined) return false
+  const verdicts = evaluateCandidates(update.candidates, 'live', sensitivity, { pBird: update.pBird, outsideDexTop: update.outsideDexTop })
+  return verdicts.find((verdict) => verdict.speciesId === update.lockedSpeciesId)?.allowed === true
 }

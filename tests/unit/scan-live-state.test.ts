@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { LiveUpdate } from '../../src/domain/engines'
-import { canCatchLive, CAMERA_STALL_MS, INITIAL_LIVE_STATE, liveReducer, StallWatch } from '../../src/features/scan/liveScan'
+import { canCatchLive, CAMERA_STALL_MS, INITIAL_LIVE_STATE, liveCatchAllowed, liveReducer, StallWatch } from '../../src/features/scan/liveScan'
 
 const update = (overrides: Partial<LiveUpdate> = {}): LiveUpdate => ({
   candidates: [{ speciesId: 'parus-major', confidence: 0.8 }],
@@ -125,5 +125,30 @@ describe('StallWatch', () => {
     const watch = new StallWatch(0, 1000)
     expect(watch.check({ hasFrame: false, marker: 0 }, 999)).toBe('waiting')
     expect(watch.check({ hasFrame: false, marker: 0 }, 1000)).toBe('stalled')
+  })
+})
+
+describe('liveCatchAllowed (the same rules as the result screen)', () => {
+  const locked = (extra: Partial<LiveUpdate> = {}): LiveUpdate => update({ lockedSpeciesId: 'parus-major', candidates: [{ speciesId: 'parus-major', confidence: 0.85 }], pBird: 0.99, outsideDexTop: 0.05, ...extra })
+
+  it('needs a lock at all', () => {
+    expect(liveCatchAllowed(undefined, 'normal')).toBe(false)
+    expect(liveCatchAllowed(update(), 'normal')).toBe(false)
+  })
+
+  it('lets a sure, clear bird through', () => {
+    expect(liveCatchAllowed(locked(), 'normal')).toBe(true)
+  })
+
+  it('refuses what the result screen would refuse: a picture that is hardly a bird (a photo of a screen), a foreign look-alike, a weak guess', () => {
+    expect(liveCatchAllowed(locked({ pBird: 0.88 }), 'normal')).toBe(false)
+    expect(liveCatchAllowed(locked({ outsideDexTop: 0.6 }), 'normal')).toBe(false)
+    expect(liveCatchAllowed(locked({ candidates: [{ speciesId: 'parus-major', confidence: 0.5 }] }), 'normal')).toBe(false)
+  })
+
+  it('follows the sensitivity', () => {
+    const borderline = locked({ candidates: [{ speciesId: 'parus-major', confidence: 0.6 }], pBird: 0.9 })
+    expect(liveCatchAllowed(borderline, 'normal')).toBe(false)
+    expect(liveCatchAllowed(borderline, 'easy')).toBe(true)
   })
 })

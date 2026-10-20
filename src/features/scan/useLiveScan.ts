@@ -14,8 +14,9 @@ import { ROUTES } from '../../app/routes'
 import type { LiveSession, LiveUpdate } from '../../domain/engines'
 import { getEngines } from '../../ml/engines'
 import { setPending } from '../../state/pending'
+import { useSettings } from '../../state/settings'
 import { classifyScanError } from './errors'
-import { canCatchLive, INITIAL_LIVE_STATE, liveReducer, StallWatch, withoutLock, type LiveScanState } from './liveScan'
+import { canCatchLive, INITIAL_LIVE_STATE, liveCatchAllowed, liveReducer, StallWatch, withoutLock, type LiveScanState } from './liveScan'
 import { buildLivePending } from './pendingBuilders'
 import { knownLocation, locationForCatch, warmLocation, warmLocationIfAllowed } from './scanLocation'
 import { ZoomController, type ZoomState } from './zoomController'
@@ -32,6 +33,8 @@ export interface LiveZoom {
 export interface LiveScan {
   state: LiveScanState
   canCatch: boolean
+  /** A bird is locked on, but the catch rules say it is not sure enough yet (so Catch stays off). */
+  lockedUnsure: boolean
   start: () => void
   /** Switches the camera off and goes back to the start button. */
   stop: () => void
@@ -59,6 +62,9 @@ function sizeOf(element: Element | null | undefined): Size | undefined {
 export function useLiveScan(videoRef: RefObject<HTMLVideoElement | null>, boxRef?: RefObject<HTMLElement | null>): LiveScan {
   const navigate = useNavigate()
   const [state, dispatch] = useReducer(liveReducer, INITIAL_LIVE_STATE)
+  const { settings } = useSettings()
+  const sensitivity = useRef(settings.sensitivity)
+  sensitivity.current = settings.sensitivity
 
   const attempt = useRef(0)
   const busy = useRef(false)
@@ -214,7 +220,7 @@ export function useLiveScan(videoRef: RefObject<HTMLVideoElement | null>, boxRef
   const catchNow = useCallback(() => {
     const live = session.current
     const update = lastUpdate.current
-    if (!live || !update?.lockedSpeciesId || catching.current) return
+    if (!live || !update?.lockedSpeciesId || catching.current || !liveCatchAllowed(update, sensitivity.current)) return
     catching.current = true
     dispatch({ type: 'catching' })
     void (async () => {
@@ -258,5 +264,8 @@ export function useLiveScan(videoRef: RefObject<HTMLVideoElement | null>, boxRef
 
   const setZoom = useCallback((zoom: number) => zoomController.setZoom(zoom), [zoomController])
 
-  return { state, canCatch: canCatchLive(state), start, stop, catchNow, zoom: { state: zoomState, setZoom, gestures } }
+  const locked = canCatchLive(state)
+  const allowed = locked && liveCatchAllowed(state.update, settings.sensitivity)
+
+  return { state, canCatch: allowed, lockedUnsure: locked && !allowed, start, stop, catchNow, zoom: { state: zoomState, setZoom, gestures } }
 }

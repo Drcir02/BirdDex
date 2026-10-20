@@ -110,6 +110,8 @@ export const scan = {
     aim: 'Namiř kameru na ptáka a drž ji klidně. Pták má být uprostřed.',
     searching: 'Hledám ptáka…',
     locked: 'Mám ho na mušce!',
+    lockedUnsure: 'Skoro… ještě si nejsem jistý',
+    unsureHint: 'Přibliž se nebo přibliž obraz a drž telefon klidně. Chytit jde, až si budu jistý.',
     guess: 'Můj tip',
     catchWait: 'Tlačítko se odemkne, až ptáka zaměřím.',
     reticle: 'Zaměřovač',
