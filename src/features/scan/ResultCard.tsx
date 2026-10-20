@@ -55,7 +55,8 @@ export function ResultCard({ view, neededConfidence, enabled, onCatch }: ResultC
         </Button>
       ) : (
         <div className="bd-result-card__blocked">
-          <Button icon="check" disabled aria-describedby={reasonId} data-testid="catch-button">
+          {/* Not sure enough, but the person decides: the button works, and the confirmation says the app is unsure. */}
+          <Button icon="check" variant="secondary" disabled={!enabled} aria-describedby={reasonId} onClick={() => onCatch(view)} data-testid="catch-button">
             {t('result.catch')}
           </Button>
           <p id={reasonId} className="bd-result-card__reason" data-testid="catch-reason">

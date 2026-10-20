@@ -49,6 +49,19 @@ const creditBody = (meta: Record<string, string>) => ({
   query: { pages: [{ title: 'File:Parus major 2.jpg', imageinfo: [{ extmetadata: Object.fromEntries(Object.entries(meta).map(([k, v]) => [k, { value: v }])) }] }] },
 })
 
+const NO_FILES = { query: { pages: [] } }
+
+const commonsList = (...files: Array<{ title: string; thumb: string; meta: Record<string, string>; mime?: string }>) => ({
+  query: {
+    pages: files.map((file, index) => ({
+      pageid: index + 1,
+      title: file.title,
+      index: index + 1,
+      imageinfo: [{ thumburl: file.thumb, mime: file.mime ?? 'image/jpeg', extmetadata: Object.fromEntries(Object.entries(file.meta).map(([k, v]) => [k, { value: v }])) }],
+    })),
+  },
+})
+
 const CC_BY_SA = { Artist: '<a href="//commons.wikimedia.org/wiki/User:Foo">Foo Bar</a>', LicenseShortName: 'CC BY-SA 4.0', License: 'cc-by-sa-4.0' }
 
 type Handler = (url: string) => Response | Promise<Response>
@@ -198,9 +211,40 @@ describe('looking up a photo', () => {
     expect(await service.get('parus-major')).toBeNull()
     expect(service.peek('parus-major')).toBeNull()
     expect(rows.get('parus-major')?.thumbnailUrl).toBe('')
-    expect(calls).toHaveLength(2)
+    const asked = calls.length
     expect(await service.get('parus-major')).toBeNull()
-    expect(calls).toHaveLength(2)
+    expect(calls).toHaveLength(asked)
+  })
+
+  it('falls back to the Commons category when the articles have no usable picture, and skips eggs and maps', async () => {
+    const category = commonsList(
+      { title: 'File:Parus major egg.jpg', thumb: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Parus_major_egg.jpg/330px-Parus_major_egg.jpg', meta: CC_BY_SA },
+      { title: 'File:Parus major NC.jpg', thumb: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Parus_major_NC.jpg/330px-Parus_major_NC.jpg', meta: { LicenseShortName: 'CC BY-NC 2.0', License: 'cc-by-nc-2.0' } },
+      { title: 'File:Parus major 7.jpg', thumb: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Parus_major_7.jpg/330px-Parus_major_7.jpg', meta: CC_BY_SA },
+    )
+    const { fetchImpl, calls } = makeFetch((url) => {
+      if (url.includes('/page/summary/')) return json({ type: 'standard', title: 'X' })
+      if (url.includes('generator=categorymembers')) return json(category)
+      return json(NO_FILES)
+    })
+    const photo = await makeService({ fetchImpl }).service.get('parus-major')
+    expect(photo?.thumbnailUrl).toContain('Parus_major_7.jpg')
+    expect(photo?.licence).toBe('CC BY-SA 4.0')
+    expect(photo?.link).toBe('https://commons.wikimedia.org/wiki/File:Parus_major_7.jpg')
+    expect(calls.some((url) => url.includes('cs.wikipedia.org'))).toBe(true)
+    expect(calls.some((url) => url.includes('generator=search'))).toBe(false)
+  })
+
+  it('tries the next place when the article picture has a licence that is not allowed, and ends with a Commons search', async () => {
+    const search = commonsList({ title: 'File:Great tit.jpg', thumb: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Great_tit.jpg/330px-Great_tit.jpg', meta: CC_BY_SA })
+    const { fetchImpl } = makeFetch((url) => {
+      if (url.includes('/page/summary/')) return json(summaryBody())
+      if (url.includes('titles=')) return json(creditBody({ LicenseShortName: 'CC BY-NC 2.0', License: 'cc-by-nc-2.0' }))
+      if (url.includes('generator=search')) return json(search)
+      return json(NO_FILES)
+    })
+    const photo = await makeService({ fetchImpl }).service.get('parus-major')
+    expect(photo?.thumbnailUrl).toContain('Great_tit.jpg')
   })
 
   it('tries the scientific name when the article under the Wikipedia title does not exist', async () => {
@@ -216,19 +260,19 @@ describe('looking up a photo', () => {
   })
 
   it('has no photo when the article has no picture, or is a disambiguation page', async () => {
-    const { fetchImpl } = makeFetch((url) => (url.includes('/page/summary/') ? json({ type: 'standard', title: 'X' }) : new Response('x', { status: 500 })))
+    const { fetchImpl } = makeFetch((url) => (url.includes('/page/summary/') ? json({ type: 'standard', title: 'X' }) : json(NO_FILES)))
     expect(await makeService({ fetchImpl }).service.get('parus-major')).toBeNull()
 
-    const other = makeFetch((url) => (url.includes('/page/summary/') ? json({ type: 'disambiguation', thumbnail: { source: THUMB } }) : new Response('x', { status: 500 })))
+    const other = makeFetch((url) => (url.includes('/page/summary/') ? json({ type: 'disambiguation', thumbnail: { source: THUMB } }) : json(NO_FILES)))
     expect(await makeService({ fetchImpl: other.fetchImpl }).service.get('parus-major')).toBeNull()
   })
 
   it('has no photo when the picture does not come from Wikimedia (nobody to credit)', async () => {
     const { fetchImpl, calls } = makeFetch((url) =>
-      url.includes('/page/summary/') ? json(summaryBody('https://example.com/a/330px-x.jpg', 'https://example.com/a/x.jpg')) : new Response('x', { status: 500 }),
+      url.includes('/page/summary/') ? json(summaryBody('https://example.com/a/330px-x.jpg', 'https://example.com/a/x.jpg')) : json(NO_FILES),
     )
     expect(await makeService({ fetchImpl }).service.get('parus-major')).toBeNull()
-    expect(calls.every((url) => url.includes('/page/summary/'))).toBe(true)
+    expect(calls.some((url) => url.includes('/w/api.php') && url.includes('titles='))).toBe(false)
   })
 
   it('has no photo for an id that is not in the Dex, without any request', async () => {
@@ -243,7 +287,8 @@ describe('looking up a photo', () => {
     const [a, b, c] = await Promise.all([service.get('parus-major'), service.get('parus-major'), service.get('parus-major')])
     expect(a).toBe(b)
     expect(b).toBe(c)
-    expect(calls).toHaveLength(2)
+    // The article, then its credit: one lookup, not three.
+    expect(calls.filter((url) => url.includes('en.wikipedia.org'))).toHaveLength(1)
   })
 })
 

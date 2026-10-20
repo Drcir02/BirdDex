@@ -193,7 +193,7 @@ test.describe('scan by sound', () => {
     await expect(first.getByTestId('candidate-name')).toHaveText('Sýkora koňadra')
     await expect(first.getByRole('button', { name: 'Chytit' })).toBeEnabled()
     for (const index of [1, 2]) {
-      await expect(cards(page).nth(index).getByRole('button', { name: 'Chytit' })).toBeDisabled()
+      await expect(cards(page).nth(index).getByRole('button', { name: 'Chytit' })).toBeEnabled()
       await expect(cards(page).nth(index).getByTestId('catch-reason')).toContainText('Zatím to není dost jisté')
     }
     // What will be saved: the clip, the time and the place.
@@ -255,7 +255,7 @@ test.describe('scan by sound', () => {
     await expect(panel).toContainText('Poslouchej aspoň deset sekund.')
     await expect(page.getByRole('heading', { name: 'Moje tipy, zatím nejisté' })).toBeVisible()
     await expect(cards(page)).toHaveCount(3)
-    for (let index = 0; index < 3; index++) await expect(cards(page).nth(index).getByRole('button', { name: 'Chytit' })).toBeDisabled()
+    for (let index = 0; index < 3; index++) await expect(cards(page).nth(index).getByRole('button', { name: 'Chytit' })).toBeEnabled()
     await shot(page, testInfo, 'result-nothing-sure')
     await page.getByTestId('retry-scan').click()
     await expect(page).toHaveURL(/#\/scan\/sound$/)
@@ -521,7 +521,7 @@ test.describe('scan by photo', () => {
     await expect(page).toHaveURL(/#\/result$/)
     await expect(cards(page)).toHaveCount(3)
     await expect(cards(page).nth(0).getByTestId('catch-reason')).toContainText('Příliš podobné jinému druhu')
-    await expect(cards(page).nth(1).getByRole('button', { name: 'Chytit' })).toBeDisabled()
+    await expect(cards(page).nth(1).getByRole('button', { name: 'Chytit' })).toBeEnabled()
     await expect(page.getByTestId('nothing-sure')).toBeVisible()
   })
 
@@ -586,7 +586,7 @@ test.describe('scan with the live camera', () => {
     await expect(page.getByTestId('live-guess')).toBeVisible({ timeout: 15_000 })
     await page.waitForTimeout(1500)
     await expect(page.getByTestId('live-view')).not.toHaveAttribute('data-locked', 'true')
-    await expect(page.getByTestId('live-catch')).toBeDisabled()
+    await expect(page.getByTestId('live-view')).not.toHaveAttribute('data-locked', 'true')
   })
 
   test('switches the camera off when the person leaves the screen', async ({ page }) => {

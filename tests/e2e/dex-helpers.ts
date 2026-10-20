@@ -82,9 +82,17 @@ export async function mockWikimedia(page: Page, options: WikimediaMockOptions = 
     }),
   )
 
+  // The fallbacks (Czech Wikipedia, the Commons category and search) find nothing in these tests.
+  await page.route(/^https:\/\/cs\.wikipedia\.org\/api\/rest_v1\/page\/summary\//, (route) =>
+    track(async () => (options.down ? route.abort('connectionfailed') : route.fulfill({ status: 404, headers: CORS, contentType: 'application/json', body: '{}' })), false),
+  )
+
   await page.route(/^https:\/\/commons\.wikimedia\.org\/w\/api\.php/, (route) =>
     track(async () => {
       if (options.down) return route.abort('connectionfailed')
+      if (!new URL(route.request().url()).searchParams.get('titles')) {
+        return route.fulfill({ status: 200, headers: CORS, contentType: 'application/json', body: JSON.stringify({ query: { pages: [] } }) })
+      }
       const titles = new URL(route.request().url()).searchParams.get('titles') ?? ''
       const file = titles.replace(/^File:/, '').replace(/ /g, '_')
       mock.credits.push(file)

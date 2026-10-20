@@ -259,9 +259,9 @@ test.describe('a bird that is far away, with the real model', () => {
       await expect(page.getByTestId('live-catch')).toBeEnabled()
       await shot(page, testInfo, 'live-far-bird-5x-locked')
 
-      // Zooming out again lets go of the lock at once: the Catch button is off before the next picture has been looked at.
+      // Zooming out again lets go of the "sure" state at once, before the next picture has been looked at.
       await page.getByTestId('zoom-step-2').tap()
-      await expect(page.getByTestId('live-catch')).toBeDisabled()
+      await expect(page.getByTestId('live-view')).not.toHaveAttribute('data-locked', 'true')
       await page.getByTestId('zoom-step-5').tap()
       await expect(page.getByTestId('live-view')).toHaveAttribute('data-locked', 'true', { timeout: 60_000 })
 

@@ -76,6 +76,7 @@ export const result = {
     withPhoto: 'Uložím ho i s datem, místem a fotkou.',
     withSound: 'Uložím ho i s datem, místem a nahrávkou.',
     withoutMedia: 'Uložím ho i s datem a místem.',
+    unsure: 'Tímhle si nejsem jistý. Chytit ho můžeš, o tom rozhoduješ ty.',
     button: 'Chytit',
     cancel: 'Ještě ne',
   },

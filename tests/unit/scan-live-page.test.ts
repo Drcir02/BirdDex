@@ -438,7 +438,7 @@ describe('zoom', () => {
     }
   })
 
-  it('lets go of the lock and switches Catch off at once when the view changes', async () => {
+  it('lets go of the "sure" state at once when the view changes, but a guess can still be caught', async () => {
     window.localStorage.setItem('birddex:fakeDelay', '150')
     resetEngines()
     await prepared()
@@ -449,8 +449,9 @@ describe('zoom', () => {
       expect(catchKey().disabled).toBe(false)
       fireEvent.click(await screen.findByTestId('zoom-step-2'))
       expect(screen.getByTestId('live-view').getAttribute('data-locked')).toBeNull()
-      expect(catchKey().disabled).toBe(true)
-      expect(screen.getByTestId('live-status').textContent).toBe('Hledám ptáka…')
+      // The green "sure" state is gone at once; a guess is still there, and the person may still catch it.
+      expect(catchKey().disabled).toBe(false)
+      expect(screen.getByTestId('live-status').textContent).toBe('Skoro… ještě si nejsem jistý')
     } finally {
       stopCamera()
     }

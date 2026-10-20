@@ -49,7 +49,7 @@ export function LiveOverlay({ scan, video, box }: LiveOverlayProps) {
       className={cx('bd-live', cameraOn && 'is-on')}
       data-testid="live-view"
       data-phase={state.phase}
-      data-locked={scan.canCatch ? 'true' : undefined}
+      data-locked={scan.sure ? 'true' : undefined}
       data-zoom={zoom.state.zoom.toFixed(2)}
       data-zoom-mode={zoom.state.mode}
     >
@@ -76,8 +76,8 @@ export function LiveOverlay({ scan, video, box }: LiveOverlayProps) {
 
           <div className="bd-live__bottom">
             <div className="bd-scan-cam__info" role="status" data-testid="live-info">
-              <span className={cx('bd-scan-cam__status', scan.canCatch && 'is-locked')} data-testid="live-status">
-                {scan.canCatch ? t('scan.live.locked') : scan.lockedUnsure ? t('scan.live.lockedUnsure') : starting ? t('scan.live.starting') : t('scan.live.searching')}
+              <span className={cx('bd-scan-cam__status', scan.sure && 'is-locked')} data-testid="live-status">
+                {scan.sure ? t('scan.live.locked') : scan.canCatch ? t('scan.live.lockedUnsure') : starting ? t('scan.live.starting') : t('scan.live.searching')}
               </span>
               {top ? (
                 <span className="bd-scan-cam__guess" data-testid="live-guess">
@@ -111,7 +111,7 @@ export function LiveOverlay({ scan, video, box }: LiveOverlayProps) {
             <Button size="lg" icon="check" fullWidth disabled={!scan.canCatch} busy={state.catching} onClick={scan.catchNow} data-testid="live-catch">
               {t('scan.live.catch')}
             </Button>
-            {!scan.canCatch ? <p className="bd-live__hint">{scan.lockedUnsure ? t('scan.live.unsureHint') : t('scan.live.catchWait')}</p> : null}
+            {!scan.sure ? <p className="bd-live__hint">{scan.canCatch ? t('scan.live.unsureHint') : t('scan.live.catchWait')}</p> : null}
           </div>
         </>
       ) : null}

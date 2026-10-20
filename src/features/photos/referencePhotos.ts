@@ -12,13 +12,29 @@ import type { Species } from '../../domain/types'
 import { fetchJson, HttpStatusError, type FetchJsonOptions } from './http'
 import { createLimiter } from './limiter'
 import { PhotoLookupError, type ReferencePhoto } from './types'
-import { creditUrl, DETAIL_WIDTH, fileOfImageUrl, filePageUrl, parseCredit, parseSummary, summaryUrl, thumbnailAtWidth } from './wikimedia'
+import {
+  commonsCategoryUrl,
+  commonsSearchUrl,
+  creditUrl,
+  czechSummaryUrl,
+  DETAIL_WIDTH,
+  fileOfImageUrl,
+  filePageUrl,
+  parseCommonsFiles,
+  parseCredit,
+  parseSummary,
+  summaryUrl,
+  thumbnailAtWidth,
+  type CommonsFile,
+} from './wikimedia'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 /** A found photo is looked up again after this long (the lead picture of an article can change). */
 export const HIT_TTL_MS = 60 * DAY_MS
 /** "No usable photo" is asked again after this long. */
 export const MISS_TTL_MS = 7 * DAY_MS
+/** A saved "no photo" older than this (20 October 2026) is forgotten: the lookup has more places to look now. */
+export const MISSES_RETRIED_SINCE = Date.UTC(2026, 9, 20)
 /** After a failed lookup the same bird is not tried again for this long (unless the phone comes back online). */
 export const FAILURE_COOL_DOWN_MS = 20_000
 /** This many failed lookups in a row pause the whole service for BREAKER_PAUSE_MS. */
@@ -137,13 +153,15 @@ export function createReferencePhotoService(options: ReferencePhotoServiceOption
 
   // A record "from the future" (the phone's clock was wrong) is not trusted either.
   const isFresh = (record: PhotoCacheRecord) => {
+    // "No photo" answers from before the Czech Wikipedia and Commons fallbacks existed are asked again once.
+    if (record.thumbnailUrl === '' && record.fetchedAt < MISSES_RETRIED_SINCE && now() >= MISSES_RETRIED_SINCE) return false
     const age = now() - record.fetchedAt
     return age > -DAY_MS && age < (record.thumbnailUrl === '' ? MISS_TTL_MS : HIT_TTL_MS)
   }
 
-  async function summaryOf(title: string) {
+  async function summaryOf(title: string, urlOf: (title: string) => string = summaryUrl) {
     try {
-      return parseSummary(await fetchJson(summaryUrl(title), http))
+      return parseSummary(await fetchJson(urlOf(title), http))
     } catch (error) {
       if (error instanceof HttpStatusError) {
         if (error.status === 404) return undefined // no such article under this title
@@ -162,27 +180,60 @@ export function createReferencePhotoService(options: ReferencePhotoServiceOption
     }
   }
 
-  /** The two questions to the web: the article's picture, then its author and licence. */
+  const photoOf = (species: Species, thumbnailUrl: string, file: CommonsFile, credit: { author: string; licence: { name: string } }): ReferencePhoto => ({
+    speciesId: species.id,
+    thumbnailUrl,
+    imageUrl: thumbnailAtWidth(thumbnailUrl, DETAIL_WIDTH),
+    author: credit.author,
+    licence: credit.licence.name,
+    link: filePageUrl(file),
+  })
+
+  /** A Wikipedia article's picture, when it has one with a licence that may be shown. */
+  async function fromArticle(species: Species, title: string, urlOf?: (title: string) => string): Promise<ReferencePhoto | null> {
+    const summary = await summaryOf(title, urlOf)
+    const thumbnailUrl = summary?.thumbnailUrl ?? summary?.originalUrl
+    if (!thumbnailUrl) return null
+    const file = fileOfImageUrl(thumbnailUrl) ?? (summary?.originalUrl ? fileOfImageUrl(summary.originalUrl) : undefined)
+    if (!file) return null // without a file page there is nobody to credit
+    const credit = await creditOf(file)
+    return credit ? photoOf(species, thumbnailUrl, file, credit) : null
+  }
+
+  /** The best photo among the pictures that Commons itself lists for the species (its category, then a search). */
+  async function fromCommons(species: Species, url: string): Promise<ReferencePhoto | null> {
+    let json: unknown
+    try {
+      json = await fetchJson(url, http)
+    } catch (error) {
+      if (error instanceof HttpStatusError) {
+        if (error.status === 404) return null
+        throw new PhotoLookupError('network', `Wikimedia answered ${error.status}`, { cause: error })
+      }
+      throw error
+    }
+    const best = parseCommonsFiles(json)[0]
+    return best ? photoOf(species, best.thumbnailUrl, best.file, best.credit) : null
+  }
+
+  /**
+   * Looks for a picture in turn: the English article (by its title, then by the scientific name), the Czech article, the
+   * Commons category of the species, a Commons search. The first usable photo wins; a picture whose licence is not allowed
+   * only means the next place is tried.
+   */
   async function findOnline(species: Species): Promise<ReferencePhoto | null> {
     const titles = [...new Set([species.wikiTitle, species.scientificName].filter((title): title is string => !!title))]
     for (const title of titles) {
-      const summary = await summaryOf(title)
-      const thumbnailUrl = summary?.thumbnailUrl ?? summary?.originalUrl
-      if (!thumbnailUrl) continue
-      const file = fileOfImageUrl(thumbnailUrl) ?? (summary?.originalUrl ? fileOfImageUrl(summary.originalUrl) : undefined)
-      if (!file) continue // without a file page there is nobody to credit
-      const credit = await creditOf(file)
-      if (!credit) return null // the licence does not allow it, so there is no photo to show
-      return {
-        speciesId: species.id,
-        thumbnailUrl,
-        imageUrl: thumbnailAtWidth(thumbnailUrl, DETAIL_WIDTH),
-        author: credit.author,
-        licence: credit.licence.name,
-        link: filePageUrl(file),
-      }
+      const photo = await fromArticle(species, title)
+      if (photo) return photo
     }
-    return null
+    if (species.czechName) {
+      const photo = await fromArticle(species, species.czechName, czechSummaryUrl)
+      if (photo) return photo
+    }
+    const fromCategory = await fromCommons(species, commonsCategoryUrl(species.scientificName))
+    if (fromCategory) return fromCategory
+    return fromCommons(species, commonsSearchUrl(species.scientificName))
   }
 
   async function lookup(speciesId: string, entry: { waiters: number }): Promise<ReferencePhoto | null> {

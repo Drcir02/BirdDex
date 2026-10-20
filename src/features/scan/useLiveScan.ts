@@ -16,8 +16,8 @@ import { getEngines } from '../../ml/engines'
 import { setPending } from '../../state/pending'
 import { useSettings } from '../../state/settings'
 import { classifyScanError } from './errors'
-import { canCatchLive, INITIAL_LIVE_STATE, liveCatchAllowed, liveReducer, StallWatch, withoutLock, type LiveScanState } from './liveScan'
-import { buildLivePending } from './pendingBuilders'
+import { canCatchLive, hasLiveGuess, INITIAL_LIVE_STATE, liveCatchAllowed, liveReducer, StallWatch, withoutLock, type LiveScanState } from './liveScan'
+import { buildLivePending, MIN_SHOWN_CONFIDENCE } from './pendingBuilders'
 import { knownLocation, locationForCatch, warmLocation, warmLocationIfAllowed } from './scanLocation'
 import { ZoomController, type ZoomState } from './zoomController'
 import { createZoomGestures, type ZoomGestures } from './zoomGestures'
@@ -33,8 +33,8 @@ export interface LiveZoom {
 export interface LiveScan {
   state: LiveScanState
   canCatch: boolean
-  /** A bird is locked on, but the catch rules say it is not sure enough yet (so Catch stays off). */
-  lockedUnsure: boolean
+  /** A bird is locked on and passes the same rules as the result screen: the "sure" state. Catch works without it too. */
+  sure: boolean
   start: () => void
   /** Switches the camera off and goes back to the start button. */
   stop: () => void
@@ -220,7 +220,7 @@ export function useLiveScan(videoRef: RefObject<HTMLVideoElement | null>, boxRef
   const catchNow = useCallback(() => {
     const live = session.current
     const update = lastUpdate.current
-    if (!live || !update?.lockedSpeciesId || catching.current || !liveCatchAllowed(update, sensitivity.current)) return
+    if (!live || !update || !hasLiveGuess(update, MIN_SHOWN_CONFIDENCE) || catching.current) return
     catching.current = true
     dispatch({ type: 'catching' })
     void (async () => {
@@ -264,8 +264,8 @@ export function useLiveScan(videoRef: RefObject<HTMLVideoElement | null>, boxRef
 
   const setZoom = useCallback((zoom: number) => zoomController.setZoom(zoom), [zoomController])
 
-  const locked = canCatchLive(state)
-  const allowed = locked && liveCatchAllowed(state.update, settings.sensitivity)
+  const sure = canCatchLive(state) && liveCatchAllowed(state.update, settings.sensitivity)
+  const canCatch = state.phase === 'running' && !state.catching && hasLiveGuess(state.update, MIN_SHOWN_CONFIDENCE)
 
-  return { state, canCatch: allowed, lockedUnsure: locked && !allowed, start, stop, catchNow, zoom: { state: zoomState, setZoom, gestures } }
+  return { state, canCatch, sure, start, stop, catchNow, zoom: { state: zoomState, setZoom, gestures } }
 }

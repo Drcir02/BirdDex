@@ -110,8 +110,14 @@ export class StallWatch {
   }
 }
 
+/** There is a guess to catch: the person decides whether it is right, so it does not have to be a lock or pass the rules. */
+export function hasLiveGuess(update: LiveUpdate | undefined, minConfidence: number): boolean {
+  const top = update?.candidates[0]
+  return top !== undefined && top.confidence >= minConfidence
+}
+
 /**
- * The locked bird must also pass the same catch rules as the result screen (confidence, lead over the other guesses, how clearly
+ * Whether the locked bird would pass the same catch rules as the result screen (confidence, lead over the other guesses, how clearly
  * the picture shows a bird, no foreign look-alike). Otherwise the Catch button would open a result screen that refuses the catch.
  */
 export function liveCatchAllowed(update: LiveUpdate | undefined, sensitivity: Sensitivity): boolean {

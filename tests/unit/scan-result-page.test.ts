@@ -107,14 +107,16 @@ describe('the guesses', () => {
     expect(within(cards()[2]).getByRole('heading', { name: 'Červenka obecná' })).toBeTruthy()
   })
 
-  it('turns the Catch button on only for the guess that passes, and names the reason for the others in Czech', async () => {
+  it('keeps Catch available for every guess (the person decides), and names the reason for the unsure ones in Czech', async () => {
     setPending(pending())
     renderResult()
     await waitFor(() => expect(cards()).toHaveLength(3))
     const button = (index: number) => within(cards()[index]).getByRole('button', { name: 'Chytit' }) as HTMLButtonElement
     expect(button(0).disabled).toBe(false)
-    expect(button(1).disabled).toBe(true)
-    expect(button(2).disabled).toBe(true)
+    expect(button(1).disabled).toBe(false)
+    expect(button(2).disabled).toBe(false)
+    expect(cards()[0].getAttribute('data-allowed')).toBe('true')
+    expect(cards()[1].getAttribute('data-allowed')).toBe('false')
     expect(within(cards()[1]).getByTestId('catch-reason').textContent).toMatch(/^Zatím to není dost jisté\. Potřebuju aspoň 70\s%\.$/)
     expect(within(cards()[0]).queryByTestId('catch-reason')).toBeNull()
     expect(button(1).getAttribute('aria-describedby')).toBe(within(cards()[1]).getByTestId('catch-reason').id)
@@ -141,8 +143,26 @@ describe('the guesses', () => {
     setPending(pending({ candidates: [guess('parus-major', 0.8)] }))
     renderResult()
     await waitFor(() => expect(cards()).toHaveLength(1))
-    expect((within(cards()[0]).getByRole('button', { name: 'Chytit' }) as HTMLButtonElement).disabled).toBe(true)
+    expect((within(cards()[0]).getByRole('button', { name: 'Chytit' }) as HTMLButtonElement).disabled).toBe(false)
     expect(within(cards()[0]).getByTestId('catch-reason').textContent).toMatch(/85\s%/)
+  })
+
+  it('an unsure guess can be caught after a confirmation that says the app is unsure', async () => {
+    setPending(pending({ candidates: [guess('parus-major', 0.5)] }))
+    renderResult()
+    await waitFor(() => expect(cards()).toHaveLength(1))
+    fireEvent.click(within(cards()[0]).getByRole('button', { name: 'Chytit' }))
+    expect(await screen.findByTestId('confirm-unsure')).toBeTruthy()
+    expect(screen.getByTestId('confirm-text').textContent).toContain('o tom rozhoduješ ty')
+  })
+
+  it('a sure guess is confirmed without that warning', async () => {
+    setPending(pending({ candidates: [guess('parus-major', 0.95)] }))
+    renderResult()
+    await waitFor(() => expect(cards()).toHaveLength(1))
+    fireEvent.click(within(cards()[0]).getByRole('button', { name: 'Chytit' }))
+    await screen.findByTestId('confirm-text')
+    expect(screen.queryByTestId('confirm-unsure')).toBeNull()
   })
 })
 

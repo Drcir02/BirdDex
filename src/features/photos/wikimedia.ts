@@ -6,6 +6,7 @@
 import { acceptLicence, cleanAuthor, plainText, type AcceptedLicence } from './licences'
 
 const SUMMARY_BASE = 'https://en.wikipedia.org/api/rest_v1/page/summary/'
+const CZECH_SUMMARY_BASE = 'https://cs.wikipedia.org/api/rest_v1/page/summary/'
 const COMMONS_HOST = 'commons.wikimedia.org'
 const ENGLISH_WIKIPEDIA_HOST = 'en.wikipedia.org'
 const UPLOAD_HOST = 'upload.wikimedia.org'
@@ -18,6 +19,11 @@ export const DETAIL_WIDTH = 500
 /** "Great tit" becomes `.../page/summary/Great_tit`. */
 export function summaryUrl(title: string): string {
   return SUMMARY_BASE + encodeURIComponent(title.trim().replace(/ /g, '_'))
+}
+
+/** The same question to the Czech Wikipedia, for birds whose English article has no usable picture. */
+export function czechSummaryUrl(title: string): string {
+  return CZECH_SUMMARY_BASE + encodeURIComponent(title.trim().replace(/ /g, '_'))
 }
 
 export interface WikiSummary {
@@ -132,13 +138,7 @@ function firstPage(json: unknown): Record<string, unknown> | undefined {
   return isRecord(page) ? page : undefined
 }
 
-/** What the Commons answer says about a file: the author and the accepted licence, or undefined when the licence is not acceptable. */
-export function parseCredit(json: unknown): Credit | undefined {
-  const page = firstPage(json)
-  if (!page || page.missing === true) return undefined
-  const info = Array.isArray(page.imageinfo) ? page.imageinfo[0] : undefined
-  const meta = isRecord(info) && isRecord(info.extmetadata) ? info.extmetadata : undefined
-  if (!meta) return undefined
+function creditOfMeta(meta: Record<string, unknown>): Credit | undefined {
   const licence = acceptLicence({
     license: plainText(valueOf(meta.License)),
     shortName: plainText(valueOf(meta.LicenseShortName)),
@@ -146,4 +146,60 @@ export function parseCredit(json: unknown): Credit | undefined {
   })
   if (!licence) return undefined
   return { author: cleanAuthor(valueOf(meta.Artist), valueOf(meta.Credit)), licence }
+}
+
+/** What the Commons answer says about a file: the author and the accepted licence, or undefined when the licence is not acceptable. */
+export function parseCredit(json: unknown): Credit | undefined {
+  const page = firstPage(json)
+  if (!page || page.missing === true) return undefined
+  const info = Array.isArray(page.imageinfo) ? page.imageinfo[0] : undefined
+  const meta = isRecord(info) && isRecord(info.extmetadata) ? info.extmetadata : undefined
+  return meta ? creditOfMeta(meta) : undefined
+}
+
+// ---------- Pictures found on Commons itself ----------
+
+const FILE_INFO =
+  'prop=imageinfo&iiprop=url|mime|extmetadata&iiurlwidth=330&iiextmetadatafilter=License|LicenseShortName|Artist|Credit|NonFree&format=json&formatversion=2&origin=*'
+
+/** The pictures in the Commons category of a species ("Category:Parus major"), with their credits, in one question. */
+export function commonsCategoryUrl(scientificName: string): string {
+  const title = encodeURIComponent(`Category:${scientificName.trim()}`)
+  return `https://${COMMONS_HOST}/w/api.php?action=query&generator=categorymembers&gcmtitle=${title}&gcmtype=file&gcmlimit=30&${FILE_INFO}`
+}
+
+/** A search for pictures of a species on Commons, with their credits, in one question. */
+export function commonsSearchUrl(scientificName: string): string {
+  const query = encodeURIComponent(`"${scientificName.trim()}" filetype:bitmap`)
+  return `https://${COMMONS_HOST}/w/api.php?action=query&generator=search&gsrsearch=${query}&gsrnamespace=6&gsrlimit=20&${FILE_INFO}`
+}
+
+export interface CommonsPhoto {
+  thumbnailUrl: string
+  file: CommonsFile
+  credit: Credit
+}
+
+/** Pictures that are not photos of a living bird: eggs, maps, sounds, skulls, museum specimens, drawings. */
+const NOT_A_BIRD_PHOTO = /\b(eggs?|maps?|range|distribution|skull|skeleton|sound|song|calls?|spectrogram|nests?|feathers?|footprints?|tracks?|stamps?|coins?|logos?|flags?|drawings?|illustrations?|plates?|painting|specimens?|museum|taxidermy|chicks?|pellets?|cover|diagram)\b/i
+
+/** Reads the answer of commonsCategoryUrl or commonsSearchUrl: the usable photos (accepted licence, a real photo), best first. */
+export function parseCommonsFiles(json: unknown): CommonsPhoto[] {
+  if (!isRecord(json) || !isRecord(json.query)) return []
+  const pages = json.query.pages
+  const list: unknown[] = Array.isArray(pages) ? pages : isRecord(pages) ? Object.values(pages) : []
+  const found: Array<CommonsPhoto & { order: number }> = []
+  list.forEach((page, position) => {
+    if (!isRecord(page) || typeof page.title !== 'string') return
+    const info = Array.isArray(page.imageinfo) ? page.imageinfo[0] : undefined
+    if (!isRecord(info) || typeof info.thumburl !== 'string') return
+    if (typeof info.mime !== 'string' || !/^image\/(jpeg|png|webp)$/.test(info.mime)) return
+    if (NOT_A_BIRD_PHOTO.test(page.title.replace(/^File:/, '').replace(/[_.-]/g, ' '))) return
+    const meta = isRecord(info.extmetadata) ? info.extmetadata : undefined
+    const credit = meta ? creditOfMeta(meta) : undefined
+    const file = fileOfImageUrl(info.thumburl)
+    if (!credit || !file) return
+    found.push({ thumbnailUrl: info.thumburl, file, credit, order: typeof page.index === 'number' ? page.index : position })
+  })
+  return found.sort((a, b) => a.order - b.order).map(({ order: _order, ...photo }) => photo)
 }

@@ -173,6 +173,11 @@ export default function ResultPage() {
                 <div className="bd-result-confirm" data-testid="confirm-text">
                   <p className="bd-result-confirm__name">{confirming.name}</p>
                   {confirming.scientificName ? <p className="bd-result-card__sci">{confirming.scientificName}</p> : null}
+                  {!confirming.allowed ? (
+                    <p className="bd-result-confirm__unsure" data-testid="confirm-unsure">
+                      {t('result.confirm.unsure')}
+                    </p>
+                  ) : null}
                   <p>{t(confirmTextKey(pending.media))}</p>
                 </div>
               ) : null

@@ -219,7 +219,7 @@ test.describe('photo: the fixture photos through the file input', () => {
         rows.push(`${file.slice(0, 22)} -> ${result.cards.map((c) => `${c.id}${c.allowed ? '*' : ''}`).join(', ')}`)
         expect(result.cards.filter((c) => c.allowed), file).toEqual([])
         await expect(page.getByTestId('nothing-sure')).toBeVisible()
-        for (const button of await cards(page).getByTestId('catch-button').all()) await expect(button).toBeDisabled()
+        for (const button of await cards(page).getByTestId('catch-button').all()) await expect(button).toBeEnabled()
         if (file === GULLS) await shot(page, testInfo, 'photo-result-gulls')
       }
 
@@ -331,7 +331,7 @@ test.describe('live camera', () => {
       await page.waitForTimeout(8000)
       await expect(page.getByTestId('live-view')).toHaveAttribute('data-phase', 'running')
       await expect(page.getByTestId('live-view')).not.toHaveAttribute('data-locked', 'true')
-      await expect(page.getByTestId('live-catch')).toBeDisabled()
+      await expect(page.getByTestId('live-view')).not.toHaveAttribute('data-locked', 'true')
       await shot(page, testInfo, 'live-pattern')
       const longTasks = await readLongTasks(page)
       console.log(`[flows] live pattern: long page tasks in 8 s: ${JSON.stringify(longTasks)}`)
@@ -379,7 +379,7 @@ test.describe('live camera', () => {
       await expect(page.getByTestId('live-guess')).toBeVisible({ timeout: 30_000 })
       await page.waitForTimeout(6000)
       await expect(page.getByTestId('live-view')).not.toHaveAttribute('data-locked', 'true')
-      await expect(page.getByTestId('live-catch')).toBeDisabled()
+      await expect(page.getByTestId('live-view')).not.toHaveAttribute('data-locked', 'true')
       await shot(page, testInfo, 'live-gulls-no-lock')
 
       // The Mallard: it locks on.
@@ -392,7 +392,7 @@ test.describe('live camera', () => {
       // Pointed at the gulls again, the lock is let go.
       await pointCameraAt(page, GULLS)
       await expect(page.getByTestId('live-view')).not.toHaveAttribute('data-locked', 'true', { timeout: 60_000 })
-      await expect(page.getByTestId('live-catch')).toBeDisabled()
+      await expect(page.getByTestId('live-view')).not.toHaveAttribute('data-locked', 'true')
 
       // The Kingfisher: a different bird locks on, and it is caught.
       await pointCameraAt(page, KINGFISHER)

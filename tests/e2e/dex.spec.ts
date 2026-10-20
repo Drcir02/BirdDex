@@ -731,7 +731,7 @@ test.describe('reference photos', () => {
   })
 
   test('show nothing for a picture with a licence the app may not use, and say so', async ({ page }) => {
-    await mockWikimedia(page, { refused: [owl?.wikiTitle ?? ''] })
+    await mockWikimedia(page, { refused: [owl?.wikiTitle ?? '', 'Bubo bubo'] })
     await seedDemo(page)
     await openBird(page, 'bubo-bubo')
     await expect(page.getByText('K tomuhle ptákovi nemám žádnou volnou fotku.')).toBeVisible()
