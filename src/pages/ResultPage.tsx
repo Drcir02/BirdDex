@@ -55,11 +55,27 @@ export default function ResultPage() {
   const saveErrorBox = useRef<HTMLDivElement>(null)
   useScrollIntoViewWhen(saveErrorBox, saveError !== null)
 
+  // A catch the live camera made by itself (it was sure enough) is saved at once, without the question: the bird may be gone
+  // in a moment. It can be deleted on the species page.
+  const autoRunning = useRef(false)
+  const confirmRef = useRef<() => Promise<void>>(async () => undefined)
+
   const caughtCounts = useMemo(() => new Map(Array.from(summary.bySpecies, ([id, entry]) => [id, entry.count] as const)), [summary.bySpecies])
   const view = useMemo(
     () => (pending && species ? buildResultView({ pending, species, sensitivity: settings.sensitivity, caughtCounts }) : undefined),
     [pending, species, settings.sensitivity, caughtCounts],
   )
+
+  useEffect(() => {
+    if (autoRunning.current || !pending?.autoCatch || !view || outcome) return
+    const top = view.candidates.find((candidate) => candidate.allowed)
+    if (!top) return
+    autoRunning.current = true
+    setConfirming(top)
+  }, [pending, view, outcome])
+  useEffect(() => {
+    if (autoRunning.current && confirming) void confirmRef.current().finally(() => (autoRunning.current = false))
+  }, [confirming])
 
   if (outcome) return <SuccessView view={outcome.view} wasNew={outcome.wasNew} media={outcome.media} />
   // Nothing to decide about (the page was reloaded, or the result was already dealt with).
@@ -108,6 +124,8 @@ export default function ResultPage() {
       setSaving(false)
     }
   }
+
+  confirmRef.current = confirm
 
   return (
     <Page className="bd-result">
@@ -166,7 +184,7 @@ export default function ResultPage() {
           </div>
 
           <ConfirmDialog
-            open={confirming !== null}
+            open={confirming !== null && !autoRunning.current}
             title={t('result.confirmTitle')}
             message={
               confirming ? (

@@ -2,7 +2,7 @@
 // Pure, so both are unit-tested without a camera. The hook that drives them with the real camera is useLiveScan.ts.
 
 import type { LiveUpdate } from '../../domain/engines'
-import { evaluateCandidates } from '../../domain/thresholds'
+import { CONFIDENCE_ONLY, evaluateCandidates } from '../../domain/thresholds'
 import type { Sensitivity } from '../../domain/types'
 import type { ScanErrorKind } from './errors'
 
@@ -122,6 +122,6 @@ export function hasLiveGuess(update: LiveUpdate | undefined, minConfidence: numb
  */
 export function liveCatchAllowed(update: LiveUpdate | undefined, sensitivity: Sensitivity): boolean {
   if (!update || update.lockedSpeciesId === undefined) return false
-  const verdicts = evaluateCandidates(update.candidates, 'live', sensitivity, { pBird: update.pBird, outsideDexTop: update.outsideDexTop })
+  const verdicts = evaluateCandidates(update.candidates, 'live', sensitivity, { pBird: update.pBird, outsideDexTop: update.outsideDexTop }, CONFIDENCE_ONLY)
   return verdicts.find((verdict) => verdict.speciesId === update.lockedSpeciesId)?.allowed === true
 }

@@ -3,7 +3,7 @@
 // the screen only draws it. The rules for the Catch button come from src/domain/thresholds.ts and are not decided here.
 
 import { displayName, getSpeciesById, secondaryName } from '../../data/species'
-import { catchRule, evaluateCandidates, type BlockReason } from '../../domain/thresholds'
+import { catchRule, CONFIDENCE_ONLY, evaluateCandidates, type BlockReason } from '../../domain/thresholds'
 import type { CatchMethod, PendingIdentification, Rarity, Sensitivity, Species } from '../../domain/types'
 import { normalizeCandidates } from './pendingBuilders'
 
@@ -47,7 +47,7 @@ export interface ResultInput {
 export function buildResultView({ pending, species, sensitivity, caughtCounts }: ResultInput): ResultView {
   const guesses = normalizeCandidates(pending.candidates)
   // The verdicts compare every guess with the others, so they are worked out for the whole list before any is left out.
-  const verdicts = evaluateCandidates(guesses, pending.method, sensitivity, { pBird: pending.pBird, outsideDexTop: pending.outsideDexTop })
+  const verdicts = evaluateCandidates(guesses, pending.method, sensitivity, { pBird: pending.pBird, outsideDexTop: pending.outsideDexTop }, CONFIDENCE_ONLY)
   const candidates: CandidateView[] = []
   guesses.forEach((guess, index) => {
     const bird = getSpeciesById(guess.speciesId, species)

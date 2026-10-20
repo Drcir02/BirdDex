@@ -513,16 +513,17 @@ test.describe('scan by photo', () => {
     await expect(pick).not.toHaveAttribute('capture', /.*/)
   })
 
-  test('with two guesses too close together the Catch button stays off and says why', async ({ page }) => {
+  test('two guesses close together do not hold back the Catch button: the percentage decides, and the person chooses', async ({ page }) => {
     await openApp(page, '/scan/photo', { scenario: 'unclear', delay: 30 })
     await downloadBrain(page)
     await page.getByTestId('photo-pick').setInputFiles(MALLARD)
     await page.getByTestId('photo-identify').click()
     await expect(page).toHaveURL(/#\/result$/)
     await expect(cards(page)).toHaveCount(3)
-    await expect(cards(page).nth(0).getByTestId('catch-reason')).toContainText('Příliš podobné jinému druhu')
+    await expect(cards(page).nth(0).getByRole('button', { name: 'Chytit' })).toBeEnabled()
     await expect(cards(page).nth(1).getByRole('button', { name: 'Chytit' })).toBeEnabled()
-    await expect(page.getByTestId('nothing-sure')).toBeVisible()
+    // The top guess is above the percentage, so there is no "nothing sure" message.
+    await expect(page.getByTestId('nothing-sure')).toHaveCount(0)
   })
 
   test('the strict setting needs more certainty than the normal one', async ({ page }) => {
@@ -587,6 +588,19 @@ test.describe('scan with the live camera', () => {
     await page.waitForTimeout(1500)
     await expect(page.getByTestId('live-view')).not.toHaveAttribute('data-locked', 'true')
     await expect(page.getByTestId('live-view')).not.toHaveAttribute('data-locked', 'true')
+  })
+
+  test('catches by itself as soon as the bird is sure enough: no tap, the catch is saved and the Dex has it', async ({ page }) => {
+    await openApp(page, '/scan/live', { delay: 250, storage: { 'birddex:settings': JSON.stringify({ autoCatch: true }) } })
+    await downloadBrain(page)
+    await page.getByTestId('live-start').click()
+    // Nobody presses Catch: the screen goes to the result, saves it, and celebrates.
+    await expect(page.getByTestId('catch-message')).toContainText('Sýkora koňadra', { timeout: 30_000 })
+    await expect(page.getByRole('alertdialog')).toHaveCount(0)
+    await page.getByTestId('to-dex').click()
+    await expect(page).toHaveURL(/#\/species\/parus-major/)
+    await expect(page.getByTestId('status-caught')).toBeVisible()
+    await expect(page.getByTestId('catch-item')).toHaveAttribute('data-method', 'live')
   })
 
   test('switches the camera off when the person leaves the screen', async ({ page }) => {

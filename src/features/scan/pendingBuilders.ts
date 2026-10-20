@@ -64,9 +64,10 @@ export function buildPhotoPending(result: Pick<PhotoResult, 'candidates'> & Pict
 }
 
 /** Live camera: what the scanner thought when the person pressed Catch, and the snapshot of that moment. */
-export function buildLivePending(update: Pick<LiveUpdate, 'candidates'> & PictureFacts, snapshot: Blob, location: GeoPoint | undefined, now: number = Date.now()): PendingIdentification {
+export function buildLivePending(update: Pick<LiveUpdate, 'candidates'> & PictureFacts, snapshot: Blob, location: GeoPoint | undefined, now: number = Date.now(), autoCatch = false): PendingIdentification {
   const pending: PendingIdentification = {
     method: 'live',
+    ...(autoCatch ? { autoCatch: true } : {}),
     candidates: normalizeCandidates(update.candidates),
     media: { kind: 'image', blob: snapshot, mime: snapshot.type || 'image/jpeg' },
     createdAt: now,

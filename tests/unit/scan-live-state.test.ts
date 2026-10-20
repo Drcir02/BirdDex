@@ -140,14 +140,14 @@ describe('liveCatchAllowed (the same rules as the result screen)', () => {
     expect(liveCatchAllowed(locked(), 'normal')).toBe(true)
   })
 
-  it('refuses what the result screen would refuse: a picture that is hardly a bird (a photo of a screen), a foreign look-alike, a weak guess', () => {
-    expect(liveCatchAllowed(locked({ pBird: 0.88 }), 'normal')).toBe(false)
-    expect(liveCatchAllowed(locked({ outsideDexTop: 0.6 }), 'normal')).toBe(false)
+  it('refuses only a weak guess: the percentage of the sensitivity decides, not the clearness of the picture', () => {
+    expect(liveCatchAllowed(locked({ pBird: 0.88 }), 'normal')).toBe(true)
+    expect(liveCatchAllowed(locked({ outsideDexTop: 0.6 }), 'normal')).toBe(true)
     expect(liveCatchAllowed(locked({ candidates: [{ speciesId: 'parus-major', confidence: 0.5 }] }), 'normal')).toBe(false)
   })
 
   it('follows the sensitivity', () => {
-    const borderline = locked({ candidates: [{ speciesId: 'parus-major', confidence: 0.6 }], pBird: 0.9 })
+    const borderline = locked({ candidates: [{ speciesId: 'parus-major', confidence: 0.6 }] })
     expect(liveCatchAllowed(borderline, 'normal')).toBe(false)
     expect(liveCatchAllowed(borderline, 'easy')).toBe(true)
   })

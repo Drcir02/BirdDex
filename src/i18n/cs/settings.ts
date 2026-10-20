@@ -26,7 +26,9 @@ export const settings = {
   // Sensitivity
   sensitivity: {
     title: 'Citlivost chytání',
-    hint: 'Říká, jak jistý si musí {appName} být, než ti dovolí ptáka chytit. Mění se tím jen tlačítko Chytit, ne samotné rozpoznávání.',
+    hint: 'Říká, od jakého procenta je {appName} dost jistý. Nad touto hranicí se pták nabízí k chycení a živá kamera ho chytí sama. Samotné rozpoznávání se tím nemění.',
+    autoLabel: 'Živá kamera chytá sama',
+    autoHint: 'Jakmile si je kamera jistá (nad hranicí výše), ptáka sama zachytí a uloží. Tlačítko Chytit zůstává pro ruční chycení.',
     label: 'Citlivost',
     strict: 'Přísná',
     normal: 'Normální',

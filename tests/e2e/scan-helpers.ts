@@ -39,6 +39,8 @@ export async function openApp(page: Page, path: string, options: AppOptions = {}
           localStorage.setItem('birddex:fakeDelay', String(delay))
         }
         if (scenario) localStorage.setItem('birddex:fake', scenario)
+        // The live camera catches by itself by default; most tests want to look at the screen, so it is off unless asked for.
+        if (!(storage as Record<string, string>)['birddex:settings']) localStorage.setItem('birddex:settings', JSON.stringify({ autoCatch: false }))
         for (const [key, value] of Object.entries(storage)) localStorage.setItem(key, value)
       } catch {
         // No storage: the test will say so.

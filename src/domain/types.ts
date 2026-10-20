@@ -81,6 +81,8 @@ export interface PendingIdentification {
    */
   pBird?: number
   outsideDexTop?: number
+  /** Live camera: the scanner caught it by itself (it was sure enough); the result screen then saves the catch at once. */
+  autoCatch?: boolean
   createdAt: number
 }
 

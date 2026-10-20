@@ -1,6 +1,6 @@
 import { t } from '../../i18n'
 import { useSettings } from '../../state/settings'
-import { LcdPanel, SegmentedControl } from '../../ui'
+import { LcdPanel, SegmentedControl, Switch } from '../../ui'
 import { isSensitivity, sensitivityNumbers } from './sensitivity'
 import './settings.css'
 
@@ -29,6 +29,7 @@ export function SensitivitySection() {
           <p>{t(INFO[settings.sensitivity])}</p>
           <p className="bd-set-explain__numbers">{t('settings.sensitivity.numbers', { sound: numbers.sound, photo: numbers.photo })}</p>
         </div>
+        <Switch checked={settings.autoCatch} label={t('settings.sensitivity.autoLabel')} description={t('settings.sensitivity.autoHint')} onChange={(checked) => update({ autoCatch: checked })} />
       </div>
     </LcdPanel>
   )

@@ -63,6 +63,19 @@ export function catchRule(method: CatchMethod, sensitivity: Sensitivity): CatchR
   return CATCH_RULES[method][sensitivity]
 }
 
+export interface EvaluateOptions {
+  /**
+   * Whether the extra checks of a picture count: the lead over the other guesses, how clearly it shows a bird, a possible foreign
+   * look-alike. The screens switch them off (since the owner's phone test): a guess above the percentage of the chosen
+   * sensitivity is simply sure enough, and the person, who confirms every catch, decides whether it is right. The checks stay
+   * here, measured and tested, so they can be switched on again. Default: on.
+   */
+  extraChecks?: boolean
+}
+
+/** What the screens pass: only the percentage of the sensitivity decides. */
+export const CONFIDENCE_ONLY: EvaluateOptions = { extraChecks: false }
+
 /** Why the Catch button is off for a guess. Screens turn this into a Czech sentence. */
 export type BlockReason = 'low-confidence' | 'unclear-margin' | 'not-a-clear-bird' | 'maybe-outside-dex'
 
@@ -94,8 +107,10 @@ export function evaluateCandidates(
   method: CatchMethod,
   sensitivity: Sensitivity,
   evidence: PictureEvidence = {},
+  options: EvaluateOptions = {},
 ): CandidateVerdict[] {
-  const rule = catchRule(method, sensitivity)
+  const base = catchRule(method, sensitivity)
+  const rule: CatchRule = options.extraChecks === false ? { ...base, minMargin: 0, minBird: 0, maxOutsideDex: 1 } : base
   const scores = candidates.map((candidate) => cleanScore(candidate.confidence))
   // Facts about the whole picture. Only a number that is really there counts; NaN is not a fact.
   const birdKnown = typeof evidence.pBird === 'number' && Number.isFinite(evidence.pBird)

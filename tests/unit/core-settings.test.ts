@@ -25,17 +25,17 @@ afterEach(() => {
 
 describe('settings', () => {
   it('starts with normal sensitivity and sound effects on', () => {
-    expect(getSettings()).toEqual({ sensitivity: 'normal', soundEffects: true })
+    expect(getSettings()).toEqual({ sensitivity: 'normal', soundEffects: true, autoCatch: true })
     expect(DEFAULT_SETTINGS).toEqual(getSettings())
   })
 
   it('saves changes to localStorage and loads them again after a restart', () => {
     updateSettings({ sensitivity: 'strict' })
     updateSettings({ soundEffects: false })
-    expect(JSON.parse(localStorage.getItem(SETTINGS_KEY) as string)).toEqual({ sensitivity: 'strict', soundEffects: false })
+    expect(JSON.parse(localStorage.getItem(SETTINGS_KEY) as string)).toEqual({ sensitivity: 'strict', soundEffects: false, autoCatch: true })
 
     reloadSettingsForTests()
-    expect(getSettings()).toEqual({ sensitivity: 'strict', soundEffects: false })
+    expect(getSettings()).toEqual({ sensitivity: 'strict', soundEffects: false, autoCatch: true })
   })
 
   it('returns the same object until something changes, and does not notify for a change to the same value', () => {
@@ -62,7 +62,7 @@ describe('settings', () => {
   it('repairs damaged stored settings field by field', () => {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({ sensitivity: 'easy', soundEffects: 'loud', welcomeSeen: true, mystery: 1 }))
     reloadSettingsForTests()
-    expect(getSettings()).toEqual({ sensitivity: 'easy', soundEffects: true })
+    expect(getSettings()).toEqual({ sensitivity: 'easy', soundEffects: true, autoCatch: true })
   })
 
   it.each(['{not json', 'null', '42', '"text"', '[]'])('falls back to the defaults for stored text %s', (stored) => {
@@ -96,7 +96,7 @@ describe('settings', () => {
     const stop = subscribeSettings(listener)
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({ sensitivity: 'strict', soundEffects: false }))
     window.dispatchEvent(new StorageEvent('storage', { key: SETTINGS_KEY }))
-    expect(getSettings()).toEqual({ sensitivity: 'strict', soundEffects: false })
+    expect(getSettings()).toEqual({ sensitivity: 'strict', soundEffects: false, autoCatch: true })
     expect(listener).toHaveBeenCalledTimes(1)
 
     // Other keys are none of its business, and neither is a storage event that changes nothing.
@@ -116,7 +116,7 @@ describe('settings', () => {
 
 describe('sanitizeSettings', () => {
   it('keeps good values and drops the rest', () => {
-    expect(sanitizeSettings({ sensitivity: 'strict', soundEffects: false })).toEqual({ sensitivity: 'strict', soundEffects: false })
+    expect(sanitizeSettings({ sensitivity: 'strict', soundEffects: false })).toEqual({ sensitivity: 'strict', soundEffects: false, autoCatch: true })
     expect(sanitizeSettings(undefined)).toEqual(DEFAULT_SETTINGS)
     expect(sanitizeSettings({ sensitivity: null })).toEqual(DEFAULT_SETTINGS)
   })

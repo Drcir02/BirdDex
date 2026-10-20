@@ -122,11 +122,12 @@ describe('the guesses', () => {
     expect(button(1).getAttribute('aria-describedby')).toBe(within(cards()[1]).getByTestId('catch-reason').id)
   })
 
-  it('says a guess is too close to another bird when the picture rules block it for that reason', async () => {
+  it('does not call a confident guess unsure just because another guess is close', async () => {
     setPending(pending({ method: 'photo', candidates: [guess('turdus-merula', 0.78), guess('parus-major', 0.74)] }))
     renderResult()
     await waitFor(() => expect(cards()).toHaveLength(2))
-    expect(within(cards()[0]).getByTestId('catch-reason').textContent).toMatch(/^Příliš podobné jinému druhu/)
+    expect(within(cards()[0]).queryByTestId('catch-reason')).toBeNull()
+    expect(cards()[0].getAttribute('data-allowed')).toBe('true')
   })
 
   it('says whether the species is new or already in the Dex', async () => {
@@ -296,6 +297,23 @@ describe('catching', () => {
     expect(screen.getByRole('link', { name: 'Skenovat dál' }).getAttribute('href')).toBe('/scan')
     expect(getPending()).toBeUndefined()
     expect(screen.queryByTestId('where')).toBeNull()
+  })
+
+  it('saves a catch that the live camera made by itself at once, without the question', async () => {
+    setPending(pending({ method: 'live', autoCatch: true, media: { kind: 'image', blob: new Blob(['x'], { type: 'image/jpeg' }), mime: 'image/jpeg' } }))
+    renderResult()
+    expect((await screen.findByTestId('catch-message')).textContent).toBe('Máš ho! Sýkora koňadra je v Dexu.')
+    expect(screen.queryByRole('alertdialog')).toBeNull()
+    expect(addCatch).toHaveBeenCalledTimes(1)
+    expect(addCatch.mock.calls[0][0]).toMatchObject({ speciesId: 'parus-major', method: 'live' })
+    expect(getPending()).toBeUndefined()
+  })
+
+  it('does not save an automatic catch whose guess is below the percentage, and shows the result as usual', async () => {
+    setPending(pending({ method: 'live', autoCatch: true, candidates: [guess('parus-major', 0.4)] }))
+    renderResult()
+    await waitFor(() => expect(cards()).toHaveLength(1))
+    expect(addCatch).not.toHaveBeenCalled()
   })
 
   it('starts the success screen at the top of the scrolling screen (the result was scrolled down to the button)', async () => {

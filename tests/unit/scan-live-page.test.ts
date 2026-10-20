@@ -16,7 +16,7 @@ import { markPrepared, resetFakePrepared } from '../../src/features/scan/modelRe
 import { resetEngines } from '../../src/ml/engines'
 import ScanLivePage from '../../src/pages/ScanLivePage'
 import { clearPending, getPending } from '../../src/state/pending'
-import { resetSettings } from '../../src/state/settings'
+import { resetSettings, updateSettings } from '../../src/state/settings'
 
 // jsdom has a <video> element but no camera and no playback: stand-ins that behave the way a phone does.
 interface FakeTrack {
@@ -68,6 +68,8 @@ beforeEach(() => {
   resetEngines()
   resetFakePrepared()
   resetSettings()
+  // The camera catches by itself by default; most tests want to look at the screen, so they switch that off.
+  updateSettings({ autoCatch: false })
   clearPending()
   tracks = []
   streams = []
@@ -533,6 +535,43 @@ describe('zoom', () => {
       fireEvent.pointerUp(layer, { pointerId: 2 })
       fireEvent.pointerUp(layer, { pointerId: 1 })
       await waitFor(() => expect(readout()).toBe('6×'))
+    } finally {
+      stopCamera()
+    }
+  })
+})
+
+describe('catching by itself', () => {
+  it('takes the picture and opens the result screen as soon as the bird is sure enough, and says it was automatic', async () => {
+    updateSettings({ autoCatch: true })
+    await prepared()
+    const stopCamera = runCamera()
+    try {
+      fireEvent.click(startKey())
+      await waitFor(() => expect(screen.getByTestId('where').textContent).toBe('/result'), { timeout: 5000 })
+      const pending = getPending()!
+      expect(pending.method).toBe('live')
+      expect(pending.autoCatch).toBe(true)
+      expect(pending.media?.kind).toBe('image')
+      expect(tracks.every((track) => track.stop.mock.calls.length > 0)).toBe(true)
+    } finally {
+      stopCamera()
+    }
+  })
+
+  it('does nothing by itself when the setting is off, and the Catch button still works', async () => {
+    await prepared()
+    const stopCamera = runCamera()
+    try {
+      fireEvent.click(startKey())
+      await waitFor(() => expect(screen.getByTestId('live-view').getAttribute('data-locked')).toBe('true'), { timeout: 3000 })
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 400))
+      })
+      expect(screen.queryByTestId('where')).toBeNull()
+      fireEvent.click(catchKey())
+      await waitFor(() => expect(screen.getByTestId('where').textContent).toBe('/result'))
+      expect(getPending()!.autoCatch).toBeUndefined()
     } finally {
       stopCamera()
     }

@@ -40,9 +40,10 @@ describe('buildResultView', () => {
     expect(low.candidates[0]).toMatchObject({ allowed: false, reason: 'low-confidence' })
     expect(low.anyAllowed).toBe(false)
 
+    // A confident guess is not held back for being close to another one: the percentage decides.
     const close = view('photo', [guess('turdus-merula', 0.78), guess('parus-major', 0.64)])
-    expect(close.candidates.map((c) => c.reason)).toEqual(['unclear-margin', 'low-confidence'])
-    expect(close.candidates.map((c) => c.allowed)).toEqual([false, false])
+    expect(close.candidates.map((c) => c.reason)).toEqual([undefined, 'low-confidence'])
+    expect(close.candidates.map((c) => c.allowed)).toEqual([true, false])
   })
 
   it('follows the sensitivity setting', () => {
@@ -72,8 +73,8 @@ describe('buildResultView', () => {
   it('leaves out a guess that is not a bird of the Dex, but still compares the others with it', () => {
     const result = view('photo', [guess('not-a-bird', 0.8), guess('parus-major', 0.7)])
     expect(result.candidates.map((c) => c.speciesId)).toEqual(['parus-major'])
-    // 0.7 trails the missing 0.8 by 0.1: not a clear lead, so the Catch button stays off.
-    expect(result.candidates[0]).toMatchObject({ allowed: false, reason: 'unclear-margin' })
+    // Still compared with the missing guess when the extra checks are on (they are off in the screens: 0.7 is enough).
+    expect(result.candidates[0]).toMatchObject({ allowed: true })
   })
 
   it('says "empty" when there is nothing to show', () => {
@@ -104,15 +105,15 @@ describe('texts and routes of the result', () => {
     expect(reasonKey('maybe-outside-dex')).toBe('result.reason.outsideDex')
   })
 
-  it('keeps a confident guess off the Catch button when the picture is unclear or may show a bird outside the Dex', () => {
+  it('does not hold a confident guess back for an unclear picture or a possible foreign bird: the percentage decides', () => {
     const guesses = [guess('anas-platyrhynchos', 0.9), guess('parus-major', 0.05)]
     const catchable = (extra: { pBird?: number; outsideDexTop?: number }) =>
       buildResultView({ pending: { method: 'photo', candidates: guesses, ...extra }, species, sensitivity: 'normal', caughtCounts: NONE })
     expect(catchable({ pBird: 0.99, outsideDexTop: 0.01 }).candidates[0].allowed).toBe(true)
-    expect(catchable({ pBird: 0.88 }).candidates[0]).toMatchObject({ allowed: false, reason: 'not-a-clear-bird' })
-    expect(catchable({ pBird: 0.99, outsideDexTop: 0.4 }).candidates[0]).toMatchObject({ allowed: false, reason: 'maybe-outside-dex' })
-    expect(catchable({}).candidates[0].allowed).toBe(true) // fakes and old results carry no such numbers
-    expect(catchable({ pBird: 0.88 }).anyAllowed).toBe(false)
+    expect(catchable({ pBird: 0.88 }).candidates[0].allowed).toBe(true)
+    expect(catchable({ pBird: 0.99, outsideDexTop: 0.4 }).candidates[0].allowed).toBe(true)
+    expect(catchable({}).candidates[0].allowed).toBe(true)
+    expect(catchable({ pBird: 0.88 }).anyAllowed).toBe(true)
   })
 
   it('sends "try again" back to the screen that made the scan', () => {

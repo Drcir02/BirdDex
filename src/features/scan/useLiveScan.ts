@@ -217,7 +217,7 @@ export function useLiveScan(videoRef: RefObject<HTMLVideoElement | null>, boxRef
     dispatch({ type: 'reset' })
   }, [teardown])
 
-  const catchNow = useCallback(() => {
+  const catchWith = useCallback((auto: boolean) => {
     const live = session.current
     const update = lastUpdate.current
     if (!live || !update || !hasLiveGuess(update, MIN_SHOWN_CONFIDENCE) || catching.current) return
@@ -228,7 +228,7 @@ export function useLiveScan(videoRef: RefObject<HTMLVideoElement | null>, boxRef
         const snapshot = await live.snapshot()
         const location = await locationForCatch()
         if (disposed.current) return
-        setPending(buildLivePending(update, snapshot, location))
+        setPending(buildLivePending(update, snapshot, location, Date.now(), auto))
         teardown()
         navigate(ROUTES.result)
       } catch {
@@ -262,10 +262,18 @@ export function useLiveScan(videoRef: RefObject<HTMLVideoElement | null>, boxRef
     }
   }, [teardown])
 
-  const setZoom = useCallback((zoom: number) => zoomController.setZoom(zoom), [zoomController])
-
   const sure = canCatchLive(state) && liveCatchAllowed(state.update, settings.sensitivity)
   const canCatch = state.phase === 'running' && !state.catching && hasLiveGuess(state.update, MIN_SHOWN_CONFIDENCE)
+
+  // Catches by itself as soon as the bird is sure enough (the same percentage as the Catch button of the result screen), so
+  // nobody has to tap at the exact moment a bird is in view. The snapshot is taken now; the result screen saves the catch.
+  const autoCatch = settings.autoCatch
+  useEffect(() => {
+    if (autoCatch && sure && !state.catching && !state.snapshotFailed) catchWith(true)
+  }, [autoCatch, sure, state.catching, state.snapshotFailed, catchWith])
+  const catchNow = useCallback(() => catchWith(false), [catchWith])
+
+  const setZoom = useCallback((zoom: number) => zoomController.setZoom(zoom), [zoomController])
 
   return { state, canCatch, sure, start, stop, catchNow, zoom: { state: zoomState, setZoom, gestures } }
 }

@@ -10,11 +10,14 @@ export interface Settings {
   sensitivity: Sensitivity
   /** Sounds made by the app itself, such as the catch jingle. */
   soundEffects: boolean
+  /** Live camera: catch the bird by itself as soon as it is sure enough (the Catch button stays). */
+  autoCatch: boolean
 }
 
 export const DEFAULT_SETTINGS: Readonly<Settings> = Object.freeze({
   sensitivity: 'normal',
   soundEffects: true,
+  autoCatch: true,
 })
 
 const SENSITIVITIES: readonly Sensitivity[] = ['strict', 'normal', 'easy']
@@ -25,10 +28,11 @@ export function sanitizeSettings(value: unknown): Settings {
   return {
     sensitivity: SENSITIVITIES.includes(source.sensitivity as Sensitivity) ? (source.sensitivity as Sensitivity) : DEFAULT_SETTINGS.sensitivity,
     soundEffects: typeof source.soundEffects === 'boolean' ? source.soundEffects : DEFAULT_SETTINGS.soundEffects,
+    autoCatch: typeof source.autoCatch === 'boolean' ? source.autoCatch : DEFAULT_SETTINGS.autoCatch,
   }
 }
 
-const sameSettings = (a: Settings, b: Settings) => a.sensitivity === b.sensitivity && a.soundEffects === b.soundEffects
+const sameSettings = (a: Settings, b: Settings) => a.sensitivity === b.sensitivity && a.soundEffects === b.soundEffects && a.autoCatch === b.autoCatch
 
 function readStored(): Settings {
   try {
