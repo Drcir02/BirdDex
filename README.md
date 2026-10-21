@@ -9,7 +9,7 @@ It is an installable web app (PWA), so the same code works on iPhone and Android
 | Milestone | What | State |
 |---|---|---|
 | M0 | Foundations, installable shell, Field check page (`/#/field-check`) | built, waits for the phone test |
-| M1 | Species data: 423 European species, 276 for Czechia | done |
+| M1 | Species data: 429 European species, 282 for Czechia | done |
 | M2 | Dex screens, species pages, database, backup and restore | done |
 | M3 | Sound identification (BirdNET V2.4, LiteRT) | done, untested on a phone |
 | M4 | Photo identification (WingCLIP int8, ONNX Runtime Web) | done, untested on a phone |

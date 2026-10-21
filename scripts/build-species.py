@@ -181,6 +181,13 @@ RARITY_OVERRIDES: dict[str, str] = {
     "Certhia familiaris": "common",  # Eurasian Treecreeper
     "Certhia brachydactyla": "common",  # Short-toed Treecreeper
     "Turdus viscivorus": "common",  # Mistle Thrush
+    # kept birds: no wild score at all, but easy to find where they are kept
+    "Pavo cristatus": "uncommon",  # Indian Peafowl
+    "Cygnus atratus": "rare",  # Black Swan
+    "Chrysolophus pictus": "rare",  # Golden Pheasant
+    "Chrysolophus amherstiae": "rare",  # Lady Amherst's Pheasant
+    "Numida meleagris": "rare",  # Helmeted Guineafowl
+    "Cairina moschata": "uncommon",  # Muscovy Duck
 }
 # Europe-only birds are epic when they reach 0.03 at this many Europe points (about 1 in 8), otherwise legendary.
 EUROPE_ONLY_EPIC_MIN_POINTS = 20
@@ -229,6 +236,13 @@ EUROPE_INCLUDE: dict[str, str] = {
     "Bucephala islandica": "Barrow's Goldeneye: breeds in Iceland",
     "Ficedula semitorquata": "Semicollared Flycatcher: breeds in the Balkans",
     "Halcyon smyrnensis": "White-throated Kingfisher: lives on the Aegean coast of Turkey (named after Smyrna, today Izmir)",
+    # Not wild birds of Europe, but kept in castle gardens, parks, zoos and farms, and people meet (and photograph) them there.
+    "Pavo cristatus": "Indian Peafowl: castle gardens and parks",
+    "Cygnus atratus": "Black Swan: park ponds",
+    "Chrysolophus pictus": "Golden Pheasant: parks and zoos, also escaped",
+    "Chrysolophus amherstiae": "Lady Amherst's Pheasant: parks and zoos, also escaped",
+    "Numida meleagris": "Helmeted Guineafowl: farms and parks",
+    "Cairina moschata": "Muscovy Duck: farms and park ponds",
 }
 
 # Passes the Czech threshold, but is a vagrant that has not been seen in Czechia, or an escape that is not established.
@@ -269,7 +283,14 @@ CZECHIA_EXCLUDE: dict[str, str] = {
 }
 
 # Below the Czech threshold, but regular or annual in Czechia.
-CZECHIA_INCLUDE: dict[str, str] = {}
+CZECHIA_INCLUDE: dict[str, str] = {
+    "Pavo cristatus": "Indian Peafowl: castle gardens and parks (Czech chateau parks are full of them)",
+    "Cygnus atratus": "Black Swan: park ponds",
+    "Chrysolophus pictus": "Golden Pheasant: parks, zoos and escapes",
+    "Chrysolophus amherstiae": "Lady Amherst's Pheasant: parks, zoos and escapes",
+    "Numida meleagris": "Helmeted Guineafowl: farms and parks",
+    "Cairina moschata": "Muscovy Duck: farms and park ponds",
+}
 
 # ---------------------------------------------------------------------------------------------------------------------
 # 4. WingCLIP rows: BirdNET scientific name -> scientific name of the WingDex taxon, or None when WingCLIP has no row.
@@ -325,8 +346,9 @@ CZECH_NAME_OVERRIDES: dict[str, str] = {
 # Latin family names (eBird / Clements classification, the one the WingDex order follows), written as
 # "Family: genus genus ...". The taxonomy file has no family column, so this table is the family source.
 FAMILY_GENERA = """
-Anatidae: Anser Branta Cygnus Alopochen Tadorna Aix Spatula Mareca Anas Netta Aythya Somateria Histrionicus Melanitta Clangula Bucephala Mergellus Mergus Oxyura
-Phasianidae: Tetrastes Lagopus Tetrao Lyrurus Perdix Phasianus Tetraogallus Coturnix Alectoris Pternistis Francolinus
+Anatidae: Anser Branta Cygnus Cairina Alopochen Tadorna Aix Spatula Mareca Anas Netta Aythya Somateria Histrionicus Melanitta Clangula Bucephala Mergellus Mergus Oxyura
+Numididae: Numida
+Phasianidae: Tetrastes Lagopus Tetrao Lyrurus Perdix Phasianus Pavo Chrysolophus Tetraogallus Coturnix Alectoris Pternistis Francolinus
 Odontophoridae: Colinus
 Columbidae: Columba Streptopelia
 Pteroclidae: Pterocles Syrrhaptes

@@ -96,11 +96,11 @@ describe('the Dex address', () => {
 })
 
 describe('selectSpecies on the real Dex', () => {
-  it('shows the 276 Czech birds by default and all 423 for Europe, in Dex order', () => {
+  it('shows the 282 Czech birds by default and all 429 for Europe, in Dex order', () => {
     const czechia = selectSpecies(real, DEFAULT_QUERY, none)
     const europe = selectSpecies(real, query({ region: 'europe' }), none)
-    expect(czechia).toHaveLength(276)
-    expect(europe).toHaveLength(423)
+    expect(czechia).toHaveLength(282)
+    expect(europe).toHaveLength(429)
     expect(czechia.every((species) => species.inCzechia)).toBe(true)
     expect(europe.map((species) => species.dexNumber)).toEqual([...europe.map((species) => species.dexNumber)].sort((a, b) => a - b))
   })
@@ -112,7 +112,7 @@ describe('selectSpecies on the real Dex', () => {
     const missing = selectSpecies(real, query({ status: 'missing' }), isCaught)
     // Alca torda lives in Europe but not in Czechia, so it is not in the Czech list.
     expect(caught.map((species) => species.id).sort()).toEqual(['bubo-bubo', 'parus-major', 'turdus-merula'])
-    expect(caught.length + missing.length).toBe(276)
+    expect(caught.length + missing.length).toBe(282)
     expect(selectSpecies(real, query({ status: 'caught', region: 'europe' }), isCaught)).toHaveLength(4)
   })
 
@@ -143,7 +143,7 @@ describe('selectSpecies on the real Dex', () => {
   })
 
   it('treats a search of only punctuation as no search', () => {
-    expect(selectSpecies(real, query({ q: '  ?! ' }), none)).toHaveLength(276)
+    expect(selectSpecies(real, query({ q: '  ?! ' }), none)).toHaveLength(282)
   })
 
   it('sorts by name in Czech alphabet order (Č after C, Ch after H) and by rarity from common to legendary', () => {
@@ -181,9 +181,9 @@ describe('selectSpecies on small lists', () => {
 describe('progress', () => {
   it('counts the caught birds of the region', () => {
     const isCaught = (id: string) => ['parus-major', 'alca-torda'].includes(id)
-    expect(regionProgress(real, 'czechia', isCaught)).toMatchObject({ caught: 1, total: 276 })
-    expect(regionProgress(real, 'europe', isCaught)).toMatchObject({ caught: 2, total: 423 })
-    expect(regionProgress(real, 'czechia', isCaught).fraction).toBeCloseTo(1 / 276, 6)
+    expect(regionProgress(real, 'czechia', isCaught)).toMatchObject({ caught: 1, total: 282 })
+    expect(regionProgress(real, 'europe', isCaught)).toMatchObject({ caught: 2, total: 429 })
+    expect(regionProgress(real, 'czechia', isCaught).fraction).toBeCloseTo(1 / 282, 6)
   })
 
   it('gives zero for an empty region instead of dividing by zero', () => {

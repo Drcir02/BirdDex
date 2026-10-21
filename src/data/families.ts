@@ -10,6 +10,7 @@ const FAMILY_NAMES_CS: Readonly<Record<string, string>> = {
   Alcedinidae: 'ledňáčkovití',
   Alcidae: 'alkovití',
   Anatidae: 'kachnovití',
+  Numididae: 'perličkovití',
   Apodidae: 'rorýsovití',
   Ardeidae: 'volavkovití',
   Bombycillidae: 'brkoslavovití',
