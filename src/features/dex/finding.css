@@ -1,0 +1,128 @@
+/* The block "when and where to find it" inside the status panel of a bird. */
+
+.bd-find {
+  margin: 0 0 var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 2px dashed var(--lcd-line);
+}
+
+.bd-find__title {
+  margin: 0 0 var(--space-3);
+  font: 400 10px / 1.7 var(--font-display);
+  color: var(--ink-soft);
+}
+
+.bd-find__row {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.bd-find__label {
+  padding-top: 2px;
+  color: var(--ink-soft);
+}
+
+.bd-find__value {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- The twelve months ---------- */
+
+.bd-find__months {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 2px;
+  align-items: end;
+  height: 54px;
+}
+
+.bd-find__month {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch;
+  height: 100%;
+  border-radius: 3px;
+}
+
+.bd-find__bar {
+  display: block;
+  height: 4px;
+  background: var(--lcd-line);
+  border-radius: 2px 2px 0 0;
+}
+
+.bd-find__month[data-level='1'] .bd-find__bar {
+  height: 14px;
+  background: var(--lcd-dark);
+  opacity: 0.55;
+}
+
+.bd-find__month[data-level='2'] .bd-find__bar {
+  height: 26px;
+  background: var(--lcd-dark);
+}
+
+.bd-find__month[data-level='3'] .bd-find__bar {
+  height: 38px;
+  background: var(--ok);
+}
+
+.bd-find__letter {
+  margin-top: 3px;
+  font: 700 14px / 1 var(--font-wordmark);
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+/* This month: a frame around the column, so it shows without colour too. */
+.bd-find__month[data-now='true'] {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.bd-find__month[data-now='true'] .bd-find__letter {
+  color: var(--ink);
+}
+
+.bd-find__season {
+  margin: var(--space-2) 0 0;
+}
+
+/* ---------- Shyness: three dots ---------- */
+
+.bd-find__dots {
+  display: inline-flex;
+  gap: 3px;
+  margin-right: var(--space-2);
+  vertical-align: 1px;
+}
+
+.bd-find__dot {
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.bd-find__dot[data-on='true'] {
+  background: var(--ink);
+}
+
+/* ---------- Tip and the note about estimates ---------- */
+
+.bd-find__tip {
+  margin: var(--space-3) 0 var(--space-2);
+}
+
+.bd-find__estimate {
+  margin: 0;
+  font-size: var(--fs-small);
+  line-height: 1.15;
+  color: var(--ink-soft);
+}

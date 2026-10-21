@@ -60,6 +60,10 @@ export default function AboutPage() {
         <p>{t('about.taxonomy.text')}</p>
       </Credit>
 
+      <Credit title={t('about.finding.title')} name={t('about.finding.name')} testId="credit-finding">
+        <p>{t('about.finding.text')}</p>
+      </Credit>
+
       <Credit title={t('about.images.title')} name={t('about.images.name')} testId="credit-wikimedia">
         <p>{t('about.images.text')}</p>
       </Credit>

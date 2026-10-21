@@ -2,7 +2,7 @@
 // and sort helpers. Everything except loadSpecies() is a pure function of a species list, so screens and tests can pass
 // any list; when the list is left out, the helpers use the one loadSpecies() has already fetched.
 
-import type { Rarity, Species } from '../domain/types'
+import type { DayPart, PlaceKey, Rarity, Shyness, Species, SpeciesInfo } from '../domain/types'
 
 export type Region = 'czechia' | 'europe'
 export type SortKey = 'number' | 'name' | 'family' | 'rarity'
@@ -62,13 +62,34 @@ function isSpecies(value: unknown): value is Species {
   )
 }
 
+const PLACES: ReadonlySet<string> = new Set<PlaceKey>(['water', 'river', 'coast', 'sea', 'forest', 'woods', 'scrub', 'fields', 'town', 'rocks', 'steppe'])
+const DAY_PARTS: ReadonlySet<string> = new Set<DayPart>(['day', 'dawn', 'dawn_dusk', 'dusk', 'night'])
+
+/** The finding info of a bird, or undefined when it is missing or does not look right: the Dex works without it. */
+function readInfo(value: unknown): SpeciesInfo | undefined {
+  if (!isObject(value)) return undefined
+  const { months, place, shy, day, tip, countries } = value
+  if (typeof months !== 'string' || !/^[0-3]{12}$/.test(months)) return undefined
+  if (typeof place !== 'string' || !PLACES.has(place)) return undefined
+  if (shy !== 1 && shy !== 2 && shy !== 3) return undefined
+  if (typeof day !== 'string' || !DAY_PARTS.has(day)) return undefined
+  if (typeof tip !== 'string') return undefined
+  const info: SpeciesInfo = { months, place: place as PlaceKey, shy: shy as Shyness, day: day as DayPart, tip }
+  if (Array.isArray(countries)) info.countries = countries.filter((code): code is string => typeof code === 'string')
+  return info
+}
+
 /** Checks the shape of the parsed file and returns it sorted by Dex number. Throws SpeciesLoadError('malformed') otherwise. */
 export function parseSpecies(json: unknown): Species[] {
   if (!Array.isArray(json) || json.length === 0) throw new SpeciesLoadError('malformed', 'species.json is not a list of birds')
   const list: Species[] = []
   for (const item of json as unknown[]) {
     if (!isSpecies(item)) throw new SpeciesLoadError('malformed', 'species.json has a bird with missing or wrong fields')
-    list.push(item)
+    const bird: Species = { ...item }
+    const info = readInfo(item.info)
+    if (info) bird.info = info
+    else delete bird.info
+    list.push(bird)
   }
   return list.sort((a, b) => a.dexNumber - b.dexNumber)
 }

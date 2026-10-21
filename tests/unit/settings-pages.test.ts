@@ -447,6 +447,8 @@ describe('the About page', () => {
     const taxonomy = screen.getByTestId('credit-taxonomy').textContent ?? ''
     expect(taxonomy).toContain('eBird/Clements')
     expect(taxonomy).toContain('Cornell Lab of Ornithology')
+    const finding = screen.getByTestId('credit-finding').textContent ?? ''
+    for (const name of ['BirdNET', 'AVONET', 'EltonTraits', 'CC BY 4.0']) expect(finding).toContain(name)
     const libraries = screen.getByTestId('credit-libraries').textContent ?? ''
     for (const name of ['React', 'Vite', 'Dexie', 'LiteRT.js', 'ONNX Runtime Web', 'fflate', 'Workbox', 'SIL Open Font License']) expect(libraries).toContain(name)
   })

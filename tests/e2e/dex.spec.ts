@@ -591,13 +591,57 @@ test.describe('the bird screen', () => {
     await expect(progress(page)).toHaveText(`Chyceno ${DEMO_CZECH_BIRDS - 1} z ${CZECH_TOTAL}`)
   })
 
+  test('shows when and where to find a bird, for a Czech bird, a bird that lives only in Europe, and a caught bird', async ({ page }) => {
+    const findingOf = (id: string) => species.find((entry) => entry.id === id)
+    expect(findingOf('fratercula-arctica')?.inCzechia).toBe(false)
+
+    // A bird of the Czech list: the months strip of the winter guest, marked for this month, and no country list.
+    await openBird(page, 'anser-albifrons')
+    const finding = page.getByTestId('status-missing').getByTestId('finding-info')
+    await expect(finding.getByTestId('finding-season')).toContainText('Od října do března')
+    await expect(finding.getByTestId('finding-months').locator('.bd-find__month[data-now="true"]')).toHaveCount(1)
+    await expect(finding.getByTestId('finding-shy')).toContainText('zoom')
+    await expect(finding.getByTestId('finding-countries')).toHaveCount(0)
+    await finding.scrollIntoViewIfNeeded()
+    await page.screenshot({ path: `${SHOTS}/finding-czech-390.png` })
+
+    // A bird that is only in Europe says it is not here and names the countries.
+    await openBird(page, 'fratercula-arctica')
+    const europe = page.getByTestId('status-missing').getByTestId('finding-info')
+    await expect(europe.getByText('Kdy v Evropě')).toBeVisible()
+    await expect(europe.getByTestId('finding-countries')).toContainText('U nás se nevyskytuje.')
+    await expect(europe.getByTestId('finding-countries')).toContainText('Norsko')
+    await expect(europe.getByTestId('finding-place')).toHaveText('Na otevřeném moři')
+    await europe.scrollIntoViewIfNeeded()
+    await page.screenshot({ path: `${SHOTS}/finding-europe-390.png` })
+
+    // A caught bird keeps the same info under the summary.
+    await seedDemo(page)
+    await openBird(page, 'parus-major')
+    const caught = page.getByTestId('status-caught')
+    await expect(caught).toContainText('Tenhle pták už je tvůj!')
+    await expect(caught.getByTestId('finding-info')).toContainText('Kde a kdy ho potkáš znovu')
+    await expect(caught.getByTestId('finding-season')).toContainText('Celý rok')
+    await caught.scrollIntoViewIfNeeded()
+    await page.screenshot({ path: `${SHOTS}/finding-caught-390.png` })
+  })
+
   test('shows a bird that is not caught: a silhouette, a tip, the way to scan it, and a peek at the reference photo', async ({ page }) => {
     await openBird(page, 'anser-anser')
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Husa velká')
     await expect(page.getByTestId('species-photo')).toHaveAttribute('data-view', 'silhouette')
     await expect(page.getByTestId('species-photo').locator('.bd-sil')).toBeVisible()
     await expect(page.getByTestId('status-missing')).toContainText('Tohohle ptáka ještě nemáš')
-    await expect(page.getByTestId('status-missing')).toContainText('Hledej ho u vody')
+    // When and where to find it: the months, the place, the shyness, the time of day and a tip for geese.
+    const finding = page.getByTestId('status-missing').getByTestId('finding-info')
+    await expect(finding).toContainText('Kdy a kde ho hledat')
+    await expect(finding.getByTestId('finding-months')).toBeVisible()
+    await expect(finding.getByTestId('finding-months').locator('.bd-find__month')).toHaveCount(12)
+    await expect(finding.getByTestId('finding-place')).toHaveText('U vody a na mokřadech')
+    await expect(finding.getByTestId('finding-shy')).toContainText('Opatrný')
+    await expect(finding.getByTestId('finding-day')).toHaveText('Ráno a k večeru')
+    await expect(finding.getByTestId('finding-tip')).toContainText('Husy se pasou')
+    await expect(finding.getByTestId('finding-countries')).toHaveCount(0)
     await expect(page.getByTestId('catch-list')).toHaveCount(0)
     // The secret is kept: nothing is looked up until the person asks.
     await page.waitForTimeout(400)

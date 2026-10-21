@@ -24,6 +24,26 @@ export interface Species {
   wingclipIndex: number | null
   /** Wikipedia article title for fetching a reference photo at run time. */
   wikiTitle: string | null
+  /** When and where to find the bird (built by scripts/build-species-info.py). Missing in a Dex file from before it existed. */
+  info?: SpeciesInfo
+}
+
+export type PlaceKey = 'water' | 'river' | 'coast' | 'sea' | 'forest' | 'woods' | 'scrub' | 'fields' | 'town' | 'rocks' | 'steppe'
+export type DayPart = 'day' | 'dawn' | 'dawn_dusk' | 'dusk' | 'night'
+/** 1 lets you come close, 2 is wary, 3 is shy or far away and needs a zoom. */
+export type Shyness = 1 | 2 | 3
+
+export interface SpeciesInfo {
+  /** Twelve digits, January to December: 0 not there, 1 a few, 2 likely, 3 most likely. For a bird that is not in Czechia: in Europe. */
+  months: string
+  place: PlaceKey
+  shy: Shyness
+  /** An estimate by bird family; EltonTraits tells which birds are nocturnal. */
+  day: DayPart
+  /** Which group text of the app ("dex.info.tips.<tip>") belongs to the bird. */
+  tip: string
+  /** Birds that are not in Czechia only: ISO codes of the European countries where the bird lives, best first. */
+  countries?: string[]
 }
 
 export type CatchMethod = 'sound' | 'photo' | 'live'

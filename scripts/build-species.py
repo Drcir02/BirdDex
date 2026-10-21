@@ -16,6 +16,7 @@ Inputs (all on disk, nothing is downloaded):
         probe row at the end), and the order of the rows is the eBird taxonomic order.
   * optional: BirdNET-Analyzer's eBird_taxonomy_codes_2024E.json, only used to cross-check the non-bird list.
 Output: public/data/species.json, an array of Species (src/domain/types.ts) sorted by dexNumber.
+The file has no `info` (when and where to find each bird): run scripts/build-species-info.py after this script to add it.
 
 How the decisions are made (the long version is in docs/notes/species-data.md)
   1. Birds: every label except the sound classes (Dog, Engine, ...) and the frogs, mammals and insects of NON_BIRD_GENERA.
@@ -841,6 +842,7 @@ def build(args: argparse.Namespace) -> int:
     text = "[\n" + ",\n".join(json.dumps(s, ensure_ascii=False, separators=(",", ":")) for s in species) + "\n]\n"
     OUT_FILE.write_text(text, encoding="utf-8")
     print(f"wrote {OUT_FILE.relative_to(ROOT)}: {len(species)} species, {len(text.encode('utf-8')) / 1024:.1f} KiB")
+    print("the file has no `info` now: run scripts/build-species-info.py to add it again", file=sys.stderr)
     return 0
 
 

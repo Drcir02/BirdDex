@@ -9,3 +9,4 @@ playwright-report
 .venv
 checkpoints
 dist-e2e-*
+__pycache__/

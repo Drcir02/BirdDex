@@ -205,7 +205,7 @@ test.describe('React hooks in a real browser', () => {
     await open(page)
     const read = (target: Page) => target.evaluate(() => window.BirdDexCore.getSettings())
     await page.evaluate(() => window.BirdDexCore.resetSettings())
-    expect(await read(page)).toEqual({ sensitivity: 'normal', soundEffects: true })
+    expect(await read(page)).toEqual({ sensitivity: 'normal', soundEffects: true, autoCatch: true })
 
     // A second tab that shows the settings (that is what keeps it listening for changes made elsewhere).
     const other = await context.newPage()
@@ -213,15 +213,15 @@ test.describe('React hooks in a real browser', () => {
     await other.evaluate(() => {
       window.BirdDexCore.subscribeSettings(() => undefined)
     })
-    expect(await read(other)).toEqual({ sensitivity: 'normal', soundEffects: true })
+    expect(await read(other)).toEqual({ sensitivity: 'normal', soundEffects: true, autoCatch: true })
 
     await page.evaluate(() => window.BirdDexCore.updateSettings({ sensitivity: 'strict', soundEffects: false }))
-    await expect.poll(() => read(other)).toEqual({ sensitivity: 'strict', soundEffects: false })
+    await expect.poll(() => read(other)).toEqual({ sensitivity: 'strict', soundEffects: false, autoCatch: true })
     await other.close()
 
     await page.reload()
     await page.addScriptTag({ path: bundle })
-    expect(await read(page)).toEqual({ sensitivity: 'strict', soundEffects: false })
+    expect(await read(page)).toEqual({ sensitivity: 'strict', soundEffects: false, autoCatch: true })
     await page.evaluate(() => window.BirdDexCore.resetSettings())
   })
 

@@ -177,3 +177,25 @@ Needs `public/models/birdnet-v2.4-geo-fp16.tflite` (fetch-models), the WingDex c
 * `family` is in Latin on purpose (the silhouettes read Latin families first); `familyNameCs` has Czech names for 72 of the 75 families (Calcariidae, Leiothrichidae and Psittaculidae have no common one, show the Latin name).
 * The Dex is the BirdNET list, not the whole European list (see above).
 * When the list is rebuilt, `dexNumber` can change (new birds shift the numbers). Catches store `speciesId`, so nothing breaks, but do not store numbers.
+
+## Finding info (`info` of every bird)
+
+`scripts/build-species-info.py` runs **after** `build-species.py` (which writes `species.json` without it) and adds an `info` object to each of the 429 birds. The app shows it on the bird's page, in the same green block as the tip, for birds that are not caught and for caught ones:
+
+| field | meaning | made from |
+|---|---|---|
+| `months` | 12 digits, January to December: 0 not there, 1 a few, 2 likely, 3 most likely | BirdNET's location model (it learned from bird observation records). Czech birds: the mean over the 22 Czech points; Europe-only birds: the mean over the points where the model puts the bird. Four of the 48 model weeks make a month, and each month is compared to the bird's best month (3 is 60 percent or more, 2 is 20 percent, 1 is 5 percent). |
+| `countries` | Europe-only birds: ISO codes, best first, at most 10 | the same model: the countries of the European sample points where the score is at least 0.03 and a quarter of the bird's best country |
+| `place` | one of water, river, coast, sea, forest, woods, scrub, fields, town, rocks, steppe | AVONET's habitat class (Tobias et al. 2022, CC BY 4.0), with a short list of overrides in the script. A Czech bird that AVONET puts at the coast or at sea is shown at "water" |
+| `day` | day, dawn, dawn_dusk, dusk, night | EltonTraits says which birds are nocturnal (owls). **The rest is an estimate by family** |
+| `shy` | 1 lets you come close, 2 wary, 3 shy or far away | **An estimate by family and genus**, with exceptions by species |
+| `tip` | key of the group text `dex.info.tips.*` | by family, a few by genus |
+
+Two data sets are needed to run it (neither is in the repo; about 22 MB together): AVONET `AVONET Supplementary dataset 1.xlsx` from https://figshare.com/articles/dataset/16586228 and EltonTraits `BirdFuncDat.txt` from https://esapubs.org/archive/ecol/E095/178/BirdFuncDat.txt (MD5 d6197b2cd90ca3ece0a7393abbf8b7fc). The script also needs `openpyxl`.
+
+```
+.venv/bin/pip install openpyxl
+.venv/bin/python scripts/build-species-info.py --avonet AVONET.xlsx --elton BirdFuncDat.txt --review docs/notes/species-info-review.md
+```
+
+`docs/notes/species-info-review.md` has one line per bird for somebody who knows birds to read: **shyness, time of day and the group tip are the part that needs a human check**. Fix a wrong one in `FAMILY_RULES`, `GENUS_RULES`, `SPECIES_RULES` or `PLACE_OVERRIDES` in the script and run it again; the script stops when a table names a bird that is not in the Dex. The model spreads a little score over places where a bird hardly ever is (puffins in Sweden and Finland, for example), so the country lists are "where the model sees the bird", not a checked atlas. The app says where each part comes from on the About page. `tests/unit/data-species-info.test.ts` fails when a bird has no info or a text is missing.

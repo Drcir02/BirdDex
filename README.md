@@ -48,7 +48,7 @@ Every `E2E_PORT` builds into its own `dist-e2e-<port>` folder (git-ignored); del
 - `src/features`: `dex`, `photos`, `scan`, `settings`, `fun` (screen logic and components).
 - `src/ml`: `audio`, `sound` (BirdNET), `vision` (WingCLIP), `runtime` (LiteRT, ONNX, model store), `engines.ts` and `fakes.ts`.
 - `src/db`, `src/state`, `src/domain`: Dexie database and backup, in-memory state, shared types and thresholds.
-- `src/data`, `public/data/species.json`: the species list (built by `scripts/build-species.py`).
+- `src/data`, `public/data/species.json`: the species list (built by `scripts/build-species.py`). `scripts/build-species-info.py` then adds the "when and where to find it" info to every bird (see `docs/notes/species-data.md`).
 - `src/i18n/cs`: all Czech texts, one file per area.
 - `src/fieldcheck`: the Field check page.
 - `scripts`: `fetch-models.mjs`, `copy-vendor.mjs`, `make-icons.mjs`, checkpoint and deploy helpers.

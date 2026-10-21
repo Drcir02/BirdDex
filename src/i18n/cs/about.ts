@@ -47,6 +47,12 @@ export const about = {
     text: 'Pořadí druhů v Dexu, jejich vědecké a anglické názvy a odkazy na Wikipedii vycházejí z taxonomie eBird/Clements, kterou přebírá projekt WingDex. České názvy doplňuje BirdNET.',
   },
 
+  finding: {
+    title: 'Kdy a kde ptáky hledat',
+    name: 'BirdNET, AVONET a EltonTraits',
+    text: 'Měsíce výskytu a země, kde pták žije, vycházejí z modelu výskytu BirdNET, který se učil z pozorování ptáků. Místo výskytu pochází z databáze AVONET (Tobias a kol., 2022, licence CC BY 4.0) a údaj, že je pták noční, z databáze EltonTraits 1.0 (Wilman a kol., 2014, Ecology 95: 2027). Plachost a denní dobu odhadl autor aplikace podle čeledi ptáků, proto jsou v Dexu označené jako odhad.',
+  },
+
   images: {
     title: 'Fotografie ptáků',
     name: 'Wikipedie a Wikimedia Commons',

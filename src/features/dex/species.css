@@ -213,8 +213,13 @@
   color: var(--ok);
 }
 
-.bd-spstatus--caught p:last-child {
+.bd-spstatus--caught > p:last-child,
+.bd-spstatus--caught .bd-find {
   margin-bottom: 0;
+}
+
+.bd-spstatus--caught .bd-find {
+  border-top-color: var(--ok);
 }
 
 .bd-spstatus__rarity {
