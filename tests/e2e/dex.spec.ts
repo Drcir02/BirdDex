@@ -152,7 +152,7 @@ test.describe('the Dex list', () => {
     await expect(tit).toHaveAttribute('data-caught', 'true')
     await expect(tit.locator('.bd-dexcard__badge')).toContainText('3×')
     await expect(tit).toContainText('Sýkora koňadra')
-    await expect(tit).toContainText('#268')
+    await expect(tit).toContainText('#274')
     expect(errors).toEqual([])
   })
 
@@ -353,9 +353,9 @@ test.describe('the Dex list', () => {
   })
 
   test('copes with 700 birds, which is more than the Dex holds today, and still skips the cards far away', async ({ page }) => {
-    // The list of birds is served with 277 more made-up birds, so there are 700 of them.
+    // The list of birds is served with 271 more made-up birds, so there are 700 of them.
     const original = JSON.parse(readFileSync('public/data/species.json', 'utf8')) as Record<string, unknown>[]
-    const more = original.slice(0, 277).map((bird, index) => ({
+    const more = original.slice(0, 271).map((bird, index) => ({
       ...bird,
       id: `${String(bird.id)}-kopie`,
       dexNumber: original.length + index + 1,
@@ -382,7 +382,7 @@ test.describe('the Dex list', () => {
     expect(scrollHeight).toBeLessThan(350 * 186 + 700)
     // It answers a tap on a filter and a search at once, and the last card can be reached.
     await page.getByRole('searchbox').fill('druhý')
-    await expect(page.getByTestId('species-card')).toHaveCount(277, { timeout: 20_000 })
+    await expect(page.getByTestId('species-card')).toHaveCount(271, { timeout: 20_000 })
     await page.getByRole('searchbox').fill('')
     await expect(page.getByTestId('species-card')).toHaveCount(700, { timeout: 20_000 })
     await scrollScreen(page, 999_999)
@@ -467,7 +467,7 @@ test.describe('the bird screen', () => {
     await expect(page.getByText('sýkorovití')).toBeVisible()
     await expect(page.getByRole('group', { name: 'Kde žije' })).toContainText('Česko')
     await expect(page.getByRole('group', { name: 'Kde žije' })).toContainText('Evropa')
-    await expect(page.getByTestId('species-photo')).toContainText('#268')
+    await expect(page.getByTestId('species-photo')).toContainText('#274')
     await expect(page.getByTestId('status-caught')).toContainText('Tenhle pták už je tvůj!')
     await expect(page.getByTestId('status-caught')).toContainText('Úlovků: 3')
 
