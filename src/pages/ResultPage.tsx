@@ -1,15 +1,17 @@
 // The result of a scan: up to three guesses as cards, the Catch button for the ones that are sure enough, the question
-// before the bird goes into the Dex, and the success screen after it.
+// before the bird goes into the Dex, and the success screen after it. When several guesses are sure enough (a recording in
+// which several birds sing) one more button catches all of them at once, with the one recording shared between them.
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useDeviceStatus } from '../app/deviceStatus'
 import { ROUTES } from '../app/routes'
 import { useSpecies } from '../data/useSpecies'
-import { addCatch, useCaughtSummary } from '../db'
+import { addCatch, addCatches, useCaughtSummary } from '../db'
 import type { PendingIdentification } from '../domain/types'
 import { classifyScanError } from '../features/scan/errors'
+import { ManySuccessView } from '../features/scan/ManySuccessView'
 import { NothingSure } from '../features/scan/NothingSure'
-import { buildResultView, confirmTextKey, scanPathFor, type CandidateView } from '../features/scan/resultModel'
+import { buildResultView, confirmTextKey, manyTextKey, scanPathFor, type CandidateView } from '../features/scan/resultModel'
 import { ResultCard } from '../features/scan/ResultCard'
 import { ResultMeta } from '../features/scan/ResultMeta'
 import { SuccessView } from '../features/scan/SuccessView'
@@ -23,8 +25,8 @@ import { useSettings } from '../state/settings'
 import { Button, ConfirmDialog, Notice, Page, PageHeader, Spinner } from '../ui'
 
 interface Outcome {
-  view: CandidateView
-  wasNew: boolean
+  /** The birds that were caught: one, or several that were caught together. */
+  views: CandidateView[]
   media: PendingIdentification['media']
 }
 
@@ -37,6 +39,8 @@ export default function ResultPage() {
   const summary = useCaughtSummary()
 
   const [confirming, setConfirming] = useState<CandidateView | null>(null)
+  // The question for "catch them all" is open.
+  const [confirmingAll, setConfirmingAll] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   // Set once the catch is saved. The pending identification is cleared then, so the success screen needs its own copy.
@@ -77,7 +81,10 @@ export default function ResultPage() {
     if (autoRunning.current && confirming) void confirmRef.current().finally(() => (autoRunning.current = false))
   }, [confirming])
 
-  if (outcome) return <SuccessView view={outcome.view} wasNew={outcome.wasNew} media={outcome.media} />
+  if (outcome) {
+    const [only] = outcome.views
+    return outcome.views.length === 1 ? <SuccessView view={only} wasNew={only.timesCaught === 0} media={outcome.media} /> : <ManySuccessView views={outcome.views} media={outcome.media} />
+  }
   // Nothing to decide about (the page was reloaded, or the result was already dealt with).
   if (!pending) return <Navigate to={ROUTES.scan} replace />
 
@@ -88,36 +95,43 @@ export default function ResultPage() {
   const retry = () => leave(scanPathFor(pending.method))
   const discard = () => leave(ROUTES.scan)
 
+  // The guesses that are sure enough: "catch them all" takes these, and only when there are at least two.
+  const allowedViews = view ? view.candidates.filter((candidate) => candidate.allowed) : []
+  const catching: CandidateView[] = confirmingAll ? allowedViews : confirming ? [confirming] : []
+
   const confirm = async () => {
-    if (!confirming || saving) return
-    const chosen = confirming
+    if (catching.length === 0 || saving) return
+    const chosen = catching
     setSaving(true)
     setSaveError(null)
     try {
       // The name of the place is looked up only now, when the person has confirmed the catch: until then nothing about
       // the position leaves the phone, also not for a result that is discarded.
       const placeName = await resolvePlaceName(pending.location)
-      await addCatch(
-        {
-          // One id per identification: a second tap on the button saves nothing new.
-          id: getPendingCatchId(),
-          speciesId: chosen.speciesId,
-          method: pending.method,
-          confidence: chosen.confidence,
-          caughtAt: pending.createdAt,
-          location: pending.location,
-          placeName,
-        },
-        pending.media ? { kind: pending.media.kind, blob: pending.media.blob, mime: pending.media.mime, durationS: pending.media.durationS } : undefined,
-      )
+      const mediaToSave = pending.media ? { kind: pending.media.kind, blob: pending.media.blob, mime: pending.media.mime, durationS: pending.media.durationS } : undefined
+      const catchFor = (bird: CandidateView, id: string | undefined) => ({
+        // One id per identification (and bird): a second tap on the button saves nothing new.
+        id,
+        speciesId: bird.speciesId,
+        method: pending.method,
+        confidence: bird.confidence,
+        caughtAt: pending.createdAt,
+        location: pending.location,
+        placeName,
+      })
+      const catchId = getPendingCatchId()
+      if (chosen.length === 1) await addCatch(catchFor(chosen[0], catchId), mediaToSave)
+      else await addCatches(chosen.map((bird) => catchFor(bird, catchId ? `${catchId}:${bird.speciesId}` : undefined)), mediaToSave)
       const media = pending.media
       // The success screen first: with the identification gone the page would otherwise send the person to the hub.
-      setOutcome({ view: chosen, wasNew: chosen.timesCaught === 0, media })
+      setOutcome({ views: chosen, media })
       setConfirming(null)
+      setConfirmingAll(false)
       clearPending()
       flash('success')
     } catch (error) {
       setConfirming(null)
+      setConfirmingAll(false)
       const kind = classifyScanError(error)
       setSaveError(kind === 'storageFull' ? t('common.errors.storageFull') : t('result.saveFailed'))
     } finally {
@@ -169,6 +183,14 @@ export default function ResultPage() {
               <h2 id="result-guesses" className="bd-result-heading">
                 {view.anyAllowed ? t('result.topGuesses') : t('result.weakGuesses')}
               </h2>
+              {allowedViews.length >= 2 ? (
+                <div className="bd-result-many-bar" data-testid="catch-many">
+                  <p>{t('result.many.hint')}</p>
+                  <Button fullWidth icon="check" disabled={saving} onClick={() => setConfirmingAll(true)} data-testid="catch-all-button">
+                    {t('result.many.button', { count: allowedViews.length })}
+                  </Button>
+                </div>
+              ) : null}
               {view.candidates.map((candidate) => (
                 <ResultCard key={candidate.speciesId} view={candidate} neededConfidence={view.neededConfidence} enabled={!saving} onCatch={setConfirming} />
               ))}
@@ -184,10 +206,22 @@ export default function ResultPage() {
           </div>
 
           <ConfirmDialog
-            open={confirming !== null && !autoRunning.current}
-            title={t('result.confirmTitle')}
+            open={(confirming !== null || confirmingAll) && !autoRunning.current}
+            title={confirmingAll ? t('result.many.confirmTitle') : t('result.confirmTitle')}
             message={
-              confirming ? (
+              confirmingAll ? (
+                <div className="bd-result-confirm" data-testid="confirm-many-text">
+                  <p>{t('result.many.confirmLead')}</p>
+                  <ul className="bd-result-confirm__list">
+                    {allowedViews.map((bird) => (
+                      <li key={bird.speciesId} data-testid="confirm-many-bird">
+                        {bird.name}
+                      </li>
+                    ))}
+                  </ul>
+                  <p>{t(manyTextKey(pending.media))}</p>
+                </div>
+              ) : confirming ? (
                 <div className="bd-result-confirm" data-testid="confirm-text">
                   <p className="bd-result-confirm__name">{confirming.name}</p>
                   {confirming.scientificName ? <p className="bd-result-card__sci">{confirming.scientificName}</p> : null}
@@ -200,11 +234,14 @@ export default function ResultPage() {
                 </div>
               ) : null
             }
-            confirmLabel={t('result.confirm.button')}
+            confirmLabel={confirmingAll ? t('result.many.confirmButton') : t('result.confirm.button')}
             cancelLabel={t('result.confirm.cancel')}
             busy={saving}
             onConfirm={() => void confirm()}
-            onCancel={() => setConfirming(null)}
+            onCancel={() => {
+              setConfirming(null)
+              setConfirmingAll(false)
+            }}
           />
         </>
       ) : null}

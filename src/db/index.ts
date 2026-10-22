@@ -6,6 +6,7 @@ export { DatabaseUnavailableError, StorageFullError } from './errors'
 export { newId } from './ids'
 export {
   addCatch,
+  addCatches,
   catchesBySpecies,
   clearPhotoCache,
   countCatches,

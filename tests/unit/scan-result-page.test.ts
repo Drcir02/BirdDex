@@ -9,9 +9,11 @@ import type { CatchRecord, Candidate, PendingIdentification } from '../../src/do
 
 // The database, the reference photos and the place lookup are other tasks' business (and need a browser): stand-ins.
 const addCatch = vi.fn()
+const addCatches = vi.fn()
 let caught = new Map<string, { count: number }>()
 vi.mock('../../src/db', () => ({
   addCatch: (...args: unknown[]) => addCatch(...args),
+  addCatches: (...args: unknown[]) => addCatches(...args),
   useCaughtSummary: () => ({ ready: true, bySpecies: caught, speciesCount: caught.size, catchCount: 0 }),
 }))
 vi.mock('../../src/features/scan/useReferencePhoto', () => ({ useReferencePhoto: () => ({ status: 'none' }) }))
@@ -39,6 +41,8 @@ beforeEach(() => {
     confidence: input.confidence,
     caughtAt: input.caughtAt ?? 0,
   }))
+  addCatches.mockReset()
+  addCatches.mockImplementation(async (inputs: { id?: string; speciesId: string }[]) => inputs.map((input) => ({ id: input.id ?? 'saved', speciesId: input.speciesId })))
   caught = new Map()
   placeName = undefined
   resolvePlaceName.mockClear()
@@ -409,6 +413,147 @@ describe('catching', () => {
       fireEvent.click(within(dialog).getByRole('button', { name: 'Chytit' }))
     })
     expect(await screen.findByText(/Uložení se nepovedlo/)).toBeTruthy()
+  })
+})
+
+describe('catching several birds at once', () => {
+  // A recording with a chorus: two birds above the line (normal sensitivity asks 70 percent for sound), one below it.
+  const chorus = (extra: Partial<PendingIdentification> = {}) =>
+    pending({ candidates: [guess('parus-major', 0.91), guess('turdus-merula', 0.78), guess('erithacus-rubecula', 0.31)], ...extra })
+
+  it('offers "Chytit všechny" only when at least two guesses are sure enough', async () => {
+    setPending(pending())
+    renderResult()
+    await waitFor(() => expect(cards()).toHaveLength(3))
+    expect(screen.queryByTestId('catch-all-button')).toBeNull()
+    cleanup()
+    clearPending()
+
+    setPending(chorus())
+    renderResult()
+    await waitFor(() => expect(cards()).toHaveLength(3))
+    expect(screen.getByTestId('catch-many').textContent).toContain('Vyšlo mi víc ptáků nad hranicí jistoty')
+    expect(screen.getByTestId('catch-all-button').textContent).toBe('Chytit všechny (2)')
+  })
+
+  it('counts the birds that the sensitivity lets through', async () => {
+    updateSettings({ sensitivity: 'easy' })
+    setPending(chorus())
+    renderResult()
+    await waitFor(() => expect(cards()).toHaveLength(3))
+    // Easy asks 60 percent for sound: the same two birds.
+    expect(screen.getByTestId('catch-all-button').textContent).toBe('Chytit všechny (2)')
+    cleanup()
+    updateSettings({ sensitivity: 'strict' })
+    renderResult()
+    await waitFor(() => expect(cards()).toHaveLength(3))
+    // Strict asks 85 percent: only one bird is sure enough, so there is nothing to catch together.
+    expect(screen.queryByTestId('catch-all-button')).toBeNull()
+  })
+
+  it('asks first and lists the birds, the sure ones only', async () => {
+    setPending(chorus())
+    renderResult()
+    await waitFor(() => expect(cards()).toHaveLength(3))
+    fireEvent.click(screen.getByTestId('catch-all-button'))
+    const dialog = await screen.findByRole('alertdialog', { name: 'Chytit všechny najednou?' })
+    expect(within(dialog).getAllByTestId('confirm-many-bird').map((item) => item.textContent)).toEqual(['Sýkora koňadra', 'Kos černý'])
+    expect(within(dialog).getByText(/Nahrávka se uloží jen jednou/)).toBeTruthy()
+    expect(addCatches).not.toHaveBeenCalled()
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Ještě ne' }))
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+    expect(addCatches).not.toHaveBeenCalled()
+    expect(getPending()).toBeDefined()
+  })
+
+  it('saves every sure bird with the one recording, a catch id for each, and shows them all', async () => {
+    placeName = 'Praha'
+    const scan = chorus()
+    setPending(scan)
+    const catchId = getPendingCatchId()
+    renderResult()
+    await waitFor(() => expect(cards()).toHaveLength(3))
+    fireEvent.click(screen.getByTestId('catch-all-button'))
+    const dialog = await screen.findByRole('alertdialog')
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Chytit všechny' }))
+    })
+
+    expect(addCatch).not.toHaveBeenCalled()
+    expect(addCatches).toHaveBeenCalledTimes(1)
+    expect(resolvePlaceName).toHaveBeenCalledTimes(1)
+    const [inputs, media] = addCatches.mock.calls[0] as [Record<string, unknown>[], Record<string, unknown>]
+    expect(inputs).toEqual([
+      { id: `${catchId}:parus-major`, speciesId: 'parus-major', method: 'sound', confidence: 0.91, caughtAt: scan.createdAt, location: { lat: 50.08, lon: 14.43 }, placeName: 'Praha' },
+      { id: `${catchId}:turdus-merula`, speciesId: 'turdus-merula', method: 'sound', confidence: 0.78, caughtAt: scan.createdAt, location: { lat: 50.08, lon: 14.43 }, placeName: 'Praha' },
+    ])
+    expect(media).toMatchObject({ kind: 'audio', mime: 'audio/wav', durationS: 2 })
+    expect(media.blob).toBe(scan.media?.blob)
+
+    expect((await screen.findByTestId('catch-message')).textContent).toBe('Máš je! Chyceno najednou: 2.')
+    expect(screen.getByTestId('celebration')).toBeTruthy()
+    const birds = screen.getAllByTestId('caught-bird')
+    expect(birds.map((item) => item.getAttribute('data-species'))).toEqual(['parus-major', 'turdus-merula'])
+    expect(within(birds[0]).getByRole('link', { name: 'Sýkora koňadra' }).getAttribute('href')).toBe('/species/parus-major')
+    expect(within(birds[1]).getByText('Nový druh')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Zobrazit Dex' }).getAttribute('href')).toBe('/')
+    expect(screen.getByRole('link', { name: 'Skenovat dál' }).getAttribute('href')).toBe('/scan')
+    expect(getPending()).toBeUndefined()
+  })
+
+  it('marks the birds that were already in the Dex', async () => {
+    caught = new Map([['turdus-merula', { count: 2 }]])
+    setPending(chorus())
+    renderResult()
+    await waitFor(() => expect(cards()).toHaveLength(3))
+    fireEvent.click(screen.getByTestId('catch-all-button'))
+    const dialog = await screen.findByRole('alertdialog')
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Chytit všechny' }))
+    })
+    const birds = await screen.findAllByTestId('caught-bird')
+    expect(within(birds[0]).getByText('Nový druh')).toBeTruthy()
+    expect(within(birds[1]).getByText('Už v Dexu')).toBeTruthy()
+  })
+
+  it('names what is saved when the scan has a photo instead of a clip', async () => {
+    setPending(chorus({ method: 'photo', media: { kind: 'image', blob: new Blob(['x'], { type: 'image/jpeg' }), mime: 'image/jpeg' }, candidates: [guess('parus-major', 0.91), guess('turdus-merula', 0.9)] }))
+    updateSettings({ sensitivity: 'easy' })
+    renderResult()
+    await waitFor(() => expect(cards()).toHaveLength(2))
+    fireEvent.click(screen.getByTestId('catch-all-button'))
+    expect(within(await screen.findByRole('alertdialog')).getByText('Uložím je i s datem, místem a fotkou.')).toBeTruthy()
+  })
+
+  it('says calmly when the phone is full, saves nothing and keeps the result', async () => {
+    addCatches.mockRejectedValueOnce(Object.assign(new Error('full'), { name: 'StorageFullError' }))
+    setPending(chorus())
+    renderResult()
+    await waitFor(() => expect(cards()).toHaveLength(3))
+    fireEvent.click(screen.getByTestId('catch-all-button'))
+    const dialog = await screen.findByRole('alertdialog')
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Chytit všechny' }))
+    })
+    expect(await screen.findByText('V telefonu došlo místo. Uvolni trochu paměti a zkus to znovu.')).toBeTruthy()
+    expect(screen.queryByTestId('catch-many-success')).toBeNull()
+    expect(getPending()).toBeDefined()
+    expect(screen.getByTestId('catch-all-button')).toBeTruthy()
+  })
+
+  it('still catches one bird at a time with its own button', async () => {
+    setPending(chorus())
+    renderResult()
+    await waitFor(() => expect(cards()).toHaveLength(3))
+    fireEvent.click(within(cards()[1]).getByRole('button', { name: 'Chytit' }))
+    const dialog = await screen.findByRole('alertdialog', { name: 'Přidat do Dexu?' })
+    expect(within(dialog).getByText('Kos černý')).toBeTruthy()
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Chytit' }))
+    })
+    expect(addCatch).toHaveBeenCalledTimes(1)
+    expect(addCatches).not.toHaveBeenCalled()
+    expect((await screen.findByTestId('catch-message')).textContent).toBe('Máš ho! Kos černý je v Dexu.')
   })
 })
 

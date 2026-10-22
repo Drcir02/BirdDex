@@ -52,30 +52,50 @@ async function guard<T>(operation: () => Promise<T>): Promise<T> {
  * If a catch with the given `id` already exists, nothing is written and that catch is returned.
  */
 export async function addCatch(input: NewCatch, media?: NewMedia): Promise<CatchRecord> {
-  if (!input.speciesId) throw new TypeError('addCatch needs a speciesId')
+  const [saved] = await addCatches([input], media)
+  return saved
+}
+
+/**
+ * Saves several catches that share one photo or clip (a recording in which several birds sing), all or nothing. The media is
+ * stored once and every new catch points at it; deleting one of the catches keeps it until the last one is gone.
+ * Returns the records in the order of `inputs`. A catch whose `id` already exists is not written again and comes back as it
+ * was saved the first time, so a double tap on the button saves nothing twice (and nothing is stored for a media that is
+ * only needed by catches that already exist).
+ */
+export async function addCatches(inputs: readonly NewCatch[], media?: NewMedia): Promise<CatchRecord[]> {
+  if (inputs.length === 0) return []
+  if (inputs.some((input) => !input.speciesId)) throw new TypeError('addCatch needs a speciesId')
   const db = getDb()
   const now = Date.now()
-  const record: CatchRecord = {
-    id: input.id ?? newId(),
-    speciesId: input.speciesId,
-    caughtAt: Number.isFinite(input.caughtAt) ? (input.caughtAt as number) : now,
-    method: input.method,
-    confidence: clamp01(input.confidence),
-  }
-  if (input.location) record.location = { ...input.location }
-  if (input.placeName) record.placeName = input.placeName
-  if (input.note) record.note = input.note
+  const records = inputs.map((input) => {
+    const record: CatchRecord = {
+      id: input.id ?? newId(),
+      speciesId: input.speciesId,
+      caughtAt: Number.isFinite(input.caughtAt) ? (input.caughtAt as number) : now,
+      method: input.method,
+      confidence: clamp01(input.confidence),
+    }
+    if (input.location) record.location = { ...input.location }
+    if (input.placeName) record.placeName = input.placeName
+    if (input.note) record.note = input.note
+    return record
+  })
 
   return guard(async () => {
-    let result = record
+    let result = records
     await db.transaction('rw', db.catches, db.media, async () => {
-      if (input.id) {
-        const existing = await db.catches.get(input.id)
-        if (existing) {
-          result = existing
-          return
+      const fresh: CatchRecord[] = []
+      result = []
+      for (const [index, record] of records.entries()) {
+        const existing = inputs[index].id ? await db.catches.get(record.id) : undefined
+        if (existing) result.push(existing)
+        else {
+          fresh.push(record)
+          result.push(record)
         }
       }
+      if (fresh.length === 0) return
       if (media) {
         const saved: MediaRecord = {
           id: newId(),
@@ -86,9 +106,9 @@ export async function addCatch(input: NewCatch, media?: NewMedia): Promise<Catch
         }
         if (media.durationS !== undefined && Number.isFinite(media.durationS)) saved.durationS = media.durationS
         await db.media.add(saved)
-        record.mediaId = saved.id
+        for (const record of fresh) record.mediaId = saved.id
       }
-      await db.catches.add(record)
+      for (const record of fresh) await db.catches.add(record)
     })
     // The first catch is the moment the data becomes worth protecting. Not awaited: it must never delay or fail a catch.
     void requestPersistentStorage()

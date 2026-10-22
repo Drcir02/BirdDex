@@ -270,3 +270,48 @@
 .bd-result-success__chips {
   justify-content: center;
 }
+
+/* ---------- Several birds at once ---------- */
+
+.bd-result-many-bar {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.bd-result-many-bar p {
+  margin: 0;
+}
+
+.bd-result-many {
+  display: grid;
+  gap: var(--space-3);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bd-result-many__item {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  padding-top: var(--space-3);
+  border-top: 2px dashed var(--lcd-line);
+}
+
+.bd-result-many__name {
+  font: 400 var(--fs-h3) / 1.6 var(--font-display);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.bd-result-confirm__list {
+  margin: 0 0 var(--space-3);
+  padding-left: var(--space-4);
+}
+
+.bd-result-confirm__list li {
+  margin-bottom: var(--space-1);
+  overflow-wrap: anywhere;
+}

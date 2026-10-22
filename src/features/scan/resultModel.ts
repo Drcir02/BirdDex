@@ -106,3 +106,9 @@ export function confirmTextKey(media: PendingIdentification['media']): 'result.c
   if (!media) return 'result.confirm.withoutMedia'
   return media.kind === 'audio' ? 'result.confirm.withSound' : 'result.confirm.withPhoto'
 }
+
+/** The same for catching several birds at once: what is saved along with them. */
+export function manyTextKey(media: PendingIdentification['media']): 'result.many.withPhoto' | 'result.many.withSound' | 'result.many.withoutMedia' {
+  if (!media) return 'result.many.withoutMedia'
+  return media.kind === 'audio' ? 'result.many.withSound' : 'result.many.withPhoto'
+}

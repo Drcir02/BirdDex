@@ -3,6 +3,7 @@ import { IDBFactory, IDBKeyRange } from 'fake-indexeddb'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   addCatch,
+  addCatches,
   BirdDexDatabase,
   catchesBySpecies,
   clearPhotoCache,
@@ -121,6 +122,83 @@ describe('addCatch', () => {
     const saved = await addCatch({ speciesId: 'a', method: 'sound', confidence: 0.9, location })
     location.lat = 99
     expect(saved.location).toEqual({ lat: 1, lon: 2 })
+  })
+})
+
+describe('addCatches', () => {
+  const chorus = [
+    { id: 'tap-a', speciesId: 'parus-major', method: 'sound' as const, confidence: 0.91, caughtAt: 1_700_000_000_000, placeName: 'Praha' },
+    { id: 'tap-b', speciesId: 'turdus-merula', method: 'sound' as const, confidence: 0.78, caughtAt: 1_700_000_000_000, placeName: 'Praha' },
+  ]
+
+  it('saves several catches that share one clip, stored once', async () => {
+    const saved = await addCatches(chorus, { kind: 'audio', blob: wav(), durationS: 4 })
+    expect(saved.map((record) => record.speciesId)).toEqual(['parus-major', 'turdus-merula'])
+    expect(await countCatches()).toBe(2)
+    expect(await getDb().media.count()).toBe(1)
+    expect(saved[0].mediaId).toBeDefined()
+    expect(saved[1].mediaId).toBe(saved[0].mediaId)
+    const media = await getMedia(saved[0].mediaId as string)
+    expect(media).toMatchObject({ kind: 'audio', mime: 'audio/wav', durationS: 4 })
+    expect(await bytesOf(media!.blob)).toEqual(await bytesOf(wav()))
+    expect((await getCatch('tap-b'))?.confidence).toBe(0.78)
+  })
+
+  it('works without media and with a single catch like addCatch', async () => {
+    const saved = await addCatches(chorus)
+    expect(saved.every((record) => record.mediaId === undefined)).toBe(true)
+    expect(await getDb().media.count()).toBe(0)
+    expect(await addCatches([])).toEqual([])
+  })
+
+  it('refuses when one of the catches has no species, and saves nothing', async () => {
+    await expect(addCatches([chorus[0], { ...chorus[1], speciesId: '' }], { kind: 'audio', blob: wav() })).rejects.toThrow(TypeError)
+    expect(await countCatches()).toBe(0)
+    expect(await getDb().media.count()).toBe(0)
+  })
+
+  it('saves nothing when the second catch cannot be written (all or nothing)', async () => {
+    const db = getDb()
+    const spy = vi.spyOn(db.catches, 'add')
+    spy.mockImplementationOnce(((record: CatchRecord) => db.catches.put(record)) as never).mockRejectedValueOnce(new Error('disk error'))
+    await expect(addCatches(chorus, { kind: 'audio', blob: wav() })).rejects.toThrow('disk error')
+    spy.mockRestore()
+    expect(await countCatches()).toBe(0)
+    expect(await db.media.count()).toBe(0)
+  })
+
+  it('reports a full phone as a StorageFullError and keeps nothing', async () => {
+    const db = getDb()
+    const spy = vi.spyOn(db.media, 'add').mockRejectedValueOnce(new DOMException('no room', 'QuotaExceededError'))
+    await expect(addCatches(chorus, { kind: 'audio', blob: wav() })).rejects.toBeInstanceOf(StorageFullError)
+    spy.mockRestore()
+    expect(await countCatches()).toBe(0)
+  })
+
+  it('saves once when the same ids arrive twice (a double tap), without a second copy of the clip', async () => {
+    const first = await addCatches(chorus, { kind: 'audio', blob: wav() })
+    const second = await addCatches(chorus, { kind: 'audio', blob: wav() })
+    expect(second).toEqual(first)
+    expect(await countCatches()).toBe(2)
+    expect(await getDb().media.count()).toBe(1)
+  })
+
+  it('writes only the catches that are new, and the clip belongs to those', async () => {
+    await addCatch({ id: 'tap-a', speciesId: 'parus-major', method: 'sound', confidence: 0.5 })
+    const saved = await addCatches(chorus, { kind: 'audio', blob: wav() })
+    expect(saved[0].confidence).toBe(0.5)
+    expect(saved[0].mediaId).toBeUndefined()
+    expect(saved[1].mediaId).toBeDefined()
+    expect(await countCatches()).toBe(2)
+    expect(await getDb().media.count()).toBe(1)
+  })
+
+  it('keeps the shared clip until the last of its catches is deleted', async () => {
+    const [a, b] = await addCatches(chorus, { kind: 'audio', blob: wav() })
+    expect(await deleteCatch(a.id)).toBe(true)
+    expect(await getMedia(b.mediaId as string)).toBeDefined()
+    expect(await deleteCatch(b.id)).toBe(true)
+    expect(await getMedia(b.mediaId as string)).toBeUndefined()
   })
 })
 

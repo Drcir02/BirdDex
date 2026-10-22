@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { createElement as h } from 'react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -78,6 +78,30 @@ describe('the finding info block', () => {
     expect(screen.getByRole('heading', { name: 'Kde a kdy ho potkáš znovu' })).toBeTruthy()
   })
 
+  it('shows the block open for a bird that is not caught, with no button to fold it', () => {
+    render(h(FindingInfo, { species: bird(), caught: false, now: OCTOBER }))
+    expect(screen.queryByTestId('finding-toggle')).toBeNull()
+    expect(screen.getByTestId('finding-season').closest('.bd-find__body')?.hasAttribute('hidden')).toBe(false)
+  })
+
+  it('starts folded for a caught bird and unfolds and folds again at a tap on the heading', () => {
+    render(h(FindingInfo, { species: bird(), caught: true, now: OCTOBER }))
+    const toggle = screen.getByRole('button', { name: 'Kde a kdy ho potkáš znovu' })
+    const body = screen.getByTestId('finding-season').closest('.bd-find__body')!
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    expect(toggle.getAttribute('aria-controls')).toBe(body.id)
+    expect(body.hasAttribute('hidden')).toBe(true)
+
+    fireEvent.click(toggle)
+    expect(toggle.getAttribute('aria-expanded')).toBe('true')
+    expect(body.hasAttribute('hidden')).toBe(false)
+    expect(screen.getByTestId('finding-place').textContent).toBe('Na loukách a polích')
+
+    fireEvent.click(toggle)
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    expect(body.hasAttribute('hidden')).toBe(true)
+  })
+
   it('says that shyness and time of day are estimates', () => {
     const { container } = render(h(FindingInfo, { species: bird(), caught: false, now: OCTOBER }))
     expect(container.querySelector('.bd-find__estimate')?.textContent).toContain('odhad')
@@ -122,6 +146,8 @@ describe('the status block of a bird', () => {
     const block = screen.getByTestId('status-caught')
     expect(within(block).getByText('Tenhle pták už je tvůj!')).toBeTruthy()
     expect(within(block).getByRole('heading', { name: 'Kde a kdy ho potkáš znovu' })).toBeTruthy()
+    // Folded until the person opens it.
+    expect(within(block).getByTestId('finding-toggle').getAttribute('aria-expanded')).toBe('false')
   })
 
   it('falls back to the general tip when the Dex file has no info', () => {

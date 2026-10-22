@@ -12,6 +12,46 @@
   color: var(--ink-soft);
 }
 
+/* A caught bird: the heading is a button that unfolds the block. */
+.bd-find__title--toggle {
+  margin: 0;
+}
+
+.bd-find__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+}
+
+.bd-find__chevron {
+  flex: none;
+  transform: rotate(90deg);
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.bd-find__toggle[aria-expanded='true'] .bd-find__chevron {
+  transform: rotate(-90deg);
+}
+
+.bd-find__title--toggle + .bd-find__body {
+  padding-top: var(--space-2);
+}
+
+.bd-find__body[hidden] {
+  display: none;
+}
+
 .bd-find__row {
   display: grid;
   grid-template-columns: 74px 1fr;

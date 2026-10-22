@@ -74,7 +74,7 @@ export function StatusBlock({ species, summary }: { species: Species; summary: S
         </h2>
         <p>{t('dex.status.firstCaught', { date: formatDate(summary.firstCaughtAt) })}</p>
         <p className="bd-spstatus__count">{t('dex.status.catchCount', { count: summary.count })}</p>
-        <FindingInfo species={species} caught />
+        <FindingInfo key={species.id} species={species} caught />
       </LcdPanel>
     )
   }

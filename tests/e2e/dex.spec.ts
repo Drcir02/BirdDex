@@ -620,10 +620,20 @@ test.describe('the bird screen', () => {
     await openBird(page, 'parus-major')
     const caught = page.getByTestId('status-caught')
     await expect(caught).toContainText('Tenhle pták už je tvůj!')
-    await expect(caught.getByTestId('finding-info')).toContainText('Kde a kdy ho potkáš znovu')
-    await expect(caught.getByTestId('finding-season')).toContainText('Celý rok')
+    // Folded at first, so it does not fill the screen; the heading unfolds it.
+    const toggle = caught.getByTestId('finding-toggle')
+    await expect(toggle).toContainText('Kde a kdy ho potkáš znovu')
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await expect(caught.getByTestId('finding-season')).toBeHidden()
     await caught.scrollIntoViewIfNeeded()
+    await page.screenshot({ path: `${SHOTS}/finding-caught-folded-390.png` })
+    await toggle.click()
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    await expect(caught.getByTestId('finding-season')).toContainText('Celý rok')
+    await expect(caught.getByTestId('finding-place')).toBeVisible()
     await page.screenshot({ path: `${SHOTS}/finding-caught-390.png` })
+    await toggle.click()
+    await expect(caught.getByTestId('finding-season')).toBeHidden()
   })
 
   test('shows a bird that is not caught: a silhouette, a tip, the way to scan it, and a peek at the reference photo', async ({ page }) => {

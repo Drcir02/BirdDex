@@ -81,6 +81,21 @@ export const result = {
     cancel: 'Ještě ne',
   },
 
+  // Several birds above the line at once (a recording with a chorus): catch them all with one tap
+  many: {
+    hint: 'Vyšlo mi víc ptáků nad hranicí jistoty. Můžeš je chytit všechny najednou.',
+    button: 'Chytit všechny ({count})',
+    confirmTitle: 'Chytit všechny najednou?',
+    confirmLead: 'Do Dexu přidám tyhle ptáky:',
+    withPhoto: 'Uložím je i s datem, místem a fotkou.',
+    withSound: 'Uložím je i s datem, místem a nahrávkou. Nahrávka se uloží jen jednou, společná pro všechny.',
+    withoutMedia: 'Uložím je i s datem a místem.',
+    confirmButton: 'Chytit všechny',
+    caught: 'Máš je! Chyceno najednou: {count}.',
+    list: 'Chycení ptáci',
+    toDex: 'Zobrazit Dex',
+  },
+
   // After the catch
   success: {
     newSpecies: 'Nový druh v tvém Dexu!',

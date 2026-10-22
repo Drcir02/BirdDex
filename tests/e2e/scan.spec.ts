@@ -243,6 +243,58 @@ test.describe('scan by sound', () => {
     expect(errors).toEqual([])
   })
 
+  test('hears two birds above the line: "Chytit všechny" saves both with the one clip, and both are in the Dex', async ({ page }, testInfo) => {
+    const errors = collectErrors(page)
+    // The "unclear" story has two birds that both score about 0.72 (BirdNET scores do not compete).
+    await openApp(page, '/scan/sound', { scenario: 'unclear', delay: 60 })
+    await downloadBrain(page)
+    await page.getByTestId('sound-start').click()
+    await expect(page.getByTestId('guess')).toHaveCount(3)
+    await expect(page.getByTestId('guess-percent').nth(1)).toHaveText(/^7\d\s%$/, { timeout: 5000 })
+    await page.getByTestId('sound-stop').click()
+    await expect(page).toHaveURL(/#\/result$/)
+    await expect(cards(page)).toHaveCount(3)
+
+    // Two cards are sure enough, so the extra button names how many it catches.
+    const all = page.getByTestId('catch-all-button')
+    await expect(all).toHaveText('Chytit všechny (2)')
+    await shot(page, testInfo, 'result-many')
+    await all.click()
+    const dialog = page.getByRole('alertdialog', { name: 'Chytit všechny najednou?' })
+    await expect(dialog.getByTestId('confirm-many-bird')).toHaveText(['Kos černý', 'Sýkora koňadra'])
+    await expect(dialog).toContainText('Nahrávka se uloží jen jednou')
+    await shot(page, testInfo, 'result-many-confirm')
+    await dialog.getByRole('button', { name: 'Ještě ne' }).click()
+    await expect(dialog).toHaveCount(0)
+    expect((await readDatabase(page).catch(() => ({ catches: [] }))).catches).toHaveLength(0)
+
+    await all.click()
+    await dialog.getByRole('button', { name: 'Chytit všechny' }).click()
+    await expect(page.getByTestId('catch-message')).toHaveText('Máš je! Chyceno najednou: 2.')
+    await expect(page.getByTestId('caught-bird')).toHaveCount(2)
+    await expect(page.getByTestId('celebration')).toBeAttached()
+    await expect(device(page)).toHaveAttribute('data-status', 'success')
+    await shot(page, testInfo, 'catch-many-success')
+
+    // Two catches, one clip that both point to.
+    const saved = await readDatabase(page)
+    expect(saved.catches).toHaveLength(2)
+    expect(saved.catches.map((record) => record.speciesId).sort()).toEqual(['parus-major', 'turdus-merula'])
+    expect(saved.media).toHaveLength(1)
+    expect(saved.catches.every((record) => record.mediaId === saved.media[0].id)).toBe(true)
+
+    // Both birds are caught in the Dex, and each has its catch with the clip.
+    await page.getByTestId('to-dex').click()
+    await expect(page.getByTestId('dex-progress')).toContainText('Chyceno 2 z')
+    await page.goto('/#/species/turdus-merula')
+    await expect(page.getByTestId('status-caught')).toBeVisible()
+    await expect(page.getByTestId('catch-item')).toHaveCount(1)
+    await page.goto('/#/species/parus-major')
+    await expect(page.getByTestId('catch-item')).toHaveCount(1)
+
+    expect(errors).toEqual([])
+  })
+
   test('with nothing sure enough it says "Nic jistého", gives tips, and "Zkusit znovu" goes back to listening', async ({ page }, testInfo) => {
     await openApp(page, '/scan/sound', { scenario: 'low', delay: 80 })
     await downloadBrain(page)
