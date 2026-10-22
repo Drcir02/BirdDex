@@ -8,9 +8,9 @@ ranges per bird is `docs/notes/birdpoints-ranges-draft.csv` (open it in a spread
 * Every catch is its **own bird** in the Dex with its own BP, also when it is the same species with the same BP. Nothing is
   merged, nothing is "best of a species", and catching a species again always adds a new bird.
 * **No repeat penalty.** A bird caught again within a day rolls like any other.
-* No total BP and no "best per bird" (see the open question about the trainer card).
+* No total BP, no "best per bird" and nothing on the trainer card: every bird is shown on its own with its own BP.
 * Size and shyness stay in the ranges. The luck window stays at -9 % / +13 % (about 4 % chance of the max on a perfect catch).
-* Higher floors: even the weakest catch of a legendary bird starts around 1600 BP, an epic one around 1100.
+* Higher floors: even the weakest catch of a legendary bird starts around 1600 BP, an epic one around 1100 (uncommon 300 and rare 650 are confirmed).
 * Old catches get a BP with the new system.
 
 ## How a catch gets its BP
@@ -65,35 +65,63 @@ backup file gets the same optional fields. **Old catches** get a BP once at the 
 confidence, way and date (the lead over the second guess was not saved, so a middle value is used) with a luck roll that is
 then fixed.
 
-## How to show it (design considerations)
+## The two screens (decided: like Pokémon GO)
 
-The Dex today is a grid of species (a silhouette until caught). With BP the thing to collect is the individual bird, as in
-Pokémon GO, where the Pokédex lists species and the storage lists every Pokémon with its CP.
+Pokémon GO has the Pokédex (which species you have) and the Pokémon list (every one you caught, with its CP). We get the same pair.
 
-**The card of one caught bird:** the BP big at the top, the photo (own photo; for a sound catch the reference photo with a
-speaker badge), the name, rarity stars, the date. A small bar can show where in the bird's range it landed. Tap: the bird's
-page with the clip or photo, the breakdown (confidence, season, time of day, way, luck) and the delete button.
+### 1. Dex: the index of species (stays where it is)
 
-| Option | What it is | For | Against |
-|---|---|---|---|
-| **A. Two views in the same Dex (recommended)** | A switch at the top of the Dex: **Moji ptáci** and **Podle druhů**. *Moji ptáci*: every caught bird as a card, strongest first, then a line "Ještě nechycení (N)" and the silhouettes of the missing species. *Podle druhů*: today's species grid, each caught species with a "x3" badge. | Nothing new in the bottom bar. The caught birds with BP come first and the missing ones after, as asked. The species progress ("Chyceno 40 z 282") stays. | The Dex screen does two jobs |
-| B. A fourth bottom button | **Dex** stays as it is, a new **Ptáci** screen lists the individuals | Two clean screens, closest to Pokémon GO | Four buttons in a bar made for three, a bigger change |
-| C. One list only | The Dex becomes the list of individuals plus silhouettes, no species view | Simplest | Loses the species overview and the "x of 282" completion feeling |
+Only the overview, no BP anywhere: a grid of all species, the picture of the bird when caught and the silhouette when not.
+"Chyceno 40 z 282", the region chips (Česko, Evropa), the search and the status chips stay.
+A card is tappable and opens the **species page**. It stays because the finding info ("Kdy a kde ho hledat", months, place,
+shyness, time of day) is how you find a bird you miss. The species page loses the list of catches and the BP. A caught species
+has one row there, "Moji ptáci tohoto druhu (3)", that opens the Ptáci screen filtered to that species.
 
-Sorting and filters in *Moji ptáci*: BP (default), newest, name, rarity; the region chips and the search work as now. The
-species page keeps its info block and lists all birds of that species, each with its BP, strongest first. A species card in
-*Podle druhů* shows how many birds you have ("x3") and no BP, because the BP belongs to the individual.
+### 2. Ptáci: every bird you caught (new, a fourth key in the bottom bar)
 
-**Sound:** a sound catch is a full bird with its own BP and its own card (the clip plays on its page), not a buff. The way of
-catching only scores it a little lower than the live camera (0.9 against 1.0). Several birds caught from one recording are
-several cards that share the one clip. A possible later extra is a "heard and seen" bonus when a photo and a recording of the
-same species come within minutes of each other; it is not part of the first version.
+```
+ +-----------------------------------+     +-----------------------------------+
+ | Moji ptáci            17 ptáků    |     | <  Detail ptáka          2 z 17 > |
+ | [hledej…]                         |     |  +-----------------------------+  |
+ | [BP v] [Nejnovější] [Název] [Vz.] |     |  |   vlastní fotka (nebo ukázka |  |
+ | +--------+ +--------+             |     |  |   + přehrávač nahrávky)      |  |
+ | | BP 684 | | BP 512 |             |     |  +-----------------------------+  |
+ | | foto   | | foto   |             |     |  Kachna divoká   (Anas platyr…)   |
+ | | Kachna | | Kachna |             |     |  BP 684                          |
+ | | *      | | *      |             |     |  50 ------------------o-- 750     |
+ | +--------+ +--------+             |     |  start 619  štěstí +65            |
+ | | BP 590 | | BP 244 |             |     |  Jistota 93 %   ###########-      |
+ | | foto   | | zvuk * |             |     |  Čistota        ########---       |
+ | | Kos    | | Sýkora |             |     |  Roční doba     ##########        |
+ | +--------+ +--------+             |     |  Denní doba     ##########        |
+ |                                   |     |  Způsob: živá kamera ##########   |
+ | DEX | PTÁCI | SKENOVAT | NASTAVENÍ|     |  12. 9. 2026, 7:42, Praha         |
+ +-----------------------------------+     |  Poznámka …            [Smazat]   |
+                                           +-----------------------------------+
+```
 
-**After a catch:** the BP big with a bar from min to max and a marker, "start 619, luck +14", a tap opens the breakdown.
+* **List:** every caught bird is a card, 2 per row, strongest first. The card has the BP big on top, the picture (your own
+  photo; for a sound catch the reference photo with a speaker badge), the name and the rarity stars. Sorting: BP (default),
+  newest, name, rarity. The search and the region/rarity chips work as in the Dex.
+* **A bird:** its detail page (arrows to the previous and next bird of the current list). It shows the picture or, for a sound
+  catch, the player of the clip; the BP with the bar from the bird's min to its max and a marker; "start 619, luck +65"; the
+  five factors (confidence, clarity, season, time of day, way of catching) as small meters; date, place with the map link,
+  a note, a link "O druhu" to the species page, and Delete. A bird of the same species with the same BP is a separate card.
+* **Empty:** "V batohu zatím nikdo není" with a button to scan.
+* **After a catch:** the success screen shows the BP (the big number and the bar) and the buttons are "Zobrazit ptáka" (opens
+  its detail) and "Skenovat dál". Several birds caught at once: a list with the BP of each, every row opens its bird.
+* **Sound:** a sound catch is a full bird with its own BP and card, not a buff (the way of catching scores it 0.9 against 1.0
+  for the live camera). Birds from one recording share the clip. A "heard and seen" bonus is a possible later extra.
 
-## Open questions
+**Bottom bar:** four keys, DEX, PTÁCI, SKENOVAT, NASTAVENÍ. Four keys are about 82 px wide on a 360 to 390 px phone, so the
+labels get a smaller size (or Nastavení becomes a gear icon); it is checked at 320, 360 and 390 px. The key can be called
+"Batoh" instead of "Ptáci".
 
-1. The trainer card: I read "no total BP" as no total at all, only counts (species, birds). Say if you want a total of all
-   birds later.
-2. The floors of uncommon (300) and rare (650) are my fill-in between your 50, 1100 and 1600.
-3. Which of A, B or C for the screens.
+### What is built, in this order
+
+1. The BP module (pure, tested with a fixed random generator) and the table of ranges (CSV to JSON).
+2. The stored fields, the first-start BP for old catches, the backup file.
+3. BP on the result and success screens.
+4. The Ptáci screen and the bird page, the fourth key.
+5. The species page loses the catch list; the Dex stays the index.
+6. Tests (unit and browser), the test guide and the docs.
