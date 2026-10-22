@@ -190,6 +190,7 @@ Needs `public/models/birdnet-v2.4-geo-fp16.tflite` (fetch-models), the WingDex c
 | `day` | day, dawn, dawn_dusk, dusk, night | EltonTraits says which birds are nocturnal (owls). **The rest is an estimate by family** |
 | `shy` | 1 lets you come close, 2 wary, 3 shy or far away | **An estimate by family and genus**, with exceptions by species |
 | `tip` | key of the group text `dex.info.tips.*` | by family, a few by genus |
+| `bp` | the least and the most BirdPoints of the bird | `data/bp-ranges.csv` (edit it by hand; `scripts/make-bp-ranges.py` adds rows for new birds), see `docs/notes/birdpoints-design.md` |
 
 Two data sets are needed to run it (neither is in the repo; about 22 MB together): AVONET `AVONET Supplementary dataset 1.xlsx` from https://figshare.com/articles/dataset/16586228 and EltonTraits `BirdFuncDat.txt` from https://esapubs.org/archive/ecol/E095/178/BirdFuncDat.txt (MD5 d6197b2cd90ca3ece0a7393abbf8b7fc). The script also needs `openpyxl`.
 

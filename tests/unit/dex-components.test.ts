@@ -441,6 +441,21 @@ describe('DexPage', () => {
     await screen.findByTestId('dex-count')
   }
 
+  it('has the trainer card (moved here from the settings), folded until the heading is tapped', async () => {
+    await dexWithCatches()
+    const toggle = screen.getByTestId('trainer-toggle')
+    expect(toggle.textContent).toContain('Karta lovce')
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    expect(screen.queryByTestId('trainer-card')).toBeNull()
+    fireEvent.click(toggle)
+    expect(toggle.getAttribute('aria-expanded')).toBe('true')
+    expect((await screen.findByTestId('stat-species')).textContent).toBe('3')
+    expect(screen.getByTestId('trainer-card')).toBeTruthy()
+    fireEvent.click(toggle)
+    expect(toggle.getAttribute('aria-expanded')).toBe('false')
+    expect(screen.queryByTestId('trainer-card')).toBeNull()
+  })
+
   it('shows the progress of Czechia and the Czech birds first, in Dex order', async () => {
     await dexWithCatches()
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Ptačí Dex')
@@ -631,37 +646,25 @@ describe('SpeciesPage', () => {
       await addCatch({ id: 'new', speciesId: 'parus-major', method: 'photo', confidence: 0.71, caughtAt: Date.UTC(2026, 9, 16, 21, 5), location: { lat: 50.0755, lon: 14.4378 }, note: 'U krmítka.' }, { kind: 'image', blob: jpegBlob() })
       await addCatch({ id: 'plain', speciesId: 'parus-major', method: 'live', confidence: 0.64, caughtAt: Date.UTC(2026, 9, 1, 8, 0) })
       render(app(['/', { pathname: '/species/parus-major', search: '?region=europe&sort=name', state: { fromDex: true } }]))
-      await screen.findByTestId('catch-list')
+      await screen.findByTestId('species-birds')
     }
 
-    it('lists the catches newest first with date, place, method and confidence', async () => {
+    it('summarises the catches and links to the birds of this species (the list moved to the Ptáci screen)', async () => {
       await open()
-      const items = screen.getAllByTestId('catch-item')
-      expect(items.map((item) => item.getAttribute('data-method'))).toEqual(['photo', 'live', 'sound'])
-      const photo = items[0]
-      expect(within(photo).getByText('Fotka')).toBeTruthy()
-      expect(photo.querySelector('time')?.textContent).toMatch(/^16\. 10\. 2026 \d{1,2}:\d{2}$/)
-      expect(within(photo).getByText('50,08° s. š., 14,44° v. d.')).toBeTruthy()
-      expect(within(photo).getByRole('link', { name: 'Otevřít v mapě' }).getAttribute('href')).toContain('openstreetmap.org')
-      expect(within(photo).getByRole('link', { name: 'Otevřít v mapě' }).getAttribute('target')).toBe('_blank')
-      expect(within(photo).getByRole('link', { name: 'Otevřít v mapě' }).getAttribute('rel')).toContain('noopener')
-      expect(within(photo).getByText('U krmítka.')).toBeTruthy()
-      expect(within(photo).getByRole('meter').getAttribute('aria-valuetext')).toMatch(/^71\s%$/)
-      const live = items[1]
-      expect(within(live).getByText('Místo nebylo uloženo')).toBeTruthy()
-      expect(within(live).queryByRole('link', { name: 'Otevřít v mapě' })).toBeNull()
-      expect(within(items[2]).getByText('Brno')).toBeTruthy()
       expect(screen.getByText('Tenhle pták už je tvůj!')).toBeTruthy()
       expect(screen.getByText('Úlovků: 3')).toBeTruthy()
+      const link = screen.getByTestId('species-birds')
+      expect(link.textContent).toBe('Moji ptáci tohoto druhu (3)')
+      expect(link.getAttribute('href')).toBe('/birds?species=parus-major')
+      // The catches themselves are no longer listed on this page.
+      expect(screen.queryByTestId('catch-list')).toBeNull()
+      expect(screen.queryByTestId('catch-item')).toBeNull()
     })
 
-    it('has the recording player for a sound catch and the photo button for a photo catch', async () => {
-      await open()
-      const [photo, , sound] = screen.getAllByTestId('catch-item')
-      expect(within(photo).getByTestId('catch-photo')).toBeTruthy()
-      expect(within(photo).queryByTestId('audio-player')).toBeNull()
-      await waitFor(() => expect(within(sound).getByTestId('audio-player')).toBeTruthy())
-      expect(within(sound).queryByTestId('catch-photo')).toBeNull()
+    it('has no link to the birds for a species that is not caught', async () => {
+      render(app('/species/bubo-bubo'))
+      await screen.findByTestId('species-name')
+      expect(screen.queryByTestId('species-birds')).toBeNull()
     })
 
     it('shows the saved photo in the big panel and opens it at full size', async () => {
@@ -672,36 +675,6 @@ describe('SpeciesPage', () => {
       expect(await screen.findByRole('dialog', { name: 'Fotka na celou obrazovku' })).toBeTruthy()
       fireEvent.keyDown(document, { key: 'Escape' })
       await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-    })
-
-    it('asks before deleting, keeps the catch on Cancel, deletes it on confirm and says so', async () => {
-      await open()
-      const [photo] = screen.getAllByTestId('catch-item')
-      fireEvent.click(within(photo).getByRole('button', { name: 'Smazat úlovek' }))
-      const dialog = await screen.findByRole('alertdialog', { name: 'Smazat tenhle úlovek?' })
-      expect(within(dialog).getByText(/Zmizí i uložená fotka nebo nahrávka/)).toBeTruthy()
-      fireEvent.click(within(dialog).getByRole('button', { name: 'Ponechat' }))
-      await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
-      expect(screen.getAllByTestId('catch-item')).toHaveLength(3)
-
-      fireEvent.click(within(screen.getAllByTestId('catch-item')[0]).getByRole('button', { name: 'Smazat úlovek' }))
-      fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Smazat' }))
-      await waitFor(() => expect(screen.getAllByTestId('catch-item')).toHaveLength(2))
-      expect(await screen.findByText('Úlovek je smazaný.')).toBeTruthy()
-      expect(await getDb().catches.get('new')).toBeUndefined()
-      expect(await getDb().catches.get('old')).toBeDefined()
-      // The photo went with its catch.
-      expect(await getDb().media.count()).toBe(1)
-    })
-
-    it('falls back to "not caught" when the last catch is deleted', async () => {
-      await addCatch({ id: 'only', speciesId: 'parus-major', method: 'sound', confidence: 0.9 })
-      render(app('/species/parus-major'))
-      fireEvent.click(await screen.findByRole('button', { name: 'Smazat úlovek' }))
-      fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Smazat' }))
-      expect(await screen.findByText('Tohohle ptáka ještě nemáš')).toBeTruthy()
-      // The message and the list come from two live queries, so on a busy machine the list can go a moment later.
-      await waitFor(() => expect(screen.queryByTestId('catch-list')).toBeNull())
     })
 
     it('offers the next and previous bird of the list it was opened from, with the same list state', async () => {

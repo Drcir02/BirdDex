@@ -231,12 +231,14 @@ test.describe('scan by sound', () => {
     expect(saved.media[0].size).toBeGreaterThan(10_000)
     expect(saved.catches[0].mediaId).toBe(saved.media[0].id)
 
-    // The Dex now shows the bird as caught, and the bird's page has the catch with its clip.
-    await page.getByTestId('to-dex').click()
-    await expect(page).toHaveURL(/#\/species\/parus-major/)
-    await expect(page.getByTestId('status-caught')).toBeVisible()
-    await expect(page.getByTestId('catch-item')).toHaveCount(1)
-    await expect(page.getByTestId('catch-item')).toHaveAttribute('data-method', 'sound')
+    // The bird has a page of its own, with its BP and the clip; the Dex shows the species as caught.
+    await expect(page.getByTestId('bp-value')).toHaveText(String(saved.catches[0].bp))
+    await page.getByTestId('to-bird').click()
+    await expect(page).toHaveURL(/#\/birds\/.+/)
+    await expect(page.getByTestId('bird-main')).toHaveAttribute('data-method', 'sound')
+    await expect(page.getByTestId('bird-name')).toHaveText('Sýkora koňadra')
+    await expect(page.getByTestId('bp-value')).toHaveText(String(saved.catches[0].bp))
+    await expect(page.getByTestId('audio-player')).toBeVisible()
     await page.getByTestId('nav-dex').click()
     await expect(page.locator('[data-testid="species-card"][data-species-id="parus-major"]')).toHaveAttribute('data-caught', 'true')
 
@@ -283,14 +285,18 @@ test.describe('scan by sound', () => {
     expect(saved.media).toHaveLength(1)
     expect(saved.catches.every((record) => record.mediaId === saved.media[0].id)).toBe(true)
 
-    // Both birds are caught in the Dex, and each has its catch with the clip.
-    await page.getByTestId('to-dex').click()
+    // Both birds are in the backpack with their own BP, and caught in the Dex.
+    await page.getByTestId('to-birds').click()
+    await expect(page).toHaveURL(/#\/birds$/)
+    await expect(page.getByTestId('bird-card')).toHaveCount(2)
+    for (const record of saved.catches) await expect(page.locator(`[data-testid="bird-card"][data-catch-id="${record.id}"]`)).toHaveAttribute('data-bp', String(record.bp))
+    await page.getByTestId('nav-dex').click()
     await expect(page.getByTestId('dex-progress')).toContainText('Chyceno 2 z')
     await page.goto('/#/species/turdus-merula')
     await expect(page.getByTestId('status-caught')).toBeVisible()
-    await expect(page.getByTestId('catch-item')).toHaveCount(1)
+    await expect(page.getByTestId('species-birds')).toContainText('(1)')
     await page.goto('/#/species/parus-major')
-    await expect(page.getByTestId('catch-item')).toHaveCount(1)
+    await expect(page.getByTestId('species-birds')).toContainText('(1)')
 
     expect(errors).toEqual([])
   })
@@ -649,10 +655,10 @@ test.describe('scan with the live camera', () => {
     // Nobody presses Catch: the screen goes to the result, saves it, and celebrates.
     await expect(page.getByTestId('catch-message')).toContainText('Sýkora koňadra', { timeout: 30_000 })
     await expect(page.getByRole('alertdialog')).toHaveCount(0)
-    await page.getByTestId('to-dex').click()
-    await expect(page).toHaveURL(/#\/species\/parus-major/)
-    await expect(page.getByTestId('status-caught')).toBeVisible()
-    await expect(page.getByTestId('catch-item')).toHaveAttribute('data-method', 'live')
+    await page.getByTestId('to-bird').click()
+    await expect(page).toHaveURL(/#\/birds\/.+/)
+    await expect(page.getByTestId('bird-name')).toHaveText('Sýkora koňadra')
+    await expect(page.getByTestId('bird-main')).toHaveAttribute('data-method', 'live')
   })
 
   test('switches the camera off when the person leaves the screen', async ({ page }) => {

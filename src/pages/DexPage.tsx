@@ -5,6 +5,7 @@ import { ROUTES } from '../app/routes'
 import { normalizeForSearch, SpeciesLoadError, useSpecies, type Region } from '../data'
 import { useCaughtSummary } from '../db'
 import { DexControls } from '../features/dex/DexControls'
+import { TrainerFold } from '../features/dex/TrainerFold'
 import {
   dexQueryToParams,
   dexQueryToSearch,
@@ -206,6 +207,7 @@ export default function DexPage() {
           {t('dex.summaryError.text')}
         </Notice>
       ) : null}
+      <TrainerFold />
       <DexControls
         count={items.length}
         search={query.q}

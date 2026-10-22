@@ -2,13 +2,13 @@ import { useEffect, useLayoutEffect, useRef, type RefObject } from 'react'
 import { useLocation, useNavigationType } from 'react-router-dom'
 import { t } from '../i18n'
 import { APP_NAME } from './constants'
-import { sectionOf } from './routes'
+import { isSettingsPath, sectionOf } from './routes'
 
 /** "Dex · BirdDex" in the tab title and the app switcher. */
 export function useDocumentTitle(): void {
   const { pathname } = useLocation()
   useEffect(() => {
-    const section = sectionOf(pathname)
+    const section = sectionOf(pathname) ?? (isSettingsPath(pathname) ? 'settings' : null)
     document.title = section ? `${t(`common.nav.${section}` as const)} · ${APP_NAME}` : APP_NAME
   }, [pathname])
 }

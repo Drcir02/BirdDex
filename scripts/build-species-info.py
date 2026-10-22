@@ -24,6 +24,8 @@ What each field is made from
   shy        How close a person gets: 1 lets you come close, 2 is wary, 3 is shy or far away and needs a zoom.
              An ESTIMATE by family and genus (FAMILY_RULES, SPECIES_RULES), not from any dataset.
   tip        Which group text of the app (dex.info.tips.*) belongs to the bird. By family, a few by genus (GENUS_TIP).
+  bp         The least and the most BirdPoints of the bird, from data/bp-ranges.csv (edit min and max there; scripts/make-bp-ranges.py
+             adds the rows of new birds). The file is the source of truth: this script only copies it, and stops when a bird has no row.
 
 shy, day and tip are written by hand, from general knowledge of the families. They should be read through by somebody who
 knows birds: --review writes one line per bird for that.
@@ -43,6 +45,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
 SPECIES_FILE = ROOT / "public" / "data" / "species.json"
+BP_FILE = ROOT / "data" / "bp-ranges.csv"
 
 _spec = importlib.util.spec_from_file_location("build_species", ROOT / "scripts" / "build-species.py")
 bs = importlib.util.module_from_spec(_spec)
@@ -372,6 +375,18 @@ def read_elton(path: Path) -> list[dict]:
         return list(csv.DictReader(handle, delimiter="\t"))
 
 
+def read_bp_ranges(path: Path) -> dict[str, tuple[int, int]]:
+    """data/bp-ranges.csv: id, min and max of every bird. Stops on a missing or broken row."""
+    ranges: dict[str, tuple[int, int]] = {}
+    with path.open(encoding="utf-8", newline="") as handle:
+        for row in csv.DictReader(handle):
+            low, high = int(row["min"]), int(row["max"])
+            if not 0 <= low < high:
+                die(f"{path.name}: {row['id']} needs 0 <= min < max, found {low} and {high}")
+            ranges[row["id"]] = (low, high)
+    return ranges
+
+
 def find(by_scientific: dict[str, dict], to_birdlife: dict[str, str], scientific: str) -> dict | None:
     if scientific in by_scientific:
         return by_scientific[scientific]
@@ -437,6 +452,10 @@ def build(args: argparse.Namespace) -> int:
     if problems:
         die("\n  ".join(["fix the tables first:", *problems]))
 
+    bp_ranges = read_bp_ranges(BP_FILE)
+    no_bp = [s["id"] for s in species if s["id"] not in bp_ranges]
+    if no_bp:
+        die(f"{BP_FILE.name} has no row for: {', '.join(no_bp)} (run scripts/make-bp-ranges.py)")
     avonet, to_birdlife = read_avonet(Path(args.avonet))
     elton_rows = read_elton(Path(args.elton))
     elton_by_sci = {r["Scientific"]: r for r in elton_rows}
@@ -507,6 +526,7 @@ def build(args: argparse.Namespace) -> int:
             if not found:
                 die(f"{sci} is in no country")
             info["countries"] = found[:MAX_COUNTRIES]
+        info["bp"] = list(bp_ranges[s["id"]])
         s["info"] = info
 
         stats["place"][place] += 1

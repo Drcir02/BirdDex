@@ -16,10 +16,11 @@ export interface ChipProps {
   /** For toggle chips: whether the filter is on. */
   selected?: boolean
   disabled?: boolean
+  'data-testid'?: string
 }
 
 /** A small label. With onClick it becomes a toggle button. */
-export function Chip({ tone = 'neutral', icon, children, className, onClick, selected = false, disabled }: ChipProps) {
+export function Chip({ tone = 'neutral', icon, children, className, onClick, selected = false, disabled, 'data-testid': testId }: ChipProps) {
   const classes = cx('bd-chip', `bd-chip--${tone}`, selected && 'is-selected', className)
   const content = (
     <>
@@ -29,10 +30,14 @@ export function Chip({ tone = 'neutral', icon, children, className, onClick, sel
   )
   if (onClick) {
     return (
-      <button type="button" className={classes} onClick={onClick} aria-pressed={selected} disabled={disabled}>
+      <button type="button" className={classes} onClick={onClick} aria-pressed={selected} disabled={disabled} data-testid={testId}>
         {content}
       </button>
     )
   }
-  return <span className={classes}>{content}</span>
+  return (
+    <span className={classes} data-testid={testId}>
+      {content}
+    </span>
+  )
 }

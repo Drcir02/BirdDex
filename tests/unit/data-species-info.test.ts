@@ -59,6 +59,19 @@ describe('the finding info of the Dex', () => {
     expect(seasonText(infoOf('Parus major').months)).toBe('celý rok')
   })
 
+  it('gives every bird a range of BirdPoints, with the floors of the rarities', () => {
+    const FLOOR = { common: 50, uncommon: 300, rare: 650, epic: 1100, legendary: 1600 }
+    for (const s of species) {
+      const range = s.info!.bp
+      expect(range, s.scientificName).toBeDefined()
+      const [min, max] = range!
+      expect(min, s.scientificName).toBeGreaterThanOrEqual(0)
+      expect(max, s.scientificName).toBeGreaterThan(min)
+      expect(min, `${s.scientificName} floor`).toBe(FLOOR[s.rarity])
+    }
+    expect(infoOf('Anas platyrhynchos').bp).toEqual([50, 750])
+  })
+
   it('puts the nocturnal birds at night or in the twilight, and the others in the day', () => {
     expect(infoOf('Bubo bubo').day).toBe('night')
     expect(infoOf('Strix aluco').day).toBe('night')

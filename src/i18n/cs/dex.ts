@@ -98,6 +98,7 @@ export const dex = {
     no: 'ne',
     photo: 'Fotka',
   },
+  myBirds: 'Moji ptáci tohoto druhu ({count})',
   status: {
     notCaughtTitle: 'Tohohle ptáka ještě nemáš',
     caughtTitle: 'Tenhle pták už je tvůj!',

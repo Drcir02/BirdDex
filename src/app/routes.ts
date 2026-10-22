@@ -3,6 +3,8 @@
 export const ROUTES = {
   dex: '/',
   species: '/species/:id',
+  birds: '/birds',
+  bird: '/birds/:id',
   scan: '/scan',
   scanSound: '/scan/sound',
   scanPhoto: '/scan/photo',
@@ -20,14 +22,24 @@ export function speciesPath(id: string): string {
   return `/species/${encodeURIComponent(id)}`
 }
 
-export type NavSection = 'dex' | 'scan' | 'settings'
+/** The path of one caught bird (one catch) with its BP. */
+export function birdPath(catchId: string): string {
+  return `/birds/${encodeURIComponent(catchId)}`
+}
+
+export type NavSection = 'birds' | 'scan' | 'dex'
 
 /** Which bottom-navigation button a path belongs to (null for screens outside the navigation). */
 export function sectionOf(pathname: string): NavSection | null {
   if (pathname === '/' || pathname === '/species' || pathname.startsWith('/species/')) return 'dex'
+  if (pathname === '/birds' || pathname.startsWith('/birds/')) return 'birds'
   if (pathname === '/scan' || pathname.startsWith('/scan/') || pathname === '/result') return 'scan'
-  if (pathname === '/settings' || pathname === '/about') return 'settings'
   return null
+}
+
+/** The settings screen and the About page behind it, reached with the gear at the top of the device. */
+export function isSettingsPath(pathname: string): boolean {
+  return pathname === '/settings' || pathname === '/about'
 }
 
 /** Paths that open even before the welcome screen has been seen. */

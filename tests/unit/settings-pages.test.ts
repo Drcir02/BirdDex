@@ -28,6 +28,7 @@ vi.mock('../../src/db/backupFile', () => ({ saveBackupFile: (blob: Blob, name?: 
 import AboutPage from '../../src/pages/AboutPage'
 import OnboardingPage from '../../src/pages/OnboardingPage'
 import SettingsPage from '../../src/pages/SettingsPage'
+import { TrainerCard } from '../../src/features/settings/TrainerCard'
 
 beforeAll(() => {
   vi.stubGlobal('Blob', NodeBlob)
@@ -126,11 +127,16 @@ describe('the settings screen', () => {
     render(app('/settings', h(SettingsPage)))
     expect(screen.getByRole('heading', { level: 1, name: 'Nastavení' })).toBeTruthy()
     const headings = screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)
-    expect(headings).toEqual(['Karta lovce', 'Citlivost chytání', 'Zvuky', 'Úložiště', 'Záloha', 'Smazat vše', 'O aplikaci'])
+    expect(headings).toEqual(['Citlivost chytání', 'Zvuky', 'Úložiště', 'Záloha', 'Smazat vše', 'O aplikaci'])
+  })
+
+  it('does not hold the trainer card any more (it moved to the Dex)', () => {
+    render(app('/settings', h(SettingsPage)))
+    expect(screen.queryByTestId('trainer-card')).toBeNull()
   })
 
   it('shows an inviting empty trainer card when nothing is caught', async () => {
-    render(app('/settings', h(SettingsPage)))
+    render(app('/settings', h(TrainerCard)))
     expect(await screen.findByTestId('trainer-empty')).toBeTruthy()
     expect(within(screen.getByTestId('trainer-empty')).getByRole('link', { name: 'Jdu na to' }).getAttribute('href')).toBe('/scan')
   })
@@ -139,7 +145,7 @@ describe('the settings screen', () => {
     await addCatch({ speciesId: 'parus-major', method: 'sound', confidence: 0.9, caughtAt: new Date(2026, 8, 21, 10).getTime() })
     await addCatch({ speciesId: 'parus-major', method: 'photo', confidence: 0.9, caughtAt: new Date(2026, 9, 1, 10).getTime() })
     await addCatch({ speciesId: 'alca-torda', method: 'live', confidence: 0.9, caughtAt: new Date(2026, 9, 2, 10).getTime() })
-    render(app('/settings', h(SettingsPage)))
+    render(app('/settings', h(TrainerCard)))
     expect((await screen.findByTestId('stat-species')).textContent).toBe('2')
     expect(screen.getByTestId('stat-catches').textContent).toBe('3 úlovky celkem')
     expect(screen.getByTestId('stat-czechia').textContent).toContain('1 z 3')
@@ -180,7 +186,7 @@ describe('the settings screen', () => {
 
   it('says "1 úlovek" for a single catch (Czech plural)', async () => {
     await addCatch({ speciesId: 'parus-major', method: 'sound', confidence: 0.9 })
-    render(app('/settings', h(SettingsPage)))
+    render(app('/settings', h(TrainerCard)))
     await screen.findByTestId('stat-species')
     expect(screen.getByTestId('stat-catches').textContent).toBe('1 úlovek celkem')
   })
@@ -378,7 +384,10 @@ describe('the backup reminder', () => {
   it('does not appear with 9 catches', async () => {
     await addMany(9)
     render(app('/settings', h(SettingsPage)))
-    await screen.findByTestId('stat-species')
+    // Wait until the settings have read the catches (the erase question names how many there are), then look for the reminder.
+    fireEvent.click(await screen.findByTestId('erase-start'))
+    await waitFor(() => expect(screen.getByRole('alertdialog').textContent).toContain('Zmizí 9 úlovků'))
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Zrušit' }))
     expect(screen.queryByTestId('backup-reminder')).toBeNull()
   })
 
@@ -396,11 +405,10 @@ describe('erasing everything', () => {
     await addCatch({ speciesId: 'parus-major', method: 'sound', confidence: 0.9 })
     await addCatch({ speciesId: 'turdus-merula', method: 'photo', confidence: 0.9 })
     render(app('/settings', h(SettingsPage)))
-    await screen.findByTestId('stat-species')
 
-    fireEvent.click(screen.getByTestId('erase-start'))
+    fireEvent.click(await screen.findByTestId('erase-start'))
     const first = screen.getByRole('alertdialog', { name: 'Smazat všechna data?' })
-    expect(first.textContent).toContain('Zmizí 2 úlovky i uložené')
+    await waitFor(() => expect(first.textContent).toContain('Zmizí 2 úlovky i uložené'))
     // The first button the finger lands on is the safe one.
     expect(document.activeElement?.textContent).toBe('Zrušit')
     fireEvent.click(within(first).getByRole('button', { name: 'Zrušit' }))
@@ -419,7 +427,6 @@ describe('erasing everything', () => {
     await waitFor(async () => expect(await listCatches()).toHaveLength(0))
     expect(await getDb().media.count()).toBe(0)
     await waitFor(() => expect(screen.getByText('Všechna data jsou smazaná. Dex je prázdný.')).toBeTruthy())
-    expect(await screen.findByTestId('trainer-empty')).toBeTruthy()
   })
 })
 

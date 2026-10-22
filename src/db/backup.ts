@@ -264,7 +264,26 @@ export function parseCatchRecord(value: unknown, where = 'catch'): CatchRecord {
   if (note) record.note = note
   const mediaId = optionalString(value, 'mediaId', where, 200)
   if (mediaId) record.mediaId = mediaId
+  copyBirdPoints(value, record)
   return record
+}
+
+const inRange = (value: unknown, min: number, max: number): value is number => typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max
+
+/**
+ * The BirdPoints of a catch, when the file has them. A backup from before BP has none, and a field that does not look right is
+ * left out (the app then works the BP out again) rather than refusing the whole backup.
+ */
+function copyBirdPoints(source: Record<string, unknown>, record: CatchRecord): void {
+  const { bp, bpBase, bpQ, bpLuck, bpRange, bpFactors, bpLegacy } = source
+  if (!inRange(bp, 0, 1e6) || !inRange(bpQ, 0, 1) || !inRange(bpLuck, -1, 1)) return
+  record.bp = Math.round(bp)
+  record.bpQ = bpQ
+  record.bpLuck = bpLuck
+  if (inRange(bpBase, 0, 1e6)) record.bpBase = Math.round(bpBase)
+  if (Array.isArray(bpRange) && bpRange.length === 2 && inRange(bpRange[0], 0, 1e6) && inRange(bpRange[1], 0, 1e6) && bpRange[0] < bpRange[1]) record.bpRange = [bpRange[0], bpRange[1]]
+  if (Array.isArray(bpFactors) && bpFactors.length === 5 && bpFactors.every((factor) => inRange(factor, 0, 1))) record.bpFactors = [...(bpFactors as number[])]
+  if (bpLegacy === true) record.bpLegacy = true
 }
 
 function parseMediaEntry(value: unknown, where: string): BackupMediaEntry {

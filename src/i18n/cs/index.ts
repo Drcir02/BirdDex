@@ -2,6 +2,7 @@
 // so `dex.title` lives in dex.ts as `title`. Files may nest objects (`common.nav.dex`), but only strings are leaves.
 
 import { about } from './about'
+import { birds } from './birds'
 import { common } from './common'
 import { dex } from './dex'
 import { fun } from './fun'
@@ -10,4 +11,4 @@ import { result } from './result'
 import { scan } from './scan'
 import { settings } from './settings'
 
-export const cs = { common, dex, scan, result, settings, about, fun, onboarding } as const
+export const cs = { common, dex, birds, scan, result, settings, about, fun, onboarding } as const

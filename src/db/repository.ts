@@ -1,6 +1,7 @@
 // Reading and writing catches, their photos and clips, and the cached reference photos.
 // Screens use these functions and never touch the tables directly.
 
+import type { StoredBirdPoints } from '../domain/birdPoints'
 import type { CatchMethod, CatchRecord, GeoPoint, MediaRecord } from '../domain/types'
 import { requestPersistentStorage } from '../state/storage'
 import { getDb, type PhotoCacheRecord } from './database'
@@ -17,6 +18,8 @@ export interface NewCatch {
   location?: GeoPoint
   placeName?: string
   note?: string
+  /** The BirdPoints of the catch (src/domain/birdPoints.ts, toStored). */
+  birdPoints?: StoredBirdPoints
   /**
    * Normally a fresh id is made. Pass the same id for the same catch (for example `getPendingCatchId()` from
    * src/state/pending.ts) to make a double tap on the Catch button harmless: the second call saves nothing and
@@ -79,6 +82,7 @@ export async function addCatches(inputs: readonly NewCatch[], media?: NewMedia):
     if (input.location) record.location = { ...input.location }
     if (input.placeName) record.placeName = input.placeName
     if (input.note) record.note = input.note
+    if (input.birdPoints) Object.assign(record, input.birdPoints, { bpFactors: [...input.birdPoints.bpFactors], bpRange: [...input.birdPoints.bpRange] })
     return record
   })
 

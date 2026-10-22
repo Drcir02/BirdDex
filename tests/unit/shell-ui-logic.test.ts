@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEVICE_STATUSES, resolveStatus } from '../../src/app/deviceStatus'
-import { ROUTES, isOpenOnFirstRun, sectionOf, speciesPath } from '../../src/app/routes'
+import { ROUTES, birdPath, isOpenOnFirstRun, isSettingsPath, sectionOf, speciesPath } from '../../src/app/routes'
 import { classifyError } from '../../src/app/ErrorBoundary'
 import { clamp01, confidenceState, cx, litSegments, nextFocusIndex, nextOptionIndex, ringGeometry, segmentTone } from '../../src/ui/logic'
 import { SILHOUETTE_SHAPES, silhouetteShapeFor } from '../../src/ui/silhouette'
@@ -267,8 +267,21 @@ describe('routes', () => {
     expect(sectionOf('/scan/sound')).toBe('scan')
     expect(sectionOf('/scan/live')).toBe('scan')
     expect(sectionOf('/result')).toBe('scan')
-    expect(sectionOf('/settings')).toBe('settings')
-    expect(sectionOf('/about')).toBe('settings')
+    expect(sectionOf('/birds')).toBe('birds')
+    expect(sectionOf('/birds/abc-123')).toBe('birds')
+  })
+
+  it('lights no big button for the settings and the About page (the gear at the top does)', () => {
+    expect(sectionOf('/settings')).toBeNull()
+    expect(sectionOf('/about')).toBeNull()
+    expect(isSettingsPath('/settings')).toBe(true)
+    expect(isSettingsPath('/about')).toBe(true)
+    expect(isSettingsPath('/scan')).toBe(false)
+  })
+
+  it('builds the path of a caught bird and encodes odd ids', () => {
+    expect(birdPath('abc')).toBe('/birds/abc')
+    expect(birdPath('x:y z')).toBe('/birds/x%3Ay%20z')
   })
 
   it('lights nothing for screens outside the navigation', () => {

@@ -1,7 +1,7 @@
 # BirdPoints (BP): design
 
-**Status: a design, nothing of it is in the app yet.** The numbers are starting values to polish and balance. The table of
-ranges per bird is `docs/notes/birdpoints-ranges-draft.csv` (open it in a spreadsheet; `min` and `max` are the values to edit).
+**Status: built (see "Built" at the end).** The design below is what was agreed. The numbers are starting values to polish and balance. The table of
+ranges per bird is `data/bp-ranges.csv` (open it in a spreadsheet; `min` and `max` are the values to edit).
 
 ## Decided
 
@@ -47,7 +47,7 @@ shyness (tame x0.95, wary x1.0, shy x1.08) stretch the span above the floor, so 
 Resulting max range of the real table: common 480 to 840, uncommon 760 to 1160, rare 1140 to 1530, epic 1620 to 2110,
 legendary 2250 to 2810. The mallard is pinned to 50 to 750 (the formula gives 50 to 710).
 
-## What catches give (reference size, 60 000 simulated catches each; start, then 90 % of catches)
+## What catches give (reference size, 60 000 simulated catches each; start, then the range where 99 of 100 catches land)
 
 | Rarity (range) | Perfect (Q 1.0) | Great field catch (0.93) | Typical sound (0.74) | Old gallery photo (0.47) | Forced unsure (0.15) |
 |---|---|---|---|---|---|
@@ -125,3 +125,19 @@ labels get a smaller size (or Nastavení becomes a gear icon); it is checked at 
 4. The Ptáci screen and the bird page, the fourth key.
 5. The species page loses the catch list; the Dex stays the index.
 6. Tests (unit and browser), the test guide and the docs.
+
+## Built
+
+* `src/domain/birdPoints.ts`: the formula and every number to balance (`BP_CONFIG`, `TIER_RANGES`), pure and tested with seeded dice
+  (`tests/unit/birdpoints.test.ts`).
+* `data/bp-ranges.csv`: the `min` and `max` of every bird, the source of truth. `scripts/make-bp-ranges.py` adds the rows of new
+  birds with the default formula and never touches existing rows; `scripts/build-species-info.py` copies the table into
+  `species.json` (`info.bp`). To balance: edit the CSV, run `build-species-info.py`, push. Catches already made are recalculated
+  at the next start of the app with the same quality and the same luck (`src/features/birds/syncBirdPoints.ts`).
+* Every catch stores `bp`, `bpBase`, `bpQ`, `bpLuck`, `bpRange`, `bpFactors` (and `bpLegacy` for a catch from before BP). The
+  backup file carries them. Catches without a BP get one at the start of the app and when a Ptáci screen opens.
+* The bottom bar is Ptáci | Skenovat | Dex; the settings are a gear in the top right corner; the trainer card moved from the
+  settings to the Dex (folded). The screens are `src/pages/BirdsPage.tsx` (list, three in a row) and `src/pages/BirdPage.tsx`
+  (one bird); the species page lost its list of catches and links to `/birds?species=<id>`.
+* Clarity (one of the five scores) is the lead of a bird over the strongest guess that was not sure enough; a catch from before BP
+  has no lead and gets the middle value 0.6.

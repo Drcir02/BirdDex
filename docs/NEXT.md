@@ -22,6 +22,7 @@ the app, both engines, all screens, settings, welcome, credits, the update banne
 
 - `src/domain/thresholds.ts` (catch rules per method and sensitivity) from real birds, false alarms in silence and wrong names.
 - Czech wording review by a native reader (`src/i18n/cs/`).
+- BirdPoints balance (`data/bp-ranges.csv`, `BP_CONFIG` in `src/domain/birdPoints.ts`): the numbers are the first proposal, to be tuned from real catches.
 - The finding info of every bird (`docs/notes/species-info-review.md`, `dex.info.tips.*` in `src/i18n/cs/dex.ts`): shyness, time of day and the group texts are estimates by family and need a read-through by somebody who knows birds; months and countries come from BirdNET's location model, not from an atlas.
 
 ## 4. Known open items from the notes

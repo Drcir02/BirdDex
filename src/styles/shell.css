@@ -232,6 +232,42 @@
   gap: 5px;
 }
 
+/* The settings key: a round dark key with a gear, in the top right corner of the device. */
+.bd-top__gear {
+  --focus: var(--focus-on-dark);
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  color: #d5d9e6;
+  background: linear-gradient(180deg, #4b4e5a, #2c2e37 55%, #1f2127);
+  border-radius: 50%;
+  box-shadow:
+    0 4px 0 #0d0e12,
+    0 7px 10px rgba(0, 0, 0, 0.35),
+    inset 0 2px 0 rgba(255, 255, 255, 0.22);
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--dur-fast) ease-out,
+    box-shadow var(--dur-fast) ease-out,
+    color var(--dur) ease-out;
+}
+
+.bd-top__gear:focus-visible {
+  outline: 3px solid var(--focus-on-dark);
+}
+
+.bd-top__gear:active {
+  transform: translateY(3px);
+  box-shadow:
+    0 1px 0 #0d0e12,
+    inset 0 2px 0 rgba(255, 255, 255, 0.22);
+}
+
+.bd-top__gear[aria-current='page'] {
+  color: var(--lcd-glow);
+}
+
 .bd-grille > i {
   width: 5px;
   height: 16px;

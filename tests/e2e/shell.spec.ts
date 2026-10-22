@@ -76,7 +76,7 @@ test.describe('the device shell', () => {
     await page.goto('/')
     await expect(heading(page)).toBeVisible()
     const links = nav(page).getByRole('link')
-    await expect(links).toHaveText(['Dex', 'Skenovat', 'Nastavení'])
+    await expect(links).toHaveText(['Ptáci', 'Skenovat', 'Dex'])
 
     await page.getByTestId('nav-scan').click()
     await expect(page).toHaveURL(/#\/scan$/)
@@ -100,6 +100,7 @@ test.describe('the device shell', () => {
   test('keeps the right button lit on the screens under a section', async ({ page }) => {
     for (const [path, id] of [
       ['/species/parus-major', 'nav-dex'],
+      ['/birds', 'nav-birds'],
       ['/scan/sound', 'nav-scan'],
       ['/scan/photo', 'nav-scan'],
       ['/scan/live', 'nav-scan'],

@@ -93,14 +93,14 @@ export const result = {
     confirmButton: 'Chytit všechny',
     caught: 'Máš je! Chyceno najednou: {count}.',
     list: 'Chycení ptáci',
-    toDex: 'Zobrazit Dex',
+    toBirds: 'Zobrazit ptáky',
   },
 
   // After the catch
   success: {
     newSpecies: 'Nový druh v tvém Dexu!',
     again: 'Další úlovek tohoto druhu.',
-    toDex: 'Zobrazit v Dexu',
+    toBird: 'Zobrazit ptáka',
     scanNext: 'Skenovat dál',
     celebration: 'Oslava chycení',
   },

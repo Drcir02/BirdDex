@@ -68,7 +68,7 @@ const DAY_PARTS: ReadonlySet<string> = new Set<DayPart>(['day', 'dawn', 'dawn_du
 /** The finding info of a bird, or undefined when it is missing or does not look right: the Dex works without it. */
 function readInfo(value: unknown): SpeciesInfo | undefined {
   if (!isObject(value)) return undefined
-  const { months, place, shy, day, tip, countries } = value
+  const { months, place, shy, day, tip, countries, bp } = value
   if (typeof months !== 'string' || !/^[0-3]{12}$/.test(months)) return undefined
   if (typeof place !== 'string' || !PLACES.has(place)) return undefined
   if (shy !== 1 && shy !== 2 && shy !== 3) return undefined
@@ -76,6 +76,7 @@ function readInfo(value: unknown): SpeciesInfo | undefined {
   if (typeof tip !== 'string') return undefined
   const info: SpeciesInfo = { months, place: place as PlaceKey, shy: shy as Shyness, day: day as DayPart, tip }
   if (Array.isArray(countries)) info.countries = countries.filter((code): code is string => typeof code === 'string')
+  if (Array.isArray(bp) && bp.length === 2 && typeof bp[0] === 'number' && typeof bp[1] === 'number' && bp[0] >= 0 && bp[0] < bp[1]) info.bp = [bp[0], bp[1]]
   return info
 }
 

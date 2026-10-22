@@ -181,6 +181,9 @@ describe('Layout (the device shell)', () => {
               Route,
               { element: h(Layout) },
               h(Route, { path: '/', element: h('h1', null, 'Stránka Dex') }),
+              h(Route, { path: '/species/:id', element: h('h1', null, 'Stránka druhu') }),
+              h(Route, { path: '/birds', element: h('h1', null, 'Stránka Ptáci') }),
+              h(Route, { path: '/birds/:id', element: h('h1', null, 'Stránka ptáka') }),
               h(Route, { path: '/scan', element: h('h1', null, 'Stránka Skenovat') }),
               h(Route, { path: '/settings', element: h('h1', null, 'Stránka Nastavení') }),
               h(Route, { path: '/about', element: h('h1', null, 'Stránka O aplikaci') }),
@@ -201,24 +204,40 @@ describe('Layout (the device shell)', () => {
     expect(await within(screenArea).findByRole('heading', { name: 'Stránka Skenovat' })).toBeTruthy()
   })
 
-  it('has the three big navigation buttons with Czech labels and the right targets', () => {
+  it('has the three big navigation buttons with Czech labels and the right targets: Ptáci, Skenovat in the middle, Dex', () => {
     render(shell('/'))
     const links = within(nav()).getAllByRole('link')
-    expect(links.map((link) => link.textContent)).toEqual(['Dex', 'Skenovat', 'Nastavení'])
-    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/', '/scan', '/settings'])
+    expect(links.map((link) => link.textContent)).toEqual(['Ptáci', 'Skenovat', 'Dex'])
+    expect(links.map((link) => link.getAttribute('href'))).toEqual(['/birds', '/scan', '/'])
+  })
+
+  it('has the settings as a gear at the top of the device, not as a big button', () => {
+    render(shell('/'))
+    const gear = screen.getByTestId('nav-settings')
+    expect(gear.getAttribute('href')).toBe('/settings')
+    expect(gear.getAttribute('aria-label')).toBe('Nastavení')
+    expect(within(nav()).queryByText('Nastavení')).toBeNull()
+    expect(gear.hasAttribute('aria-current')).toBe(false)
   })
 
   it.each([
     ['/', 'Dex'],
+    ['/species/parus-major', 'Dex'],
+    ['/birds', 'Ptáci'],
+    ['/birds/some-catch', 'Ptáci'],
     ['/scan', 'Skenovat'],
-    ['/settings', 'Nastavení'],
-    ['/about', 'Nastavení'],
   ])('marks the current section on %s as "%s"', (path, label) => {
     render(shell(path))
     const current = within(nav())
       .getAllByRole('link')
       .filter((link) => link.getAttribute('aria-current') === 'page')
     expect(current.map((link) => link.textContent)).toEqual([label])
+  })
+
+  it.each(['/settings', '/about'])('lights the gear, and no big button, on %s', (path) => {
+    render(shell(path))
+    expect(screen.getByTestId('nav-settings').getAttribute('aria-current')).toBe('page')
+    expect(within(nav()).getAllByRole('link').filter((link) => link.hasAttribute('aria-current'))).toHaveLength(0)
   })
 
   it('marks nothing on screens outside the navigation', () => {

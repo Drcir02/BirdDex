@@ -281,7 +281,7 @@ describe('catching', () => {
     expect(resolvePlaceName).toHaveBeenCalledTimes(1)
     expect(resolvePlaceName).toHaveBeenCalledWith({ lat: 50.08, lon: 14.43 })
     const [input, media] = addCatch.mock.calls[0] as [Record<string, unknown>, Record<string, unknown>]
-    expect(input).toEqual({
+    expect(input).toMatchObject({
       id: catchId,
       speciesId: 'parus-major',
       method: 'sound',
@@ -290,6 +290,17 @@ describe('catching', () => {
       location: { lat: 50.08, lon: 14.43 },
       placeName: 'Praha',
     })
+    // The BirdPoints go in with the catch: the result, the quality, the luck, the five scores and the range they were made against.
+    const points = input.birdPoints as { bp: number; bpBase: number; bpQ: number; bpLuck: number; bpFactors: number[]; bpRange: [number, number] }
+    const range = parseSpecies(JSON.parse(readFileSync('public/data/species.json', 'utf8'))).find((bird) => bird.id === 'parus-major')!.info!.bp!
+    expect(points.bpRange).toEqual(range)
+    expect(points.bp).toBeGreaterThanOrEqual(range[0])
+    expect(points.bp).toBeLessThanOrEqual(range[1])
+    expect(points.bpQ).toBeGreaterThan(0)
+    expect(points.bpQ).toBeLessThanOrEqual(1)
+    expect(points.bpLuck).toBeGreaterThanOrEqual(-0.09)
+    expect(points.bpLuck).toBeLessThanOrEqual(0.13)
+    expect(points.bpFactors).toHaveLength(5)
     expect(media).toMatchObject({ kind: 'audio', mime: 'audio/wav', durationS: 2 })
     expect(media.blob).toBe(scan.media?.blob)
 
@@ -297,7 +308,11 @@ describe('catching', () => {
     expect((await screen.findByTestId('catch-message')).textContent).toBe('Máš ho! Sýkora koňadra je v Dexu.')
     expect(screen.getByTestId('celebration')).toBeTruthy()
     expect(screen.getByText('Nový druh v tvém Dexu!')).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Zobrazit v Dexu' }).getAttribute('href')).toBe('/species/parus-major')
+    // The BP of the bird, big, and the way to its page.
+    expect(screen.getByTestId('bp-value').textContent).toBe(String(points.bp))
+    expect(screen.getByTestId('bp-bar').getAttribute('aria-valuenow')).toBe(String(points.bp))
+    expect(screen.getByTestId('bp-detail').textContent).toBe(`Základ ${points.bpBase}, štěstí ${points.bp - points.bpBase >= 0 ? '+' : '−'}${Math.abs(points.bp - points.bpBase)}`)
+    expect(screen.getByRole('link', { name: 'Zobrazit ptáka' }).getAttribute('href')).toBe(`/birds/${catchId}`)
     expect(screen.getByRole('link', { name: 'Skenovat dál' }).getAttribute('href')).toBe('/scan')
     expect(getPending()).toBeUndefined()
     expect(screen.queryByTestId('where')).toBeNull()
@@ -483,10 +498,12 @@ describe('catching several birds at once', () => {
     expect(addCatches).toHaveBeenCalledTimes(1)
     expect(resolvePlaceName).toHaveBeenCalledTimes(1)
     const [inputs, media] = addCatches.mock.calls[0] as [Record<string, unknown>[], Record<string, unknown>]
-    expect(inputs).toEqual([
-      { id: `${catchId}:parus-major`, speciesId: 'parus-major', method: 'sound', confidence: 0.91, caughtAt: scan.createdAt, location: { lat: 50.08, lon: 14.43 }, placeName: 'Praha' },
-      { id: `${catchId}:turdus-merula`, speciesId: 'turdus-merula', method: 'sound', confidence: 0.78, caughtAt: scan.createdAt, location: { lat: 50.08, lon: 14.43 }, placeName: 'Praha' },
-    ])
+    expect(inputs).toHaveLength(2)
+    expect(inputs[0]).toMatchObject({ id: `${catchId}:parus-major`, speciesId: 'parus-major', method: 'sound', confidence: 0.91, caughtAt: scan.createdAt, location: { lat: 50.08, lon: 14.43 }, placeName: 'Praha' })
+    expect(inputs[1]).toMatchObject({ id: `${catchId}:turdus-merula`, speciesId: 'turdus-merula', method: 'sound', confidence: 0.78, caughtAt: scan.createdAt, location: { lat: 50.08, lon: 14.43 }, placeName: 'Praha' })
+    // Every bird has its own BirdPoints, worked out separately.
+    const bps = inputs.map((input) => (input.birdPoints as { bp: number }).bp)
+    expect(bps.every((bp) => Number.isInteger(bp) && bp > 0)).toBe(true)
     expect(media).toMatchObject({ kind: 'audio', mime: 'audio/wav', durationS: 2 })
     expect(media.blob).toBe(scan.media?.blob)
 
@@ -494,9 +511,11 @@ describe('catching several birds at once', () => {
     expect(screen.getByTestId('celebration')).toBeTruthy()
     const birds = screen.getAllByTestId('caught-bird')
     expect(birds.map((item) => item.getAttribute('data-species'))).toEqual(['parus-major', 'turdus-merula'])
-    expect(within(birds[0]).getByRole('link', { name: 'Sýkora koňadra' }).getAttribute('href')).toBe('/species/parus-major')
+    expect(within(birds[0]).getByRole('link', { name: 'Sýkora koňadra' }).getAttribute('href')).toBe(`/birds/${encodeURIComponent(`${catchId}:parus-major`)}`)
+    expect(within(birds[0]).getByTestId('bp-value').textContent).toBe(String(bps[0]))
+    expect(within(birds[1]).getByTestId('bp-value').textContent).toBe(String(bps[1]))
     expect(within(birds[1]).getByText('Nový druh')).toBeTruthy()
-    expect(screen.getByRole('link', { name: 'Zobrazit Dex' }).getAttribute('href')).toBe('/')
+    expect(screen.getByRole('link', { name: 'Zobrazit ptáky' }).getAttribute('href')).toBe('/birds')
     expect(screen.getByRole('link', { name: 'Skenovat dál' }).getAttribute('href')).toBe('/scan')
     expect(getPending()).toBeUndefined()
   })

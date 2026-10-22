@@ -14,6 +14,8 @@ const DEV_ROUTES_ENABLED = import.meta.env.DEV || __DEV_ROUTES__
 // Every screen is its own chunk, downloaded the first time it opens (the service worker caches them for offline use).
 const DexPage = lazy(() => import('./pages/DexPage'))
 const SpeciesPage = lazy(() => import('./pages/SpeciesPage'))
+const BirdsPage = lazy(() => import('./pages/BirdsPage'))
+const BirdPage = lazy(() => import('./pages/BirdPage'))
 const ScanPage = lazy(() => import('./pages/ScanPage'))
 const ScanSoundPage = lazy(() => import('./pages/ScanSoundPage'))
 const ScanPhotoPage = lazy(() => import('./pages/ScanPhotoPage'))
@@ -47,6 +49,8 @@ export default function App() {
                 <Route element={<Layout />}>
                   <Route index element={<DexPage />} />
                   <Route path={ROUTES.species} element={<SpeciesPage />} />
+                  <Route path={ROUTES.birds} element={<BirdsPage />} />
+                  <Route path={ROUTES.bird} element={<BirdPage />} />
                   <Route path={ROUTES.scan} element={<ScanPage />} />
                   <Route path={ROUTES.scanSound} element={<ScanSoundPage />} />
                   <Route path={ROUTES.scanPhoto} element={<ScanPhotoPage />} />

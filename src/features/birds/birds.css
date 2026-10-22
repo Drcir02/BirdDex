@@ -1,0 +1,375 @@
+/* BirdPoints and the Ptáci screens. */
+
+/* ---------- The BP and its bar ---------- */
+
+.bd-bp {
+  display: grid;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+.bd-bp__number {
+  margin: 0;
+  text-align: center;
+  font: 400 12px / 1.4 var(--font-display);
+  color: var(--ink-soft);
+}
+
+.bd-bp__number strong {
+  margin-left: 4px;
+  font: 400 30px / 1.1 var(--font-display);
+  color: var(--ink);
+}
+
+.bd-bp__bar {
+  position: relative;
+  height: 14px;
+  background: rgba(0, 0, 0, 0.16);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+}
+
+.bd-bp__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--w);
+  background: repeating-linear-gradient(90deg, var(--ok) 0 6px, transparent 6px 8px);
+}
+
+.bd-bp__marker {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  left: var(--x);
+  width: 4px;
+  margin-left: -2px;
+  background: var(--ink);
+  border-radius: 2px;
+  box-shadow: 0 0 0 2px var(--lcd-panel);
+}
+
+.bd-bp__ends {
+  display: flex;
+  justify-content: space-between;
+  font: 700 14px / 1 var(--font-wordmark);
+  color: var(--ink-soft);
+}
+
+.bd-bp__detail {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-small);
+  color: var(--ink-soft);
+}
+
+.bd-bp--compact .bd-bp__number {
+  font-size: 10px;
+}
+
+.bd-bp--compact .bd-bp__number strong {
+  font-size: 18px;
+}
+
+/* ---------- The list: three birds in a row ---------- */
+
+.bd-bgrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bd-bcard {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto 156px;
+  min-width: 0;
+}
+
+.bd-bcard__link {
+  --rarity: var(--rarity-common);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  height: 100%;
+  min-height: 150px;
+  padding: 5px;
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--lcd-panel);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-m);
+  box-shadow: 2px 2px 0 rgba(23, 48, 31, 0.35);
+  transition: transform var(--dur-fast) ease-out;
+}
+
+.bd-bcard[data-rarity='uncommon'] .bd-bcard__link {
+  --rarity: var(--rarity-uncommon);
+}
+
+.bd-bcard[data-rarity='rare'] .bd-bcard__link {
+  --rarity: var(--rarity-rare);
+}
+
+.bd-bcard[data-rarity='epic'] .bd-bcard__link {
+  --rarity: var(--rarity-epic);
+}
+
+.bd-bcard[data-rarity='legendary'] .bd-bcard__link {
+  --rarity: var(--rarity-legendary);
+}
+
+.bd-bcard__link:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.bd-bcard__link:active {
+  transform: translateY(2px);
+}
+
+.bd-bcard__bp {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 3px;
+  line-height: 1;
+}
+
+.bd-bcard__bp small {
+  font: 400 7px / 1 var(--font-display);
+  color: var(--ink-soft);
+}
+
+/* Four digits must fit the card on a 320 px phone too: the size follows the width of the screen. */
+.bd-bcard__bp strong {
+  font: 400 clamp(11px, 3.6vw, 15px) / 1.1 var(--font-display);
+}
+
+.bd-bcard__pic {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 40%, #2c5a3b, var(--lcd-deep) 80%);
+  border: 2px solid var(--ink);
+  border-bottom: 4px solid var(--rarity);
+  border-radius: var(--radius-s);
+}
+
+.bd-bcard__sil {
+  color: var(--lcd-glow);
+  opacity: 0.8;
+}
+
+.bd-bcard__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bd-bcard__badge {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  color: var(--lcd-bg-hi);
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: 50%;
+}
+
+.bd-bcard__name {
+  font: 400 17px / 17px var(--font-lcd);
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.bd-bcard__stars {
+  display: flex;
+  justify-content: center;
+  margin-top: auto;
+}
+
+/* ---------- The screen ---------- */
+
+.bd-birds__filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.bd-birds__filter p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- One bird ---------- */
+
+.bd-bird {
+  gap: var(--space-4);
+}
+
+.bd-bird__main {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  text-align: center;
+}
+
+.bd-bird__picture {
+  width: 100%;
+}
+
+.bd-bird__photo {
+  display: block;
+  width: 100%;
+  padding: 0;
+  background: var(--lcd-deep);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-m);
+  overflow: hidden;
+  cursor: zoom-in;
+}
+
+.bd-bird__photo img,
+.bd-bird__reference {
+  display: block;
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.bd-bird__audio {
+  width: 100%;
+}
+
+.bd-bird__name {
+  margin: var(--space-1) 0 0;
+  font: 400 14px / 1.65 var(--font-display);
+  overflow-wrap: anywhere;
+}
+
+.bd-bird__latin {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.1;
+  color: var(--ink-soft);
+}
+
+.bd-bird__chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.bd-factors {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bd-factor {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 2px var(--space-2);
+}
+
+.bd-factor__name {
+  grid-column: 1;
+}
+
+.bd-factor__value {
+  grid-column: 2;
+  grid-row: 1;
+  font: 700 17px / 1 var(--font-wordmark);
+}
+
+.bd-factor__bar {
+  grid-column: 1 / -1;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.16);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bd-factor__bar i {
+  display: block;
+  height: 100%;
+  background: repeating-linear-gradient(90deg, var(--ok) 0 6px, transparent 6px 8px);
+}
+
+.bd-factor__hint {
+  grid-column: 1 / -1;
+  font-size: var(--fs-small);
+  line-height: 1.15;
+  color: var(--ink-soft);
+}
+
+.bd-bird__legacy {
+  margin: var(--space-3) 0 0;
+  font-size: var(--fs-small);
+  color: var(--ink-soft);
+}
+
+.bd-bird__facts {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.bd-bird__fact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.bd-bird__muted {
+  color: var(--ink-soft);
+}
+
+.bd-bird__note {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.bd-bird__notelabel {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--ink-soft);
+}
+
+.bd-bird__textarea {
+  width: 100%;
+  padding: var(--space-2);
+  font: inherit;
+  color: var(--ink);
+  background: var(--lcd-bg-hi);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-s);
+  resize: vertical;
+}
+
+.bd-bird__actions {
+  display: grid;
+  gap: var(--space-3);
+}

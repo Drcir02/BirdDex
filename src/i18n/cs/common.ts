@@ -39,6 +39,7 @@ export const common = {
   // Bottom navigation
   nav: {
     label: 'Hlavní nabídka',
+    birds: 'Ptáci',
     dex: 'Dex',
     scan: 'Skenovat',
     settings: 'Nastavení',

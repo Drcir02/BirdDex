@@ -7,8 +7,10 @@ import { useDeviceStatus } from '../app/deviceStatus'
 import { ROUTES } from '../app/routes'
 import { useSpecies } from '../data/useSpecies'
 import { addCatch, addCatches, useCaughtSummary } from '../db'
+import { calculateBirdPoints, toStored, type BirdPoints } from '../domain/birdPoints'
 import type { PendingIdentification } from '../domain/types'
 import { classifyScanError } from '../features/scan/errors'
+import type { CaughtBird } from '../features/scan/caught'
 import { ManySuccessView } from '../features/scan/ManySuccessView'
 import { NothingSure } from '../features/scan/NothingSure'
 import { buildResultView, confirmTextKey, manyTextKey, scanPathFor, type CandidateView } from '../features/scan/resultModel'
@@ -26,7 +28,7 @@ import { Button, ConfirmDialog, Notice, Page, PageHeader, Spinner } from '../ui'
 
 interface Outcome {
   /** The birds that were caught: one, or several that were caught together. */
-  views: CandidateView[]
+  birds: CaughtBird[]
   media: PendingIdentification['media']
 }
 
@@ -82,8 +84,8 @@ export default function ResultPage() {
   }, [confirming])
 
   if (outcome) {
-    const [only] = outcome.views
-    return outcome.views.length === 1 ? <SuccessView view={only} wasNew={only.timesCaught === 0} media={outcome.media} /> : <ManySuccessView views={outcome.views} media={outcome.media} />
+    const [only] = outcome.birds
+    return outcome.birds.length === 1 ? <SuccessView view={only.view} wasNew={only.view.timesCaught === 0} media={outcome.media} points={only.points} catchId={only.catchId} /> : <ManySuccessView birds={outcome.birds} media={outcome.media} />
   }
   // Nothing to decide about (the page was reloaded, or the result was already dealt with).
   if (!pending) return <Navigate to={ROUTES.scan} replace />
@@ -109,22 +111,40 @@ export default function ResultPage() {
       // the position leaves the phone, also not for a result that is discarded.
       const placeName = await resolvePlaceName(pending.location)
       const mediaToSave = pending.media ? { kind: pending.media.kind, blob: pending.media.blob, mime: pending.media.mime, durationS: pending.media.durationS } : undefined
-      const catchFor = (bird: CandidateView, id: string | undefined) => ({
+      const caughtAt = pending.createdAt
+      const dice = Math.random
+      // The BirdPoints of every bird: how sure the app was, how clearly (the lead over the best guess that was not sure enough),
+      // the season and hour, the way of catching, and a little luck.
+      const pointsOf = (bird: CandidateView): BirdPoints => {
+        const runnerUp = view?.candidates.filter((other) => other.speciesId !== bird.speciesId && !other.allowed).reduce((best, other) => Math.max(best, other.confidence), -1) ?? -1
+        return calculateBirdPoints({
+          species: bird.species,
+          method: pending.method,
+          confidence: bird.confidence,
+          lead: runnerUp >= 0 ? bird.confidence - runnerUp : undefined,
+          caughtAt,
+          random: dice,
+        })
+      }
+      const catchFor = (bird: CandidateView, points: BirdPoints, id: string | undefined) => ({
         // One id per identification (and bird): a second tap on the button saves nothing new.
         id,
         speciesId: bird.speciesId,
         method: pending.method,
         confidence: bird.confidence,
-        caughtAt: pending.createdAt,
+        caughtAt,
         location: pending.location,
         placeName,
+        birdPoints: toStored(points),
       })
       const catchId = getPendingCatchId()
-      if (chosen.length === 1) await addCatch(catchFor(chosen[0], catchId), mediaToSave)
-      else await addCatches(chosen.map((bird) => catchFor(bird, catchId ? `${catchId}:${bird.speciesId}` : undefined)), mediaToSave)
+      const points = chosen.map(pointsOf)
+      let saved: { id: string }[]
+      if (chosen.length === 1) saved = [await addCatch(catchFor(chosen[0], points[0], catchId), mediaToSave)]
+      else saved = await addCatches(chosen.map((bird, index) => catchFor(bird, points[index], catchId ? `${catchId}:${bird.speciesId}` : undefined)), mediaToSave)
       const media = pending.media
       // The success screen first: with the identification gone the page would otherwise send the person to the hub.
-      setOutcome({ views: chosen, media })
+      setOutcome({ birds: chosen.map((bird, index) => ({ view: bird, catchId: saved[index].id, points: points[index] })), media })
       setConfirming(null)
       setConfirmingAll(false)
       clearPending()

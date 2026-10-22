@@ -1,6 +1,9 @@
-import { Suspense, useRef } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Suspense, useEffect, useRef } from 'react'
+import { Link, Outlet, useLocation } from 'react-router-dom'
+import { useSpecies } from '../data/useSpecies'
+import { syncBirdPointsOnce } from '../features/birds/syncBirdPoints'
 import { t } from '../i18n'
+import { Icon } from '../ui/icons'
 import { Spinner } from '../ui/Spinner'
 import { ToastViewport } from '../ui/Toast'
 import { BottomNav } from './BottomNav'
@@ -9,7 +12,7 @@ import { useDeviceStatus } from './deviceStatus'
 import { ErrorBoundary } from './ErrorBoundary'
 import { Leds } from './Leds'
 import { Lens } from './Lens'
-import { ROUTES } from './routes'
+import { ROUTES, isSettingsPath } from './routes'
 import { UpdateBanner } from './UpdateBanner'
 import { useDocumentTitle, useScrollMemory } from './useShell'
 import '../styles/shell.css'
@@ -33,6 +36,11 @@ export function Layout() {
   const scroller = useRef<HTMLDivElement>(null)
   useDocumentTitle()
   useScrollMemory(scroller)
+  // BirdPoints for catches from before they existed, and for a bird whose range changed (see syncBirdPoints.ts).
+  const { species } = useSpecies()
+  useEffect(() => {
+    if (species) void syncBirdPointsOnce(species).catch(() => undefined)
+  }, [species])
   const showNav = pathname !== ROUTES.welcome
   const scrollToTop = () => {
     const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
@@ -45,14 +53,19 @@ export function Layout() {
         <header className="bd-top">
           <Lens />
           <Leds />
-          <div className="bd-top__brand" aria-hidden="true">
-            <span className="bd-wordmark">{APP_NAME}</span>
-            <span className="bd-grille">
-              <i />
-              <i />
-              <i />
-              <i />
+          <div className="bd-top__brand">
+            <span className="bd-wordmark" aria-hidden="true">
+              {APP_NAME}
             </span>
+            <Link
+              to={ROUTES.settings}
+              className="bd-top__gear"
+              aria-label={t('common.nav.settings')}
+              aria-current={isSettingsPath(pathname) ? 'page' : undefined}
+              data-testid="nav-settings"
+            >
+              <Icon name="settings" size={26} />
+            </Link>
           </div>
         </header>
 

@@ -156,7 +156,7 @@ test('the service worker keeps a Wikimedia picture, and the bird shows it again 
   const again = page.getByTestId('species-photo').locator('img')
   await expect.poll(() => again.evaluate((element: HTMLImageElement) => element.naturalWidth), { timeout: 15_000 }).toBeGreaterThan(0)
   expect(asked.length).toBe(before)
-  await expect(page.getByTestId('catch-item')).toHaveCount(1)
+  await expect(page.getByTestId('species-birds')).toBeVisible()
 })
 
 test('a picture still shows when the server does not let a page read it (no CORS): the plain request is the last try', async ({ page }) => {

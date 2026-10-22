@@ -106,7 +106,7 @@ test.describe('the demo page', () => {
 
     // The person's own catch is still there, the demo ones are gone.
     await openBird(page, 'parus-major')
-    await expect(page.getByTestId('catch-item')).toHaveCount(1)
+    await expect(page.getByTestId('species-birds')).toContainText('Moji ptáci tohoto druhu (1)')
     await openBird(page, 'turdus-merula')
     await expect(page.getByText('Tohohle ptáka ještě nemáš')).toBeVisible()
     expect(errors).toEqual([])
@@ -115,7 +115,7 @@ test.describe('the demo page', () => {
   test('opens with seven quick taps on the progress ring, and is not in the navigation', async ({ page }) => {
     await mockWikimedia(page)
     await openDex(page)
-    await expect(page.getByRole('navigation', { name: 'Hlavní nabídka' }).getByRole('link')).toHaveText(['Dex', 'Skenovat', 'Nastavení'])
+    await expect(page.getByRole('navigation', { name: 'Hlavní nabídka' }).getByRole('link')).toHaveText(['Ptáci', 'Skenovat', 'Dex'])
     const ring = page.getByRole('progressbar', { name: 'Postup sbírkou' })
     for (let tap = 0; tap < 6; tap += 1) await ring.click({ delay: 10 })
     await expect(page).toHaveURL(/#\/$/)
@@ -194,18 +194,18 @@ test.describe('the Dex list', () => {
     await expect(count(page)).toHaveText('1 pták')
 
     await box.fill('SÝKORA')
-    expect(await cardIds(page)).toContain('parus-major')
-    expect((await cardIds(page)).length).toBeGreaterThan(3)
+    await expect.poll(() => cardIds(page)).toContain('parus-major')
+    await expect.poll(async () => (await cardIds(page)).length).toBeGreaterThan(3)
     // The best matches come first: every name that starts with the word, before names that only contain it.
     const starts = await page.getByTestId('species-card').evaluateAll((items) => items.map((item) => (item.querySelector('.bd-dexcard__name')?.textContent ?? '').toLowerCase().startsWith('sýkora')))
     expect(starts.slice(0, 4)).toEqual([true, true, true, true])
 
     await box.fill('great tit')
-    expect(await cardIds(page)).toContain('parus-major')
+    await expect.poll(() => cardIds(page)).toContain('parus-major')
     await box.fill('parus')
-    expect(await cardIds(page)).toContain('parus-major')
+    await expect.poll(() => cardIds(page)).toContain('parus-major')
     await box.fill('ledňáček')
-    expect(await cardIds(page)).toContain('alcedo-atthis')
+    await expect.poll(() => cardIds(page)).toContain('alcedo-atthis')
 
     await box.fill('zzzzzz')
     await expect(page.getByText('Nic se nenašlo')).toBeVisible()
@@ -458,7 +458,7 @@ test.describe('the bird screen', () => {
     await seedDemo(page)
   })
 
-  test('shows a caught bird with its photo panel, names, family, flags and every catch', async ({ page }) => {
+  test('shows a caught bird with its photo panel, names, family, flags and the link to its birds', async ({ page }) => {
     const errors = collectErrors(page)
     await openBird(page, 'parus-major')
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Sýkora koňadra')
@@ -471,75 +471,16 @@ test.describe('the bird screen', () => {
     await expect(page.getByTestId('status-caught')).toContainText('Tenhle pták už je tvůj!')
     await expect(page.getByTestId('status-caught')).toContainText('Úlovků: 3')
 
-    const items = page.getByTestId('catch-item')
-    await expect(items).toHaveCount(3)
-    // Newest first: the sound (a few hours ago), then the photo and the older sound.
-    await expect(items.nth(0)).toHaveAttribute('data-method', 'sound')
-    await expect(items.nth(1)).toHaveAttribute('data-method', 'photo')
-    await expect(items.nth(2)).toHaveAttribute('data-method', 'sound')
-    for (const item of await items.all()) {
-      await expect(item.locator('time')).toHaveText(/^\d{1,2}\. \d{1,2}\. 2026 \d{1,2}:\d{2}$/)
-      await expect(item.getByRole('meter')).toBeVisible()
-      await expect(item.getByRole('button', { name: 'Smazat úlovek' })).toBeVisible()
-      await expect(item.getByText('UKÁZKA')).toBeVisible()
-    }
-    // A named place with a map link, rounded coordinates, and a catch without any place.
-    await expect(items.first().getByRole('link', { name: 'Otevřít v mapě' })).toHaveAttribute('href', /openstreetmap\.org\/\?mlat=[\d.]+&mlon=[\d.]+/)
+    // The catches themselves are on the Ptáci screen; the page of the species links to its birds.
+    await expect(page.getByTestId('species-birds')).toContainText('Moji ptáci tohoto druhu (3)')
+    await expect(page.getByTestId('species-birds')).toHaveAttribute('href', /#\/birds\?species=parus-major$/)
+    await expect(page.getByTestId('catch-list')).toHaveCount(0)
     expect(errors).toEqual([])
   })
 
-  test('shows rounded coordinates when a catch has no place name, and nothing when it has no place', async ({ page }) => {
-    // The demo has catches with a place name, catches with coordinates only, and catches with no place at all.
-    await openBird(page, 'sitta-europaea')
-    await expect(page.getByTestId('catch-list')).toContainText(/\d{2},\d{2}° s\. š\., \d{1,2},\d{2}° v\. d\./)
-    await expect(page.getByTestId('catch-item').first().getByRole('link', { name: 'Otevřít v mapě' })).toBeVisible()
-    await openBird(page, 'grus-grus')
-    await expect(page.getByTestId('catch-list')).toContainText('Místo nebylo uloženo')
-    await expect(page.getByRole('link', { name: 'Otevřít v mapě' })).toHaveCount(0)
-    await openBird(page, 'turdus-merula')
-    await expect(page.getByTestId('catch-item')).toHaveCount(2)
-  })
-
-  test('has a recording player with its own controls that plays, pauses and seeks', async ({ page }) => {
+  test('opens the saved photo full size from the big panel and closes it again', async ({ page }) => {
     await openBird(page, 'parus-major')
-    const player = page.getByTestId('audio-player').first()
-    await expect(player).toBeVisible()
-    const audio = player.locator('audio')
-    await expect(audio).toHaveCount(1)
-    expect(await audio.evaluate((element: HTMLAudioElement) => element.controls)).toBe(false)
-    await expect.poll(() => audio.evaluate((element: HTMLAudioElement) => Number.isFinite(element.duration) && element.duration > 2)).toBe(true)
-    await expect(player.locator('.bd-audio__time')).toHaveText('0:00 / 0:02')
-    await expect(player.locator('.bd-audio__bar')).toHaveCount(32)
-
-    const button = player.getByRole('button', { name: 'Přehrát nahrávku' })
-    await button.click()
-    await expect(player.getByRole('button', { name: 'Pozastavit nahrávku' })).toBeVisible()
-    await expect.poll(() => audio.evaluate((element: HTMLAudioElement) => !element.paused)).toBe(true)
-    await expect.poll(() => audio.evaluate((element: HTMLAudioElement) => element.currentTime)).toBeGreaterThan(0.15)
-    await expect.poll(() => player.locator('.bd-audio__bar.is-lit').count()).toBeGreaterThan(0)
-    await player.getByRole('button', { name: 'Pozastavit nahrávku' }).click()
-    await expect.poll(() => audio.evaluate((element: HTMLAudioElement) => element.paused)).toBe(true)
-
-    // The seek bar moves the playhead and the time.
-    await player.getByRole('slider', { name: 'Místo v nahrávce' }).fill('1.8')
-    await expect.poll(() => audio.evaluate((element: HTMLAudioElement) => element.currentTime)).toBeCloseTo(1.8, 0)
-    await expect(player.locator('.bd-audio__time')).toHaveText('0:01 / 0:02')
-  })
-
-  test('plays one recording at a time', async ({ page }) => {
-    await openBird(page, 'parus-major')
-    const players = page.getByTestId('audio-player')
-    await expect(players).toHaveCount(2)
-    await players.nth(0).getByTestId('audio-toggle').click()
-    await expect.poll(() => players.nth(0).locator('audio').evaluate((element: HTMLAudioElement) => !element.paused)).toBe(true)
-    await players.nth(1).getByTestId('audio-toggle').click()
-    await expect.poll(() => players.nth(1).locator('audio').evaluate((element: HTMLAudioElement) => !element.paused)).toBe(true)
-    await expect.poll(() => players.nth(0).locator('audio').evaluate((element: HTMLAudioElement) => element.paused)).toBe(true)
-  })
-
-  test('opens the saved photo full size and closes it again', async ({ page }) => {
-    await openBird(page, 'parus-major')
-    await page.getByTestId('catch-photo').first().click()
+    await page.getByTestId('own-photo').click()
     const viewer = page.getByRole('dialog', { name: 'Fotka na celou obrazovku' })
     await expect(viewer).toBeVisible()
     const image = viewer.getByRole('img')
@@ -551,44 +492,10 @@ test.describe('the bird screen', () => {
     await page.screenshot({ path: `${SHOTS}/viewer-390.png` })
     await page.keyboard.press('Escape')
     await expect(viewer).toHaveCount(0)
-
-    // The big panel opens the same viewer, and the close button works too.
     await page.getByTestId('own-photo').click()
     await expect(viewer).toBeVisible()
     await viewer.getByRole('button', { name: 'Zavřít fotku' }).click()
     await expect(viewer).toHaveCount(0)
-  })
-
-  test('deletes a catch after asking, and keeps it when the answer is no', async ({ page }) => {
-    await openBird(page, 'parus-major')
-    const items = page.getByTestId('catch-item')
-    await expect(items).toHaveCount(3)
-
-    await items.nth(1).getByRole('button', { name: 'Smazat úlovek' }).click()
-    const dialog = page.getByRole('alertdialog', { name: 'Smazat tenhle úlovek?' })
-    await expect(dialog).toBeVisible()
-    await expect(dialog.getByRole('button', { name: 'Ponechat' })).toBeFocused()
-    await dialog.getByRole('button', { name: 'Ponechat' }).click()
-    await expect(dialog).toHaveCount(0)
-    await expect(items).toHaveCount(3)
-
-    await items.nth(1).getByRole('button', { name: 'Smazat úlovek' }).click()
-    await dialog.getByRole('button', { name: 'Smazat' }).click()
-    await expect(items).toHaveCount(2)
-    await expect(page.getByText('Úlovek je smazaný.')).toBeVisible()
-    await expect(page.getByTestId('status-caught')).toContainText('Úlovků: 2')
-    await expect(page.locator('[data-method="photo"]')).toHaveCount(0)
-
-    // Deleting everything turns the bird back into one that is not caught.
-    for (const remaining of [2, 1]) {
-      await items.first().getByRole('button', { name: 'Smazat úlovek' }).click()
-      await dialog.getByRole('button', { name: 'Smazat' }).click()
-      await expect(items).toHaveCount(remaining - 1)
-    }
-    await expect(page.getByText('Tohohle ptáka ještě nemáš')).toBeVisible()
-    await expect(page.getByTestId('catch-list')).toHaveCount(0)
-    await page.goto('/#/')
-    await expect(progress(page)).toHaveText(`Chyceno ${DEMO_CZECH_BIRDS - 1} z ${CZECH_TOTAL}`)
   })
 
   test('shows when and where to find a bird, for a Czech bird, a bird that lives only in Europe, and a caught bird', async ({ page }) => {
@@ -809,7 +716,7 @@ test.describe('reference photos', () => {
     await expect(page.getByText('Bez připojení ukázkovou fotku nenačtu.')).toBeVisible({ timeout: 20_000 })
     await expect(page.getByTestId('species-photo').locator('.bd-sil')).toBeVisible()
     // The rest of the screen is fine.
-    await expect(page.getByTestId('catch-item')).toHaveCount(1)
+    await expect(page.getByTestId('species-birds')).toBeVisible()
     await expect(page.getByTestId('species-name')).toBeVisible()
   })
 

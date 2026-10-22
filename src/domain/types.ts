@@ -44,6 +44,8 @@ export interface SpeciesInfo {
   tip: string
   /** Birds that are not in Czechia only: ISO codes of the European countries where the bird lives, best first. */
   countries?: string[]
+  /** The least and the most BirdPoints a bird of this species can get (data/bp-ranges.csv). */
+  bp?: [number, number]
 }
 
 export type CatchMethod = 'sound' | 'photo' | 'live'
@@ -74,6 +76,19 @@ export interface CatchRecord {
   /** Id of the saved photo or audio clip in the media table. */
   mediaId?: string
   note?: string
+  /** BirdPoints of this bird (src/domain/birdPoints.ts). Missing only until the first start after BP came. */
+  bp?: number
+  /** Where the quality alone put the bird in its range, before luck. */
+  bpBase?: number
+  /** The quality of the catch, 0 to 1, and the luck roll as a share of the range: together they recalculate the BP after a rebalance. */
+  bpQ?: number
+  bpLuck?: number
+  /** The range of the bird (least and most BP) that the BP was worked out against. */
+  bpRange?: [number, number]
+  /** The five scores that made the quality: confidence, clarity, season, time of day, way of catching (0 to 1). */
+  bpFactors?: number[]
+  /** The BP was worked out afterwards for a catch from before BP existed, so its clarity is a guess. */
+  bpLegacy?: boolean
 }
 
 export interface MediaRecord {

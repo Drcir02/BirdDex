@@ -122,6 +122,10 @@ export interface SavedCatch {
   location?: { lat: number; lon: number }
   placeName?: string
   mediaId?: string
+  /** The BirdPoints of the catch. */
+  bp?: number
+  bpBase?: number
+  bpRange?: [number, number]
 }
 
 export interface SavedMedia {

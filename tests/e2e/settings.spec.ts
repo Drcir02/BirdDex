@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { seedDemo } from './dex-helpers'
+import { mockWikimedia, seedDemo } from './dex-helpers'
 import { collectErrors, skipWelcome } from './shell-helpers'
 
 const SIZES = [
@@ -60,9 +60,12 @@ test('with nothing downloaded every model row says so and there is nothing to de
 test('backup round trip: export with demo data, erase everything, restore from the file', async ({ page }, info) => {
   test.setTimeout(240_000)
   const errors = collectErrors(page)
+  // The Ptáci list looks up reference photos for the sound catches: a pretend Wikipedia keeps the test off the network.
+  await mockWikimedia(page)
   await seedDemo(page)
+  await page.goto('/#/birds')
+  await expect(page.getByTestId('birds-shown')).toHaveText('30 ptáků')
   await page.goto('/#/settings')
-  await expect(page.getByTestId('stat-catches')).toContainText('30')
 
   const download = page.waitForEvent('download')
   await page.getByTestId('backup-export').click()
@@ -76,17 +79,20 @@ test('backup round trip: export with demo data, erase everything, restore from t
   await page.getByTestId('erase-start').click()
   await page.getByRole('button', { name: 'Pokračovat' }).click()
   await page.getByRole('button', { name: 'Ano, smazat vše' }).click()
-  await expect(page.getByTestId('trainer-empty')).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByText('Všechna data jsou smazaná. Dex je prázdný.')).toBeVisible({ timeout: 30_000 })
 
   await page.getByTestId('backup-file').setInputFiles(path)
   await expect(page.getByTestId('backup-message')).toHaveAttribute('data-tone', 'success', { timeout: 60_000 })
   await expect(page.getByTestId('backup-message')).toContainText('30')
-  await expect(page.getByTestId('stat-catches')).toContainText('30')
+  await page.goto('/#/birds')
+  await expect(page.getByTestId('birds-shown')).toHaveText('30 ptáků')
+  await page.goto('/#/settings')
 
   // Restoring the same file again adds nothing.
   await page.getByTestId('backup-file').setInputFiles(path)
   await expect(page.getByTestId('backup-message')).toContainText('nic nového', { timeout: 60_000 }).catch(() => undefined)
-  await expect(page.getByTestId('stat-catches')).toContainText('30')
+  await page.goto('/#/birds')
+  await expect(page.getByTestId('birds-shown')).toHaveText('30 ptáků')
   expect(errors).toEqual([])
 })
 

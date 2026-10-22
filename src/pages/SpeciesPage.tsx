@@ -3,7 +3,6 @@ import { useLocation, useNavigate, useParams, useSearchParams } from 'react-rout
 import { ROUTES } from '../app/routes'
 import { getSpeciesById, useSpecies } from '../data'
 import { useCaughtSummary, useSpeciesCatches } from '../db'
-import { CatchList } from '../features/dex/CatchList'
 import {
   DEFAULT_QUERY,
   cameFromDex,
@@ -22,7 +21,6 @@ import type { Species } from '../domain/types'
 import { t } from '../i18n'
 import { Button, ButtonLink } from '../ui/Button'
 import { EmptyState } from '../ui/EmptyState'
-import { Icon } from '../ui/icons'
 import { IconButton, IconLink } from '../ui/IconButton'
 import { Page } from '../ui/Page'
 import { Spinner } from '../ui/Spinner'
@@ -143,14 +141,9 @@ export default function SpeciesPage() {
       <StatusBlock species={bird} summary={caughtSummary} />
 
       {catches.length > 0 ? (
-        <section className="bd-spcatches" aria-labelledby="bd-spcatches-title">
-          <h2 id="bd-spcatches-title" className="bd-spcatches__title">
-            <Icon name="bird" size={20} />
-            {t('dex.catches.title')}
-            <span className="bd-spcatches__count">{catches.length}</span>
-          </h2>
-          <CatchList catches={catches} />
-        </section>
+        <ButtonLink to={`${ROUTES.birds}?species=${encodeURIComponent(bird.id)}`} icon="bird" fullWidth data-testid="species-birds">
+          {t('dex.myBirds', { count: catches.length })}
+        </ButtonLink>
       ) : null}
 
       {viewing ? <PhotoViewer mediaId={viewing} onClose={() => setViewing(undefined)} /> : null}

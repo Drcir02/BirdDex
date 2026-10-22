@@ -12,9 +12,9 @@ interface NavItem {
 }
 
 const ITEMS: readonly NavItem[] = [
-  { section: 'dex', to: ROUTES.dex, icon: 'dex', label: () => t('common.nav.dex') },
+  { section: 'birds', to: ROUTES.birds, icon: 'bird', label: () => t('common.nav.birds') },
   { section: 'scan', to: ROUTES.scan, icon: 'scan', label: () => t('common.nav.scan') },
-  { section: 'settings', to: ROUTES.settings, icon: 'settings', label: () => t('common.nav.settings') },
+  { section: 'dex', to: ROUTES.dex, icon: 'dex', label: () => t('common.nav.dex') },
 ]
 
 interface BottomNavProps {
@@ -22,7 +22,7 @@ interface BottomNavProps {
   onReselect?: () => void
 }
 
-/** The three big buttons at the bottom of the device: Dex, Scan, Settings. */
+/** The three big buttons at the bottom of the device: Ptáci (the birds you caught), Scan in the middle, and the Dex. Settings is the gear at the top. */
 export function BottomNav({ onReselect }: BottomNavProps) {
   const { pathname } = useLocation()
   const active = sectionOf(pathname)

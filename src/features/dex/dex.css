@@ -321,3 +321,55 @@
 .bd-dexcard__img.is-loaded {
   opacity: 1;
 }
+
+/* ---------- The trainer card, folded above the controls ---------- */
+
+.bd-trainerfold {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.bd-trainerfold__title {
+  margin: 0;
+  font: inherit;
+}
+
+.bd-trainerfold__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0 var(--space-3);
+  font: 400 11px / 1.7 var(--font-display);
+  text-align: left;
+  color: var(--ink);
+  background: var(--lcd-panel);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius-m);
+  box-shadow: 3px 3px 0 rgba(23, 48, 31, 0.35);
+  cursor: pointer;
+}
+
+.bd-trainerfold__toggle span {
+  flex: 1;
+}
+
+.bd-trainerfold__chevron {
+  flex: none;
+  transform: rotate(90deg);
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.bd-trainerfold__toggle[aria-expanded='true'] .bd-trainerfold__chevron {
+  transform: rotate(-90deg);
+}
+
+.bd-trainerfold__toggle:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.bd-trainerfold [hidden] {
+  display: none;
+}

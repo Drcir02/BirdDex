@@ -1,4 +1,4 @@
-// Settings: the trainer card, sensitivity, sound effects, storage, backup and restore, erase everything, links and version.
+// Settings: sensitivity, sound effects, storage, backup and restore, erase everything, links and version.
 import { useCallback, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { resetWelcomed } from '../app/welcome'
@@ -13,7 +13,6 @@ import { SensitivitySection } from '../features/settings/SensitivitySection'
 import { SoundSection } from '../features/settings/SoundSection'
 import { StorageSection } from '../features/settings/StorageSection'
 import { countVersionTap, enableTesterMode, isTesterMode } from '../features/settings/tester'
-import { TrainerCard } from '../features/settings/TrainerCard'
 import { useBackup } from '../features/settings/useBackup'
 import '../features/settings/settings.css'
 import { formatDateTime, t } from '../i18n'
@@ -64,7 +63,6 @@ export default function SettingsPage() {
         </Notice>
       ) : null}
 
-      <TrainerCard />
       <SensitivitySection />
       <SoundSection />
       <StorageSection />

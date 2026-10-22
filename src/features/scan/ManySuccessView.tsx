@@ -2,17 +2,20 @@ import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import type { PendingIdentification, Rarity } from '../../domain/types'
 import { RARITIES } from '../../data/species'
-import { ROUTES, speciesPath } from '../../app/routes'
+import { bpRangeOf } from '../../domain/birdPoints'
+import { ROUTES, birdPath } from '../../app/routes'
 import { t } from '../../i18n'
 import { ButtonLink, Chip, LcdPanel, Page, PageHeader } from '../../ui'
+import { BpMeter } from '../birds/BpMeter'
 import { CatchCelebration } from '../fun/CatchCelebration'
+import type { CaughtBird } from './caught'
 import type { CandidateView } from './resultModel'
 import { useObjectUrl } from './useObjectUrl'
 import { useScrollToTopOnMount } from './useScroll'
 
 export interface ManySuccessViewProps {
   /** The birds that were caught together, strongest first. */
-  views: readonly CandidateView[]
+  birds: readonly CaughtBird[]
   /** The photo or clip that was saved with them (the pending identification is gone by now). */
   media: PendingIdentification['media']
 }
@@ -23,7 +26,8 @@ export function rarestOf(views: readonly CandidateView[]): Rarity {
 }
 
 /** After catching several birds at once: one celebration, the list of the birds (each opens its page) and the two ways on. */
-export function ManySuccessView({ views, media }: ManySuccessViewProps) {
+export function ManySuccessView({ birds, media }: ManySuccessViewProps) {
+  const views = birds.map((bird) => bird.view)
   const savedImage = useObjectUrl(media?.kind === 'image' ? media.blob : undefined)
   const marker = useRef<HTMLSpanElement>(null)
   useScrollToTopOnMount(marker)
@@ -41,11 +45,11 @@ export function ManySuccessView({ views, media }: ManySuccessViewProps) {
           {t('result.many.caught', { count: views.length })}
         </p>
         <ul className="bd-result-many" aria-label={t('result.many.list')}>
-          {views.map((view) => {
+          {birds.map(({ view, catchId, points }) => {
             const isNew = view.timesCaught === 0
             return (
-              <li key={view.speciesId} className="bd-result-many__item" data-testid="caught-bird" data-species={view.speciesId}>
-                <Link className="bd-result-many__name" to={speciesPath(view.speciesId)}>
+              <li key={catchId} className="bd-result-many__item" data-testid="caught-bird" data-species={view.speciesId}>
+                <Link className="bd-result-many__name" to={birdPath(catchId)}>
                   {view.name}
                 </Link>
                 {view.scientificName ? <span className="bd-result-card__sci">{view.scientificName}</span> : null}
@@ -55,14 +59,15 @@ export function ManySuccessView({ views, media }: ManySuccessViewProps) {
                     {isNew ? t('result.card.newSpecies') : t('result.card.inDex')}
                   </Chip>
                 </span>
+                <BpMeter bp={points.bp} range={bpRangeOf(view.species)} base={points.base} compact />
               </li>
             )
           })}
         </ul>
       </LcdPanel>
       <div className="bd-scan-actions">
-        <ButtonLink to={ROUTES.dex} size="lg" icon="dex" fullWidth data-testid="to-dex">
-          {t('result.many.toDex')}
+        <ButtonLink to={ROUTES.birds} size="lg" icon="bird" fullWidth data-testid="to-birds">
+          {t('result.many.toBirds')}
         </ButtonLink>
         <ButtonLink to={ROUTES.scan} variant="secondary" icon="scan" fullWidth data-testid="scan-next">
           {t('result.success.scanNext')}
