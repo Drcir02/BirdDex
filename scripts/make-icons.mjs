@@ -9,8 +9,9 @@ const dir = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'icons
 const jobs = [
   { svg: 'icon.svg', png: 'icon-192.png', size: 192 },
   { svg: 'icon.svg', png: 'icon-512.png', size: 512 },
-  // iOS rounds the corners itself and shows transparent pixels as black, so it gets the full-bleed version.
-  { svg: 'icon-maskable.svg', png: 'apple-touch-icon.png', size: 180 },
+  // iOS rounds the corners itself and shows transparent pixels as black, so it gets the version without rounded corners.
+  { svg: 'icon-fullbleed.svg', png: 'apple-touch-icon.png', size: 180 },
+  // Android cuts a shape out of the middle of this one: the picture is smaller and the background goes to the edges.
   { svg: 'icon-maskable.svg', png: 'icon-maskable-512.png', size: 512 },
 ]
 
