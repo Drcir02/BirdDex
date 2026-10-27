@@ -1,6 +1,6 @@
 # Group feed and leaderboard: design proposal
 
-**Status: a proposal, nothing of it is in the app yet.**
+**Status: agreed in the main points, nothing of it is in the app yet.** See "Decided" at the end.
 
 ## The short answer
 
@@ -23,9 +23,21 @@ Restore in the dashboard; a scheduled ping from GitHub Actions every few days pr
 sources say today (supabase.com/pricing is the place to confirm). A group of 5 to 30 people that shares photos of about 100 KB
 fits: 30 people x 100 catches x 100 KB = 300 MB.
 
-What I cannot do from here: create the account, or reach the server from this sandbox. The person who runs the group makes a free
-Supabase project (10 minutes), pastes one SQL file that I write, and sends me the project address and the public key (it is meant
-to be public). The first real test is then on your phones. Until then I test with a pretend server, as with the models.
+### Setting up the server (once for the whole app, not once per group)
+
+A web page cannot create its own database, so one person has to open an account once. After that **everything about a group is
+done inside the app** (a "Vytvořit skupinu" button, an invite QR code, the members); nobody else ever sees the website.
+
+Two ways, the same result:
+
+* **I do it (about 2 minutes of your time).** You sign up at supabase.com (the "Continue with GitHub" button, no card), make an
+  access token (Account > Access Tokens, short expiry) and give it to me. With it I create the project in the EU (Frankfurt), apply
+  the SQL file, switch on anonymous sign-in, put the public address and key into the app and test against it. Then you delete the
+  token. The token can do anything in your Supabase account, so it is used only for this and revoked right after.
+* **You do it (about 10 minutes).** Sign up, press New project (EU region), open SQL Editor and paste the file I give you, switch on
+  Authentication > Providers > Anonymous sign-ins, then send me the Project URL and the anon key (the key is made to be public).
+
+Then a scheduled GitHub Action pings the project every few days so that the free plan never pauses it.
 
 ## Who is who (no accounts, no passwords)
 
@@ -40,14 +52,14 @@ to be public). The first real test is then on your phones. Until then I test wit
 
 A **post** is one catch of one member: nickname, bird (name, rarity), BP and its five scores, way of catching, date and time,
 **place** (see below), and a **picture** (the photo, resized to 720 px, about 80 KB) or **recording** (the clip, a few seconds).
-The original photo and the whole database never leave the phone.
+The original photo and the rest of the database never leave the phone. Only new catches are shared (nothing made before joining).
 
 Settings (a new "Skupina" section in the settings):
 
 * Share new catches automatically: on by default after joining, so the leaderboard is complete. Each catch can be unshared on the
   success screen and on its page.
-* Place: **name only** (default, "Praha"), **rounded** (about 10 km), or **nothing**. Exact coordinates are never sent.
-* "Share my older catches too": a one-time button.
+* Place: **exact** (default: the name, and a tap on it opens the point on OpenStreetMap as on your own birds), **name only**
+  (no map link), or **nothing**. A catch made at home can be hidden on its own on the success screen.
 * Leave the group, and delete all my posts.
 
 A catch that is not shared does not count in the leaderboard.
@@ -115,7 +127,6 @@ Boards (a switch):
 | **Nejsilnější pták** | the highest BP of a single bird |
 | **Úlovky** | how many birds were caught |
 | **Série** | the longest run of days with a catch |
-| optional **Top 10 BP** | the BP of the ten strongest birds added up (rewards quality and cannot be won by many weak catches) |
 
 Periods: all time, this month, this week (by the date of the catch). A tie shares the place. Tap a row to open that member.
 
@@ -164,16 +175,17 @@ sentence ("unless you join a group").
 
 1. The server file (SQL) and the join flow, the sharing settings, the outbox and publishing, a feed that only reads.
 2. The leaderboard and the member pages.
-3. Reactions, the red dot, the "share older catches" button.
+3. Reactions (decided: in the first version, so they come with part 1 or 2), the red dot.
 
 About the size of the BirdPoints work, 1.5 to 2 times; the first two parts are what makes it useful.
 
-## Open questions
+## Decided
 
-1. Is **Supabase** (a free account of somebody in the group) fine, and who creates and owns the project?
-2. The entry: a **round key next to the gear** (my suggestion), a fourth bottom key, or a tab inside Ptáci?
-3. **Share automatically** after joining (my suggestion), or ask for every catch?
-4. **Place** default: name only?
-5. Which **leaderboards**: Druhy, Nejsilnější pták, Úlovky, Série, and do you want the optional Top 10 BP?
-6. **Reactions** in the first version, and comments later?
-7. Should the **older catches** be shared when somebody joins (one button), or only new ones?
+1. Entry: the **round key next to the gear**.
+2. Catches are **shared automatically** after joining (each can be hidden on the success screen).
+3. Place: **exact by default**, with a map link; name only or nothing are choices in the settings, and one catch can be hidden.
+4. Leaderboards: **Druhy, Nejsilnější pták, Úlovky, Série**. No sum of BP.
+5. **Reactions are in the first version** (comments later).
+6. **Only new catches** are shared; no button for the older ones.
+
+Still open: who makes the Supabase account, and which of the two ways above.
