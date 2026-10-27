@@ -1,6 +1,6 @@
 # Group feed and leaderboard: design proposal
 
-**Status: agreed in the main points, nothing of it is in the app yet.** See "Decided" at the end.
+**Status: built (see "Built" at the end).** The sections before it are the design that was agreed; the end says where the build differs.
 
 ## The short answer
 
@@ -44,8 +44,9 @@ Then a scheduled GitHub Action pings the project every few days so that the free
 * **A group** has a name and an invite code. The person who makes it is its admin.
 * **A phone joins** with the code (a link or a QR code: `#/join/CODE`), chooses a **nickname** and a colour, and agrees to what is
   shared. It gets an anonymous identity from the server; nobody types an e-mail or a password.
-* The identity and the group are saved in the backup file, so a restored phone is the same member. A phone that lost everything
-  can join again under a new nickname; the admin can remove the old one.
+* The backup file does **not** carry the group (the anonymous sign-in stays in the phone's browser and a backup must not become a
+  key to somebody's account). A restored phone joins again with the code under a new nickname; the admin can remove the old one.
+  Catches in a backup come back as not shared.
 * The admin can remove a member or a post. Everybody can delete their own posts and leave the group (their posts go with them).
 
 ## What is shared, and what is not
@@ -188,4 +189,32 @@ About the size of the BirdPoints work, 1.5 to 2 times; the first two parts are w
 5. **Reactions are in the first version** (comments later).
 6. **Only new catches** are shared; no button for the older ones.
 
-Still open: who makes the Supabase account, and which of the two ways above.
+## Built
+
+* **Server:** Supabase project `birddex` in `eu-central-1` (Frankfurt), free plan. Everything about it is in `supabase/migrations/001_group.sql`
+  (tables, row-level security, the private bucket `posts`, the functions `create_group`, `join_group`, `leave_group`, `remove_member`,
+  `group_feed`, `group_leaderboard`, `ping`). `scripts/apply-supabase.mjs` runs a SQL file through the Management API;
+  `scripts/group-smoke-test.mjs` checks the whole server (65 checks: who may read what, the functions, the pictures, the boards).
+* **Creating a group needs a founder code.** Without it anybody who finds the public key could create groups on this free project.
+  Only the SHA-256 of the code is on the server (`private.config`, key `founder_code_sha256`), the code itself is in no file of the repo.
+  To change it, run in the SQL editor of the project:
+  `insert into private.config values ('founder_code_sha256', encode(extensions.digest(upper('NEWCODE'), 'sha256'), 'hex')) on conflict (key) do update set value = excluded.value;`
+* **The public address and key** of the project are in `src/features/group/server.ts` (made to be public). The access token of the account
+  and the database password are not in the repo.
+* **Keep-alive:** `.github/workflows/keepalive.yml` (copy in `deploy/`) calls `ping()` every three days, so the free plan never pauses the project.
+* **App:** `src/features/group/`: `types.ts` (the `GroupApi` interface), `supabaseApi.ts` (real, the library is loaded only when a group is used),
+  `fakeApi.ts` (in memory, for tests and `birddex:groupServer = fake`), `compute.ts` (boards and badges as pure functions, the fake's copy of the SQL),
+  `share.ts` (what is decided when a catch is saved, the outbox, hide and share again, delete, leave), `state.ts` (membership and preferences in
+  localStorage), the screens `src/pages/Group*.tsx` and the section `GroupSection` in the settings.
+* **A catch** made while in a group gets `shareState` (`pending` for ten seconds, then `sent`, or `hidden`), `shareAt`, `sharePlace`, `sharedPostId`.
+  A catch made before joining has no `shareState` and can never be shared. The post is made with the id of the catch, so a retry never doubles.
+  Changing the place of a bird that is already in the feed deletes its post and sends it again; hiding it deletes the post. If the
+  connection is lost in between, the old post is deleted first the next time (a place that was hidden is never left in the feed).
+* **Polling, not realtime:** the feed and the boards refresh every 60 seconds while the app is visible; the red dot asks `latest()` every 60 seconds.
+* **Tests:** `tests/unit/group-*.test.ts` (boards, badges, state, the fake, the outbox, the screens), `tests/e2e/group.spec.ts` (browser, with the fake).
+
+## Still to do on the phone
+
+* Try it with two phones (TEST-GUIDE step 15) and tell me what is awkward.
+* Reactions are one button ("Super!"); comments are not built. Realtime updates are not built (the minute of polling is enough for a few people).
+* Delete the Supabase access token that was used to set the server up (Account, Access Tokens) once everything works.

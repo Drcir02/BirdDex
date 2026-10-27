@@ -18,6 +18,12 @@ the app, both engines, all screens, settings, welcome, credits, the update banne
 - Share sheet for the backup file; update banner when a new version is deployed while the app is open.
 - EXIF date and GPS from real phone photos; HEIC pictures are refused with a calm message.
 
+## 2b. The group (feed and leaderboards)
+
+- Built and tested against the real Supabase project and in the browser with a pretend server (`docs/notes/group-feed-design.md`, "Built"); not yet used on two real phones (TEST-GUIDE step 15).
+- Delete the Supabase access token that was used to set the server up (Account, Access Tokens) and keep the founder code secret.
+- Not built: comments, realtime updates (the screens refresh every minute), pushing a notification.
+
 ## 3. Tuning from real results
 
 - `src/domain/thresholds.ts` (catch rules per method and sensitivity) from real birds, false alarms in silence and wrong names.

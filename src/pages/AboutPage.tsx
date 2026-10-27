@@ -45,6 +45,7 @@ export default function AboutPage() {
 
       <LcdPanel title={t('about.privacy.title')} data-testid="about-privacy">
         <p>{t('about.privacy.text')}</p>
+        <p data-testid="about-privacy-group">{t('about.privacy.group')}</p>
       </LcdPanel>
 
       <Credit title={t('about.sound.title')} name={t('about.sound.name')} by={t('about.sound.by')} testId="credit-birdnet">

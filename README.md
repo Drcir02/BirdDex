@@ -1,6 +1,6 @@
 # BirdDex
 
-A Pokédex for the birds of Czechia and Europe. Identify a bird by its sound or by a photo, confirm the catch, and fill your Dex. Everything runs on the phone: no accounts, no servers.
+A Pokédex for the birds of Czechia and Europe. Identify a bird by its sound or by a photo, confirm the catch, and fill your Dex. Everything runs on the phone: no accounts, no tracking. Only if you join a group (a feed of the catches of your friends and leaderboards, `docs/notes/group-feed-design.md`) do new catches go to the group's small server (Supabase).
 
 It is an installable web app (PWA), so the same code works on iPhone and Android. See [PLAN.md](PLAN.md) for the plan, the milestones, the licenses and the risks.
 

@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { clearPhotoCache, deleteAllCatches, useCaughtSummary } from '../../db'
+import { catchesWithPost, clearPhotoCache, deleteAllCatches, useCaughtSummary } from '../../db'
 import { t } from '../../i18n'
 import { catchesText } from './backupFlow'
 import { Button, ConfirmDialog, LcdPanel, useToast } from '../../ui'
 import { forgetAllThumbnails } from '../dex/thumbnails'
+import { forgetShared } from '../group/share'
+import { useMembership } from '../group/state'
 import { forgetBackup } from './backupReminder'
 import './settings.css'
 
@@ -17,12 +19,15 @@ type Step = 'idle' | 'first' | 'second'
 export function EraseSection({ onErased }: EraseSectionProps) {
   const toast = useToast()
   const { catchCount } = useCaughtSummary()
+  const inGroup = useMembership() !== undefined
   const [step, setStep] = useState<Step>('idle')
   const [busy, setBusy] = useState(false)
 
   const erase = async () => {
     setBusy(true)
     try {
+      // The posts of the group go with the birds (they are deleted on the server as soon as there is a connection).
+      for (const record of await catchesWithPost()) await forgetShared(record)
       await deleteAllCatches()
       await clearPhotoCache()
       forgetAllThumbnails()
@@ -50,7 +55,12 @@ export function EraseSection({ onErased }: EraseSectionProps) {
         open={step === 'first'}
         tone="danger"
         title={t('settings.erase.firstTitle')}
-        message={<p>{t('settings.erase.firstMessage', { catches: catchesText(catchCount) })}</p>}
+        message={
+          <>
+            <p>{t('settings.erase.firstMessage', { catches: catchesText(catchCount) })}</p>
+            {inGroup ? <p data-testid="erase-group-note">{t('group.settings.eraseNote')}</p> : null}
+          </>
+        }
         confirmLabel={t('settings.erase.firstConfirm')}
         onConfirm={() => setStep('second')}
         onCancel={() => setStep('idle')}

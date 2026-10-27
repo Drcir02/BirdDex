@@ -91,9 +91,18 @@ export function flushShares(now: number = Date.now()): Promise<FlushResult> {
   return running
 }
 
-async function lostMembership(membership: Membership): Promise<void> {
+/** The group is gone for this phone (the admin removed it, or the sign-in was lost): forget it and say why. */
+export async function lostMembership(membership: Membership): Promise<void> {
   clearMembership(membership.groupName)
   await clearAllShares()
+}
+
+/**
+ * The sign-in belongs to the phone's browser: when it was lost (data cleared, another browser) the server sees a stranger, who is
+ * in no group. True when it is still the member that joined.
+ */
+export async function stillTheSameMember(api: GroupApi, membership: Membership): Promise<boolean> {
+  return (await api.session()) === membership.userId
 }
 
 async function doFlush(now: number): Promise<FlushResult> {
@@ -106,6 +115,15 @@ async function doFlush(now: number): Promise<FlushResult> {
     api = await getGroupApi()
   } catch {
     return { ...result, retry: true }
+  }
+
+  try {
+    if (!(await stillTheSameMember(api, membership))) {
+      await lostMembership(membership)
+      return result
+    }
+  } catch (error) {
+    if (!(error instanceof GroupError && error.kind === 'removed')) return { ...result, retry: true }
   }
 
   const stop = async (error: unknown): Promise<boolean> => {

@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getGroupApi } from './api'
 import { readFeedCache, writeFeedCache } from './feedCache'
+import { lostMembership, stillTheSameMember } from './share'
 import { markSeen } from './useGroupSync'
-import { useMembership } from './state'
+import { getMembership, useMembership } from './state'
 import { GroupError, type FeedPost } from './types'
 
 export type FeedFilter = 'all' | 'new' | 'mine'
@@ -56,6 +57,12 @@ export function useFeed(filter: FeedFilter, refreshSignal = 0): FeedState {
     const run = async () => {
       try {
         const api = await getGroupApi()
+        const joined = getMembership()
+        // A lost sign-in is a stranger to the server, who reads an empty group: say so instead of "nothing here yet".
+        if (joined && !(await stillTheSameMember(api, joined))) {
+          await lostMembership(joined)
+          return
+        }
         const fresh = await api.feed(groupId, query)
         if (!alive) return
         setPosts((previous) => mergeFirstPage(previous, fresh))

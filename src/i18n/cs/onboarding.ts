@@ -9,7 +9,7 @@ export const onboarding = {
   next: 'Dál',
   back: 'Zpět',
   skip: 'Přeskočit',
-  privacy: 'Všechno se děje přímo v telefonu. Žádné účty, žádné sledování.',
+  privacy: 'Všechno se děje přímo v telefonu. Žádné účty, žádné sledování. Nové úlovky se sdílejí jen s členy skupiny, do které se sám přidáš.',
   stepLabel: 'Krok {step} z {total}',
   stepsLabel: 'Průběh úvodu',
 
@@ -28,7 +28,7 @@ export const onboarding = {
     title: 'Stáhne se jen jednou',
     download: 'Při prvním skenování si {appName} stáhne „ptačí mozek“, asi {size} MB. Nejlíp to udělej přes Wi-Fi. Potom funguje i bez internetu.',
     local: 'Rozpoznávání běží přímo v tvém telefonu. Fotky a nahrávky z něj nikam neodcházejí.',
-    noTracking: 'Žádné účty, žádná reklama, žádné sledování. Z internetu se kromě mozku dotahují jen ukázkové fotky ptáků z Wikipedie. Název místa se zjišťuje jen při chycení ptáka: do OpenStreetMap se pošle poloha zaokrouhlená na asi 1 km.',
+    noTracking: 'Žádné účty, žádná reklama, žádné sledování. Z internetu se kromě mozku dotahují jen ukázkové fotky ptáků z Wikipedie. Název místa se zjišťuje jen při chycení ptáka: do OpenStreetMap se pošle poloha zaokrouhlená na asi 1 km. Jen když se přidáš do skupiny, uvidí tvoje nové úlovky její členové (to si můžeš u každého ptáka vypnout).',
   },
 
   permissions: {

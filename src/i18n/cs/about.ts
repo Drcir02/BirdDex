@@ -3,7 +3,7 @@
 
 export const about = {
   title: 'O aplikaci',
-  intro: 'Ptačí atlas, který se vejde do kapsy. Žádné účty, žádný server, rozpoznávání i sbírka zůstávají v tvém telefonu.',
+  intro: 'Ptačí atlas, který se vejde do kapsy. Žádné účty, rozpoznávání i sbírka zůstávají v tvém telefonu. Jen když se sám přidáš do skupiny, sdílíš s ní své nové úlovky.',
   credits: 'Poděkování',
   licences: 'Licence',
   version: 'Verze {version}',
@@ -23,6 +23,7 @@ export const about = {
   privacy: {
     title: 'Žádné sledování',
     text: 'Žádné účty, žádná reklama, žádné statistiky ani sledování. Tvoje sbírka, fotky, nahrávky a poloha zůstávají v telefonu. Z internetu se stahují jen modely (jednou), ukázkové fotky ptáků a název místa, a to jen když jsi online.',
+    group: 'Když se sám přidáš do skupiny, odešlou se na její server (u služby Supabase) tvoje nové úlovky: druh, BP, datum, zmenšená fotka nebo nahrávka a podle nastavení místo. Vidí je jen členové té skupiny a správce serveru. Skupinu můžeš kdykoli opustit a tvoje příspěvky se smažou.',
   },
 
   sound: {

@@ -11,8 +11,9 @@ import type { Species } from '../../src/domain/types'
 import { useGroupApiForTests } from '../../src/features/group/api'
 import { FAKE_FOUNDER_CODE, FAKE_GROUP_CODE, createFakeApi, type FakeGroupApi } from '../../src/features/group/fakeApi'
 import { GroupSection } from '../../src/features/group/GroupSection'
+import { EraseSection } from '../../src/features/settings/EraseSection'
 import { ShareControl } from '../../src/features/group/ShareControl'
-import { flushShares, initialShare } from '../../src/features/group/share'
+import { SHARE_DELAY_MS, flushShares, initialShare } from '../../src/features/group/share'
 import { getMembership, reloadGroupStateForTests, setMembership, updatePrefs } from '../../src/features/group/state'
 import { reloadSettingsForTests } from '../../src/state/settings'
 import { ToastProvider, ToastViewport } from '../../src/ui/Toast'
@@ -434,5 +435,23 @@ describe('the share switches of a bird', () => {
       expect((await getCatch('a'))!.shareState).toBe('hidden')
       expect((await getCatch('b'))!.shareState).toBe('hidden')
     })
+  })
+})
+
+describe('erasing everything', () => {
+  it('takes the posts of the group away with the birds and says so, and stays in the group', async () => {
+    await joinAs()
+    await addCatch({ id: 'c1', speciesId: 'parus-major', method: 'live', confidence: 0.9, share: initialShare() })
+    await flushShares(Date.now() + SHARE_DELAY_MS + 1)
+    expect((await api.feed((await api.members('fake-group-rodina'))[0] && 'fake-group-rodina')).filter((post) => post.userId === 'me')).toHaveLength(1)
+    render(h(ToastProvider, null, h(EraseSection)))
+    fireEvent.click(screen.getByTestId('erase-start'))
+    expect(screen.getByTestId('erase-group-note').textContent).toMatch(/příspěvky ve skupině se smažou/i)
+    fireEvent.click(screen.getByRole('button', { name: 'Pokračovat' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Ano, smazat vše' }))
+    await waitFor(async () => expect(await getCatch('c1')).toBeUndefined())
+    await flushShares(Date.now() + 1000)
+    await waitFor(async () => expect(api.snapshot().posts.some((post) => post.userId === 'me')).toBe(false))
+    expect(getMembership()).toBeDefined()
   })
 })

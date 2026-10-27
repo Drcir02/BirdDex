@@ -214,6 +214,15 @@ describe('the outbox', () => {
     expect((await getCatch('bad'))!.shareState).toBe('hidden')
   })
 
+  it('forgets the group when the sign-in of the phone was lost (the server sees a stranger)', async () => {
+    await save('c1')
+    setMembership({ ...getMembership()!, userId: 'the-old-sign-in' })
+    await flushShares(NOW + SHARE_DELAY_MS)
+    expect(getMembership()).toBeUndefined()
+    expect(getGroupState().removedFrom).toBe('Rodina')
+    expect(await posts()).toHaveLength(0)
+  })
+
   it('forgets the group when the server says the phone was removed', async () => {
     await save('c1')
     await api.as('fake-tomas').removeMember(groupId, 'me')

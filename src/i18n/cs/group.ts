@@ -22,7 +22,7 @@ export const group = {
     join: 'Připojit se kódem',
     create: 'Vytvořit skupinu',
   },
-  removed: 'Ze skupiny {name} tě odebral správce. Tvoji ptáci zůstávají u tebe.',
+  removed: 'Už nejsi členem skupiny {name}: buď tě odebral správce, nebo se tomuhle telefonu ztratilo přihlášení. Tvoji ptáci zůstávají u tebe, připojit se můžeš znovu kódem.',
   removedDismiss: 'Rozumím',
 
   // Joining
@@ -48,7 +48,7 @@ export const group = {
       noCode: 'Zadej kód skupiny.',
       noNickname: 'Zadej přezdívku (nejvýš 24 znaků).',
       noGroup: 'Takovou skupinu neznám. Zkontroluj kód.',
-      nameTaken: 'Tuhle přezdívku už ve skupině někdo má. Zkus jinou.',
+      nameTaken: 'Tuhle přezdívku už ve skupině někdo má (třeba tvoje dřívější připojení z jiného prohlížeče). Zkus jinou, nebo ať starou odebere správce.',
       full: 'Skupina je plná.',
       network: 'Nepodařilo se spojit se serverem. Zkontroluj připojení a zkus to znovu.',
       other: 'Připojení se nepovedlo. Zkus to prosím za chvíli.',
@@ -126,6 +126,7 @@ export const group = {
     leaveCancel: 'Zůstat',
     leaveFailed: 'Odejít se nepodařilo. Zkontroluj připojení a zkus to znovu.',
     left: 'Odchod ze skupiny je hotový.',
+    eraseNote: 'Tvoje příspěvky ve skupině se smažou taky. Ve skupině zůstaneš.',
   },
 
   // Sharing one bird
