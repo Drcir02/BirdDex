@@ -19,6 +19,7 @@
     "@fontsource/silkscreen": "^5.3.0",
     "@fontsource/vt323": "^5.3.0",
     "@litertjs/core": "^2.5.3",
+    "@supabase/supabase-js": "^2.118.0",
     "dexie": "^4.4.6",
     "fflate": "^0.8.3",
     "onnxruntime-web": "^1.30.0",
