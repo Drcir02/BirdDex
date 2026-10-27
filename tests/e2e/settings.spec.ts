@@ -7,6 +7,9 @@ const SIZES = [
   { width: 360, height: 800 },
 ]
 
+// The service worker would answer the picture requests itself, past the pretend Wikipedia, and reach the real one.
+test.use({ serviceWorkers: 'block' })
+
 test.beforeEach(async ({ page }) => {
   await skipWelcome(page)
 })
