@@ -8,6 +8,9 @@ export {
   addCatch,
   addCatches,
   catchesBySpecies,
+  catchesWithPost,
+  catchesWithShare,
+  clearAllShares,
   clearPhotoCache,
   countCatches,
   deleteAllCatches,
@@ -18,8 +21,9 @@ export {
   listCatches,
   putCachedPhoto,
   updateCatchNote,
+  updateCatchShare,
 } from './repository'
-export type { NewCatch, NewMedia } from './repository'
+export type { NewCatch, NewMedia, SharePatch } from './repository'
 export { summarizeCatches, useCaughtSummary, useRecentCatches, useSpeciesCatches } from './summary'
 export type { CaughtSummary, SpeciesCaughtSummary } from './summary'
 export { useMediaUrl } from './hooks'

@@ -28,15 +28,26 @@ export interface GroupPrefs {
   seenAt: number
 }
 
+/** A post that must be taken out of the feed as soon as there is a connection (its catch was deleted on this phone). */
+export interface PostToDelete {
+  groupId: string
+  postId: string
+}
+
 export interface GroupState {
   membership?: Membership
   prefs: GroupPrefs
+  /** Posts still to delete on the server. */
+  deletes: PostToDelete[]
+  /** The name of the group the admin removed this phone from, until the person has read it. */
+  removedFrom?: string
 }
 
 export const DEFAULT_PREFS: Readonly<GroupPrefs> = Object.freeze({ autoShare: true, place: 'exact', seenAt: 0 })
 
 const isObject = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
-const text = (value: unknown, max: number): string | undefined => (typeof value === 'string' && value.length > 0 && value.length <= max ? value : undefined)
+const text = (value: unknown, max: number): string | undefined =>
+  typeof value === 'string' && value.length > 0 && value.length <= max ? value : undefined
 
 /** Turns whatever was stored into a valid state: a broken membership is dropped, a broken preference falls back to its default. */
 export function sanitizeGroupState(value: unknown): GroupState {
@@ -68,7 +79,15 @@ export function sanitizeGroupState(value: unknown): GroupState {
           joinedAt: m.joinedAt as number,
         } satisfies Membership)
       : undefined
-  return membership ? { membership, prefs } : { prefs }
+  const deletes = (Array.isArray(source.deletes) ? source.deletes : [])
+    .filter((item): item is Record<string, unknown> => isObject(item) && !!text(item.groupId, 60) && !!text(item.postId, 60))
+    .map((item) => ({ groupId: item.groupId as string, postId: item.postId as string }))
+    .slice(0, 200)
+  const state: GroupState = { prefs, deletes }
+  if (membership) state.membership = membership
+  const removedFrom = text(source.removedFrom, 60)
+  if (removedFrom) state.removedFrom = removedFrom
+  return state
 }
 
 function readStored(): GroupState {
@@ -102,12 +121,30 @@ function save(next: GroupState): void {
 export const getMembership = (): Membership | undefined => getGroupState().membership
 
 export function setMembership(membership: Membership): void {
-  save(sanitizeGroupState({ ...getGroupState(), membership }))
+  const { removedFrom: _gone, ...rest } = getGroupState()
+  save(sanitizeGroupState({ ...rest, membership }))
 }
 
-/** Leaves the group on this phone (the server is told by leaveGroup). The preferences stay. */
-export function clearMembership(): void {
-  save({ prefs: getGroupState().prefs })
+/** Leaves the group on this phone (the server is told by leaveGroup). The preferences stay; `removedFrom` says why, when it was not the person's own wish. */
+export function clearMembership(removedFrom?: string): void {
+  const { prefs, deletes } = getGroupState()
+  save(sanitizeGroupState({ prefs, deletes: deletes.filter((item) => item.groupId !== getMembership()?.groupId), removedFrom }))
+}
+
+export function dismissRemoved(): void {
+  const { removedFrom: _gone, ...rest } = getGroupState()
+  if (_gone) save(rest)
+}
+
+export function addPostToDelete(item: PostToDelete): void {
+  const state = getGroupState()
+  if (state.deletes.some((known) => known.postId === item.postId)) return
+  save({ ...state, deletes: [...state.deletes, item] })
+}
+
+export function removePostToDelete(postId: string): void {
+  const state = getGroupState()
+  if (state.deletes.some((known) => known.postId === postId)) save({ ...state, deletes: state.deletes.filter((known) => known.postId !== postId) })
 }
 
 export function updateMembership(patch: Partial<Pick<Membership, 'nickname' | 'color' | 'isAdmin'>>): void {

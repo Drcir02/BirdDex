@@ -26,14 +26,14 @@ type Draw = (blob: Blob) => Promise<Blob>
  * Shrinks a picture with the browser's own decoder. It goes through an <img> element, which every browser draws the right
  * way up (the camera's orientation note, EXIF, is applied), and gives the memory back straight afterwards.
  */
-const shrinkWithBrowser: Draw = async (blob) => {
+export async function shrinkImage(blob: Blob, side: number = THUMBNAIL_SIDE, quality: number = JPEG_QUALITY): Promise<Blob> {
   const address = URL.createObjectURL(blob)
   try {
     const image = new Image()
     image.decoding = 'async'
     image.src = address
     await image.decode()
-    const { width, height } = fitWithin(image.naturalWidth, image.naturalHeight, THUMBNAIL_SIDE)
+    const { width, height } = fitWithin(image.naturalWidth, image.naturalHeight, side)
     const canvas = document.createElement('canvas')
     canvas.width = width
     canvas.height = height
@@ -42,11 +42,13 @@ const shrinkWithBrowser: Draw = async (blob) => {
     context.imageSmoothingQuality = 'high'
     context.drawImage(image, 0, 0, width, height)
     image.src = ''
-    return await new Promise<Blob>((resolve, reject) => canvas.toBlob((result) => (result ? resolve(result) : reject(new Error('No picture'))), 'image/jpeg', JPEG_QUALITY))
+    return await new Promise<Blob>((resolve, reject) => canvas.toBlob((result) => (result ? resolve(result) : reject(new Error('No picture'))), 'image/jpeg', quality))
   } finally {
     URL.revokeObjectURL(address)
   }
 }
+
+const shrinkWithBrowser: Draw = (blob) => shrinkImage(blob)
 
 const urls = new Map<string, string | undefined>()
 const pending = new Map<string, Promise<string | undefined>>()

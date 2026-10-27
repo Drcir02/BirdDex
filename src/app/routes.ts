@@ -10,6 +10,11 @@ export const ROUTES = {
   scanPhoto: '/scan/photo',
   scanLive: '/scan/live',
   result: '/result',
+  group: '/group',
+  groupJoin: '/group/join',
+  groupJoinCode: '/group/join/:code',
+  groupCreate: '/group/create',
+  groupMember: '/group/member/:userId',
   settings: '/settings',
   about: '/about',
   welcome: '/welcome',
@@ -22,12 +27,30 @@ export function speciesPath(id: string): string {
   return `/species/${encodeURIComponent(id)}`
 }
 
+/** The path of the group page, on one of its parts. */
+export function groupPath(tab?: 'board' | 'members'): string {
+  return tab ? `/group?tab=${tab}` : '/group'
+}
+
+export function groupJoinPath(code?: string): string {
+  return code ? `/group/join/${encodeURIComponent(code)}` : '/group/join'
+}
+
+export function groupMemberPath(userId: string): string {
+  return `/group/member/${encodeURIComponent(userId)}`
+}
+
 /** The path of one caught bird (one catch) with its BP. */
 export function birdPath(catchId: string): string {
   return `/birds/${encodeURIComponent(catchId)}`
 }
 
 export type NavSection = 'birds' | 'scan' | 'dex'
+
+/** The group screens, reached with the round key next to the gear. */
+export function isGroupPath(pathname: string): boolean {
+  return pathname === '/group' || pathname.startsWith('/group/')
+}
 
 /** Which bottom-navigation button a path belongs to (null for screens outside the navigation). */
 export function sectionOf(pathname: string): NavSection | null {

@@ -7,6 +7,7 @@ import { useCaughtSummary } from '../db'
 import { BackupSection } from '../features/settings/BackupSection'
 import { catchesText } from '../features/settings/backupFlow'
 import { lastBackupAt, shouldRemindBackup } from '../features/settings/backupReminder'
+import { GroupSection } from '../features/group/GroupSection'
 import { EraseSection } from '../features/settings/EraseSection'
 import { formatBuildTime } from '../features/settings/format'
 import { SensitivitySection } from '../features/settings/SensitivitySection'
@@ -65,6 +66,7 @@ export default function SettingsPage() {
 
       <SensitivitySection />
       <SoundSection />
+      <GroupSection />
       <StorageSection />
       <BackupSection backup={backup} version={version} />
       <EraseSection onErased={changed} />

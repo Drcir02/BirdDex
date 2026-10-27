@@ -139,7 +139,7 @@ describe('the Czech dictionary', () => {
   walk(cs, '')
 
   it('has one file per feature, in the agreed order of prefixes', () => {
-    expect(Object.keys(cs).sort()).toEqual(['about', 'birds', 'common', 'dex', 'fun', 'onboarding', 'result', 'scan', 'settings'])
+    expect(Object.keys(cs).sort()).toEqual(['about', 'birds', 'common', 'dex', 'fun', 'group', 'onboarding', 'result', 'scan', 'settings'])
   })
 
   it('has a first set of texts in every file', () => {

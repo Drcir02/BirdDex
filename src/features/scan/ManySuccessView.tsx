@@ -8,6 +8,7 @@ import { t } from '../../i18n'
 import { ButtonLink, Chip, LcdPanel, Page, PageHeader } from '../../ui'
 import { BpMeter } from '../birds/BpMeter'
 import { CatchCelebration } from '../fun/CatchCelebration'
+import { ShareControl } from '../group/ShareControl'
 import type { CaughtBird } from './caught'
 import type { CandidateView } from './resultModel'
 import { useObjectUrl } from './useObjectUrl'
@@ -65,6 +66,7 @@ export function ManySuccessView({ birds, media }: ManySuccessViewProps) {
           })}
         </ul>
       </LcdPanel>
+      <ShareControl catchIds={birds.map((bird) => bird.catchId)} />
       <div className="bd-scan-actions">
         <ButtonLink to={ROUTES.birds} size="lg" icon="bird" fullWidth data-testid="to-birds">
           {t('result.many.toBirds')}

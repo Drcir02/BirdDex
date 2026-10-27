@@ -127,7 +127,7 @@ describe('the settings screen', () => {
     render(app('/settings', h(SettingsPage)))
     expect(screen.getByRole('heading', { level: 1, name: 'Nastavení' })).toBeTruthy()
     const headings = screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)
-    expect(headings).toEqual(['Citlivost chytání', 'Zvuky', 'Úložiště', 'Záloha', 'Smazat vše', 'O aplikaci'])
+    expect(headings).toEqual(['Citlivost chytání', 'Zvuky', 'Skupina', 'Úložiště', 'Záloha', 'Smazat vše', 'O aplikaci'])
   })
 
   it('does not hold the trainer card any more (it moved to the Dex)', () => {

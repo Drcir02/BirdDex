@@ -6,9 +6,10 @@ import { birds } from './birds'
 import { common } from './common'
 import { dex } from './dex'
 import { fun } from './fun'
+import { group } from './group'
 import { onboarding } from './onboarding'
 import { result } from './result'
 import { scan } from './scan'
 import { settings } from './settings'
 
-export const cs = { common, dex, birds, scan, result, settings, about, fun, onboarding } as const
+export const cs = { common, dex, birds, group, scan, result, settings, about, fun, onboarding } as const

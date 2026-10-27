@@ -2,6 +2,7 @@ import { Suspense, useEffect, useRef } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useSpecies } from '../data/useSpecies'
 import { syncBirdPointsOnce } from '../features/birds/syncBirdPoints'
+import { useGroupBadge, useGroupSync } from '../features/group/useGroupSync'
 import { t } from '../i18n'
 import { Icon } from '../ui/icons'
 import { Spinner } from '../ui/Spinner'
@@ -12,7 +13,7 @@ import { useDeviceStatus } from './deviceStatus'
 import { ErrorBoundary } from './ErrorBoundary'
 import { Leds } from './Leds'
 import { Lens } from './Lens'
-import { ROUTES, isSettingsPath } from './routes'
+import { ROUTES, isGroupPath, isSettingsPath } from './routes'
 import { UpdateBanner } from './UpdateBanner'
 import { useDocumentTitle, useScrollMemory } from './useShell'
 import '../styles/shell.css'
@@ -41,6 +42,9 @@ export function Layout() {
   useEffect(() => {
     if (species) void syncBirdPointsOnce(species).catch(() => undefined)
   }, [species])
+  // Catches waiting for the group are sent, and the red dot on the group key shows news.
+  useGroupSync()
+  const groupNews = useGroupBadge()
   const showNav = pathname !== ROUTES.welcome
   const scrollToTop = () => {
     const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
@@ -57,15 +61,28 @@ export function Layout() {
             <span className="bd-wordmark" aria-hidden="true">
               {APP_NAME}
             </span>
-            <Link
-              to={ROUTES.settings}
-              className="bd-top__gear"
-              aria-label={t('common.nav.settings')}
-              aria-current={isSettingsPath(pathname) ? 'page' : undefined}
-              data-testid="nav-settings"
-            >
-              <Icon name="settings" size={26} />
-            </Link>
+            <div className="bd-top__keys">
+              <Link
+                to={ROUTES.group}
+                className="bd-top__gear bd-top__group"
+                aria-label={groupNews ? t('group.keyNews') : t('group.key')}
+                aria-current={isGroupPath(pathname) ? 'page' : undefined}
+                data-testid="nav-group"
+                data-news={groupNews ? 'true' : undefined}
+              >
+                <Icon name="people" size={26} />
+                {groupNews ? <span className="bd-top__dot" data-testid="group-dot" aria-hidden="true" /> : null}
+              </Link>
+              <Link
+                to={ROUTES.settings}
+                className="bd-top__gear"
+                aria-label={t('common.nav.settings')}
+                aria-current={isSettingsPath(pathname) ? 'page' : undefined}
+                data-testid="nav-settings"
+              >
+                <Icon name="settings" size={26} />
+              </Link>
+            </div>
           </div>
         </header>
 

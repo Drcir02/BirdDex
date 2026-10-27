@@ -9,7 +9,9 @@ import { formatClock } from './format'
 
 export interface AudioPlayerProps {
   /** The saved clip (a row of the media table). */
-  mediaId: string
+  mediaId?: string
+  /** Or the address of a clip that is somewhere else (the clip of a post in the group feed). */
+  url?: string
   className?: string
 }
 
@@ -41,8 +43,9 @@ function useEnvelope(url: string | undefined): number[] | undefined {
  * Plays a saved recording: an audio element with our own controls (play and pause, a seek bar laid over the loudness bars,
  * and the time). The bars are the clip's level over time and light up as the clip plays.
  */
-export function AudioPlayer({ mediaId, className }: AudioPlayerProps) {
-  const media = useMediaUrl(mediaId)
+export function AudioPlayer({ mediaId, url, className }: AudioPlayerProps) {
+  const saved = useMediaUrl(url ? undefined : mediaId)
+  const media = url ? { url, loading: false, missing: false, durationS: undefined } : saved
   const audio = useRef<HTMLAudioElement>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [current, setCurrent] = useState(0)

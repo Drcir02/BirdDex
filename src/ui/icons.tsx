@@ -28,6 +28,7 @@ export type IconName =
   | 'refresh'
   | 'speaker'
   | 'chevron'
+  | 'people'
 
 const GEAR =
   'M10.1 4.8 L10.5 2.4 L13.5 2.4 L13.9 4.8 L15.8 5.5 L17.7 4.2 L19.8 6.3 L18.5 8.2 L19.2 10.1 L21.6 10.5 L21.6 13.5 L19.2 13.9 L18.5 15.7 L19.8 17.7 L17.7 19.8 L15.8 18.5 L13.9 19.2 L13.5 21.6 L10.5 21.6 L10.1 19.2 L8.3 18.5 L6.3 19.8 L4.2 17.7 L5.5 15.8 L4.8 13.9 L2.4 13.5 L2.4 10.5 L4.8 10.1 L5.5 8.2 L4.2 6.3 L6.3 4.2 L8.2 5.5Z'
@@ -148,6 +149,14 @@ const GLYPHS: Record<IconName, ReactNode> = {
     </>
   ),
   chevron: <path d="M9 5l7 7-7 7" />,
+  // Two people: a head and shoulders in front, a second head and shoulder behind
+  people: (
+    <>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3 20c0-3.6 2.7-6 6-6s6 2.4 6 6" />
+      <path d="M15.5 5.2a3.2 3.2 0 0 1 0 5.6M17.5 14.3c2.2.6 3.5 2.5 3.5 5.7" />
+    </>
+  ),
 }
 
 export const ICON_NAMES = Object.keys(GLYPHS) as IconName[]

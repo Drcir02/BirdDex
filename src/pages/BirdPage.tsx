@@ -9,8 +9,11 @@ import { displayName, getSpeciesById, secondaryName } from '../data/species'
 import { familyNameCs } from '../data/families'
 import { useSpecies } from '../data/useSpecies'
 import { deleteCatch, getDb, updateCatchNote, useLiveQuery, useMediaUrl } from '../db'
-import { FACTOR_ORDER, bpRangeOf, factorsOf, type BpFactors } from '../domain/birdPoints'
+import { FACTOR_ORDER, bpRangeOf, factorsOf } from '../domain/birdPoints'
 import { BpMeter } from '../features/birds/BpMeter'
+import { FactorRow } from '../features/birds/FactorRow'
+import { forgetShared } from '../features/group/share'
+import { ShareControl } from '../features/group/ShareControl'
 import { birdHref, buildBirdEntries, neighboursInList, parseBirdsQuery, selectBirds, DEFAULT_BIRDS_QUERY, birdsQueryToSearch } from '../features/birds/list'
 import { AudioPlayer } from '../features/dex/AudioPlayer'
 import { METHOD_ICON, mapUrl, placeOf } from '../features/dex/format'
@@ -108,6 +111,7 @@ export default function BirdPage() {
     setBusy(true)
     try {
       await deleteCatch(record.id)
+      void forgetShared(record)
       if (record.mediaId) forgetThumbnail(record.mediaId)
       toast.show(t('birds.detail.deleted'), { tone: 'success' })
       setRemoving(false)
@@ -209,6 +213,8 @@ export default function BirdPage() {
         <NoteEditor key={record.id} record={record} />
       </LcdPanel>
 
+      <ShareControl catchId={record.id} />
+
       <div className="bd-bird__actions">
         <ButtonLink to={speciesPath(bird.id)} variant="secondary" icon="dex" fullWidth data-testid="bird-species">
           {t('birds.detail.aboutSpecies')}
@@ -235,28 +241,6 @@ export default function BirdPage() {
         {list.length}
       </span>
     </Page>
-  )
-}
-
-function FactorRow({ factorKey, factors }: { factorKey: keyof BpFactors; factors: BpFactors }) {
-  const value = factors[factorKey]
-  return (
-    <li className="bd-factor" data-testid={`factor-${factorKey}`}>
-      <span className="bd-factor__name">{t(`birds.bp.factor.${factorKey}` as const)}</span>
-      <div
-        className="bd-factor__bar"
-        role="meter"
-        aria-label={t(`birds.bp.factor.${factorKey}` as const)}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={Math.round(value * 100)}
-        aria-describedby={undefined}
-      >
-        <i style={{ width: `${Math.round(value * 100)}%` }} />
-      </div>
-      <span className="bd-factor__value">{formatPercent(value)}</span>
-      <span className="bd-factor__hint">{t(`birds.bp.factorHint.${factorKey}` as const)}</span>
-    </li>
   )
 }
 

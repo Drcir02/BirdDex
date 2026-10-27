@@ -6,6 +6,7 @@ import { t } from '../../i18n'
 import { ButtonLink, Chip, LcdPanel, Page, PageHeader } from '../../ui'
 import { BpMeter } from '../birds/BpMeter'
 import { CatchCelebration } from '../fun/CatchCelebration'
+import { ShareControl } from '../group/ShareControl'
 import { ReferencePhotoBox } from './ReferencePhotoBox'
 import type { CandidateView } from './resultModel'
 import { useObjectUrl } from './useObjectUrl'
@@ -52,6 +53,7 @@ export function SuccessView({ view, wasNew, media, points, catchId }: SuccessVie
         </div>
         <BpMeter bp={points.bp} range={bpRangeOf(view.species)} base={points.base} />
       </LcdPanel>
+      <ShareControl catchId={catchId} />
       <div className="bd-scan-actions">
         <ButtonLink to={birdPath(catchId)} size="lg" icon="bird" fullWidth data-testid="to-bird">
           {t('result.success.toBird')}

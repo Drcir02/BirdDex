@@ -254,6 +254,7 @@ export const common = {
       refresh: 'Obnovit',
       speaker: 'Reproduktor',
       chevron: 'Další',
+      people: 'Skupina',
     },
   },
 } as const

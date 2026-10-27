@@ -1,7 +1,10 @@
 // The group feature talks to a server through this one interface (GroupApi). The real one (supabaseApi.ts) speaks to Supabase;
 // the fake one (fakeApi.ts) lives in memory, for tests and for trying the screens without a server. See docs/notes/group-feed-design.md.
 
-export type PlaceMode = 'exact' | 'name' | 'none'
+import type { SharePlace } from '../../domain/types'
+
+/** How much of the place of a catch the group sees: the point on the map, the name only, or nothing. */
+export type PlaceMode = SharePlace
 export const PLACE_MODES: readonly PlaceMode[] = ['exact', 'name', 'none']
 
 /** The leaderboards: different species, the strongest bird (highest BP), how many catches, the longest run of days. */
@@ -78,7 +81,8 @@ export interface MemberRow {
   joinedAt: number
 }
 
-export type GroupErrorKind = 'network' | 'auth' | 'wrong-founder-code' | 'no-group' | 'name-taken' | 'full' | 'rejected' | 'server'
+/** `removed`: this phone is no longer a member of the group (the admin removed it). */
+export type GroupErrorKind = 'network' | 'auth' | 'wrong-founder-code' | 'no-group' | 'name-taken' | 'full' | 'rejected' | 'removed' | 'server'
 
 /** Something the server refused or could not do. `network` means: try again later. */
 export class GroupError extends Error {
@@ -94,7 +98,12 @@ export interface GroupApi {
   readonly kind: 'supabase' | 'fake'
   /** Signs in (anonymously, once) and returns the id of this phone. */
   session(): Promise<string>
-  createGroup(input: { founderCode: string; name: string; nickname: string; color: string }): Promise<{ groupId: string; groupName: string; code: string }>
+  createGroup(input: {
+    founderCode: string
+    name: string
+    nickname: string
+    color: string
+  }): Promise<{ groupId: string; groupName: string; code: string }>
   joinGroup(input: { code: string; nickname: string; color: string }): Promise<{ groupId: string; groupName: string }>
   /** Leaves the group; the member's posts and pictures go with them. */
   leaveGroup(groupId: string): Promise<void>

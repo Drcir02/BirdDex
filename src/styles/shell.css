@@ -232,6 +232,29 @@
   gap: 5px;
 }
 
+/* The two round keys in the top right corner: the group (people) and the settings (gear). */
+.bd-top__keys {
+  display: flex;
+  gap: 12px;
+}
+
+.bd-top__group {
+  position: relative;
+}
+
+/* The red dot on the group key: somebody posted since the feed was last looked at. */
+.bd-top__dot {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 14px;
+  height: 14px;
+  background: var(--led-red);
+  border: 2px solid #1f2127;
+  border-radius: 50%;
+  box-shadow: 0 0 8px 2px rgba(255, 64, 64, 0.7);
+}
+
 /* The settings key: a round dark key with a gear, in the top right corner of the device. */
 .bd-top__gear {
   --focus: var(--focus-on-dark);

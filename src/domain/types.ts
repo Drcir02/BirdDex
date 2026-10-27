@@ -89,7 +89,20 @@ export interface CatchRecord {
   bpFactors?: number[]
   /** The BP was worked out afterwards for a catch from before BP existed, so its clarity is a guess. */
   bpLegacy?: boolean
+  /**
+   * Sharing with the group (src/features/group). Missing: the catch is not part of a group (made without one, or before joining;
+   * such a catch can never be shared). `pending`: goes to the group at `shareAt`; `sent`: it is in the feed as `sharedPostId`;
+   * `hidden`: the person keeps it to themselves.
+   */
+  shareState?: ShareState
+  shareAt?: number
+  sharePlace?: SharePlace
+  sharedPostId?: string
 }
+
+export type ShareState = 'pending' | 'sent' | 'hidden'
+/** How much of the place of a shared catch the group sees: the point on the map, the name only, or nothing. */
+export type SharePlace = 'exact' | 'name' | 'none'
 
 export interface MediaRecord {
   id: string

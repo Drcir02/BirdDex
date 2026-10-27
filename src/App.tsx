@@ -21,6 +21,10 @@ const ScanSoundPage = lazy(() => import('./pages/ScanSoundPage'))
 const ScanPhotoPage = lazy(() => import('./pages/ScanPhotoPage'))
 const ScanLivePage = lazy(() => import('./pages/ScanLivePage'))
 const ResultPage = lazy(() => import('./pages/ResultPage'))
+const GroupPage = lazy(() => import('./pages/GroupPage'))
+const GroupJoinPage = lazy(() => import('./pages/GroupJoinPage'))
+const GroupCreatePage = lazy(() => import('./pages/GroupCreatePage'))
+const GroupMemberPage = lazy(() => import('./pages/GroupMemberPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 const OnboardingPage = lazy(() => import('./pages/OnboardingPage'))
@@ -56,6 +60,11 @@ export default function App() {
                   <Route path={ROUTES.scanPhoto} element={<ScanPhotoPage />} />
                   <Route path={ROUTES.scanLive} element={<ScanLivePage />} />
                   <Route path={ROUTES.result} element={<ResultPage />} />
+                  <Route path={ROUTES.group} element={<GroupPage />} />
+                  <Route path={ROUTES.groupJoin} element={<GroupJoinPage />} />
+                  <Route path={ROUTES.groupJoinCode} element={<GroupJoinPage />} />
+                  <Route path={ROUTES.groupCreate} element={<GroupCreatePage />} />
+                  <Route path={ROUTES.groupMember} element={<GroupMemberPage />} />
                   <Route path={ROUTES.settings} element={<SettingsPage />} />
                   <Route path={ROUTES.about} element={<AboutPage />} />
                   <Route path={ROUTES.welcome} element={<OnboardingPage />} />

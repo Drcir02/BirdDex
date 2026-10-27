@@ -2,7 +2,7 @@
 // Screens use these functions and never touch the tables directly.
 
 import type { StoredBirdPoints } from '../domain/birdPoints'
-import type { CatchMethod, CatchRecord, GeoPoint, MediaRecord } from '../domain/types'
+import type { CatchMethod, CatchRecord, GeoPoint, MediaRecord, SharePlace, ShareState } from '../domain/types'
 import { requestPersistentStorage } from '../state/storage'
 import { getDb, type PhotoCacheRecord } from './database'
 import { isQuotaExceededError, StorageFullError } from './errors'
@@ -20,6 +20,8 @@ export interface NewCatch {
   note?: string
   /** The BirdPoints of the catch (src/domain/birdPoints.ts, toStored). */
   birdPoints?: StoredBirdPoints
+  /** Sharing with the group, when this phone is in one (src/features/group/share.ts decides). */
+  share?: { state: ShareState; at?: number; place?: SharePlace }
   /**
    * Normally a fresh id is made. Pass the same id for the same catch (for example `getPendingCatchId()` from
    * src/state/pending.ts) to make a double tap on the Catch button harmless: the second call saves nothing and
@@ -82,6 +84,11 @@ export async function addCatches(inputs: readonly NewCatch[], media?: NewMedia):
     if (input.location) record.location = { ...input.location }
     if (input.placeName) record.placeName = input.placeName
     if (input.note) record.note = input.note
+    if (input.share) {
+      record.shareState = input.share.state
+      if (input.share.at !== undefined) record.shareAt = input.share.at
+      if (input.share.place) record.sharePlace = input.share.place
+    }
     if (input.birdPoints) Object.assign(record, input.birdPoints, { bpFactors: [...input.birdPoints.bpFactors], bpRange: [...input.birdPoints.bpRange] })
     return record
   })
@@ -172,6 +179,56 @@ export async function updateCatchNote(id: string, note: string | undefined): Pro
   else delete next.note
   await guard(() => db.catches.put(next))
   return true
+}
+
+/** What can change about the sharing of a catch. `null` removes a field. */
+export type SharePatch = { [K in 'shareState' | 'shareAt' | 'sharePlace' | 'sharedPostId']?: CatchRecord[K] | null }
+
+/** Changes the sharing fields of a catch in one step. Returns the catch as it is now, or undefined when there is none. */
+export function updateCatchShare(id: string, patch: SharePatch): Promise<CatchRecord | undefined> {
+  const db = getDb()
+  return guard(() =>
+    db.transaction('rw', db.catches, async () => {
+      const existing = await db.catches.get(id)
+      if (!existing) return undefined
+      const next: Record<string, unknown> = { ...existing }
+      for (const [key, value] of Object.entries(patch)) {
+        if (value === null || value === undefined) delete next[key]
+        else next[key] = value
+      }
+      await db.catches.put(next as unknown as CatchRecord)
+      return next as unknown as CatchRecord
+    }),
+  )
+}
+
+/** The catches that have anything to do with the group: waiting, shared or hidden. */
+export function catchesWithShare(states?: readonly ShareState[]): Promise<CatchRecord[]> {
+  return getDb()
+    .catches.filter((record) => record.shareState !== undefined && (!states || states.includes(record.shareState)))
+    .toArray()
+}
+
+/** The catches that still have a post in the feed (or an old one to take out). */
+export function catchesWithPost(): Promise<CatchRecord[]> {
+  return getDb()
+    .catches.filter((record) => record.sharedPostId !== undefined)
+    .toArray()
+}
+
+/** Forgets everything about sharing on every catch (the phone left its group). The catches themselves stay. */
+export function clearAllShares(): Promise<void> {
+  const db = getDb()
+  return db.transaction('rw', db.catches, async () => {
+    await db.catches
+      .filter((record) => record.shareState !== undefined || record.sharedPostId !== undefined)
+      .modify((record) => {
+        delete record.shareState
+        delete record.shareAt
+        delete record.sharePlace
+        delete record.sharedPostId
+      })
+  })
 }
 
 /** Removes every catch and every saved photo and clip. The reference photo cache stays. */

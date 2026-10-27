@@ -16,6 +16,7 @@ import { NothingSure } from '../features/scan/NothingSure'
 import { buildResultView, confirmTextKey, manyTextKey, scanPathFor, type CandidateView } from '../features/scan/resultModel'
 import { ResultCard } from '../features/scan/ResultCard'
 import { ResultMeta } from '../features/scan/ResultMeta'
+import { initialShare, scheduleFlush, shareDelayMs } from '../features/group/share'
 import { SuccessView } from '../features/scan/SuccessView'
 import { resolvePlaceName } from '../features/scan/placeName'
 import { useScrollIntoViewWhen } from '../features/scan/useScroll'
@@ -136,12 +137,15 @@ export default function ResultPage() {
         location: pending.location,
         placeName,
         birdPoints: toStored(points),
+        share,
       })
       const catchId = getPendingCatchId()
+      const share = initialShare()
       const points = chosen.map(pointsOf)
       let saved: { id: string }[]
       if (chosen.length === 1) saved = [await addCatch(catchFor(chosen[0], points[0], catchId), mediaToSave)]
       else saved = await addCatches(chosen.map((bird, index) => catchFor(bird, points[index], catchId ? `${catchId}:${bird.speciesId}` : undefined)), mediaToSave)
+      if (share?.state === 'pending') scheduleFlush(shareDelayMs() + 300)
       const media = pending.media
       // The success screen first: with the identification gone the page would otherwise send the person to the hub.
       setOutcome({ birds: chosen.map((bird, index) => ({ view: bird, catchId: saved[index].id, points: points[index] })), media })

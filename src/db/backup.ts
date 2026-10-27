@@ -159,6 +159,11 @@ export async function exportBackup(options: { now?: Date; onProgress?: (done: nu
   // One photo or clip at a time, so the phone never holds them all in memory at once.
   for (const record of catches) {
     const copy: CatchRecord = { ...record }
+    // Whether a catch is in the group's feed belongs to this phone and its sign-in, not to the backup.
+    delete copy.shareState
+    delete copy.shareAt
+    delete copy.sharePlace
+    delete copy.sharedPostId
     if (record.mediaId && !savedMedia.has(record.mediaId)) {
       const media = await db.media.get(record.mediaId)
       if (media) {
