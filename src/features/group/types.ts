@@ -28,6 +28,8 @@ export interface PostInput {
   placeName?: string
   lat?: number
   lon?: number
+  /** false: only counts in the leaderboards (a catch from before joining); it has no picture and no place and is not in the feed. Default true. */
+  inFeed?: boolean
 }
 
 /** The picture (a small JPEG) or the clip (a WAV) of a post. */
@@ -52,6 +54,8 @@ export interface FeedPost extends PostInput {
   newForUser: boolean
   /** The first post of this species in the whole group. */
   firstInGroup: boolean
+  /** False for a stats-only post (only seen when the query asks for all). */
+  inFeed: boolean
 }
 
 export interface FeedQuery {
@@ -62,6 +66,8 @@ export interface FeedQuery {
   userId?: string
   /** Only the posts that are the first of their species for their member. */
   newOnly?: boolean
+  /** Also the stats-only posts of catches from before joining (for a member's page; the feed leaves them out). */
+  all?: boolean
 }
 
 export interface BoardRow {

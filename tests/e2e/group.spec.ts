@@ -1,6 +1,7 @@
 import { test, type Page } from '@playwright/test'
 import { downloadBrain, expect, openApp, readDatabase } from './scan-helpers'
-import { collectErrors } from './shell-helpers'
+import { mockWikimedia, seedDemo } from './dex-helpers'
+import { collectErrors, skipWelcome } from './shell-helpers'
 
 // The group in a real browser, with the pretend server (birddex:groupServer = fake): joining by an invitation link, the feed with
 // its Super button, the leaderboards, the members, the round key with its red dot, sharing a new catch (and hiding it), leaving.
@@ -25,7 +26,13 @@ async function joinByLink(page: Page, nickname = 'Míša') {
 }
 
 /** The pretend server keeps its state in localStorage: look into it, or let somebody else post. */
-const fakeServer = (page: Page) => page.evaluate(() => JSON.parse(localStorage.getItem('birddex:fake-group-server') ?? 'null') as { posts: Array<{ userId: string; speciesId: string; catchId: string }> })
+const fakeServer = (page: Page) =>
+  page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem('birddex:fake-group-server') ?? 'null') as {
+        posts: Array<{ userId: string; speciesId: string; catchId: string }>
+      },
+  )
 
 test.describe('joining', () => {
   test('joins by an invitation link, and the feed, the leaderboard and the members are there', async ({ page }) => {
@@ -94,6 +101,51 @@ test.describe('joining', () => {
   })
 })
 
+test.describe('the birds from before joining', () => {
+  test('count in the leaderboard (without a picture or a place), but the feed has only what is new', async ({ page }) => {
+    await skipWelcome(page)
+    await mockWikimedia(page)
+    await seedDemo(page) // 30 birds, made before any group
+    await page.goto('about:blank') // a whole new load, so that the pretend server setting of openApp is read
+    await joinByLink(page)
+    await expect(posts(page)).toHaveCount(9)
+    // Everything the phone had is sent as "stats only" a moment after joining.
+    await expect
+      .poll(
+        async () => {
+          const server = await page.evaluate(
+            () =>
+              JSON.parse(localStorage.getItem('birddex:fake-group-server') ?? 'null') as {
+                posts: Array<{ userId: string; inFeed?: boolean; mediaPath?: string; placeName?: string }>
+              },
+          )
+          return server.posts.filter((post) => post.inFeed === false).length
+        },
+        { timeout: 20_000 },
+      )
+      .toBe(30)
+    const server = await page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem('birddex:fake-group-server') ?? 'null') as {
+          posts: Array<{ inFeed?: boolean; mediaPath?: string; placeName?: string; lat?: number }>
+        },
+    )
+    expect(server.posts.filter((post) => post.inFeed === false).every((post) => !post.mediaPath && !post.placeName && post.lat === undefined)).toBe(
+      true,
+    )
+
+    await page.getByRole('radio', { name: 'Žebříček' }).click()
+    await page.getByTestId('board-catches').click()
+    const mine = page.locator('[data-testid=board-row], [data-testid=podium] li').filter({ hasText: 'Míša' })
+    await expect(mine.first()).toContainText('30 úlovků')
+    await page.screenshot({ path: `${SHOTS}/board-with-older-390.png` })
+    // The feed still has only the nine posts of the others, nothing of mine.
+    await page.getByRole('radio', { name: 'Feed' }).click()
+    await expect(posts(page)).toHaveCount(9)
+    await expect(page.getByTestId('feed').locator('[data-user-id]').filter({ hasText: 'Míša' })).toHaveCount(0)
+  })
+})
+
 test.describe('the feed', () => {
   test('gives a Super and takes it back, and opens the details of a post', async ({ page }) => {
     await joinByLink(page)
@@ -119,7 +171,17 @@ test.describe('the feed', () => {
     // Somebody else posts while the app is closed.
     await page.evaluate(() => {
       const raw = JSON.parse(localStorage.getItem('birddex:fake-group-server') as string)
-      raw.posts.push({ id: 'fresh', groupId: raw.groups[0].id, userId: 'fake-anna', catchId: 'fresh', speciesId: 'pica-pica', method: 'live', confidence: 0.9, caughtAt: Date.now(), createdAt: Date.now() + 5000 })
+      raw.posts.push({
+        id: 'fresh',
+        groupId: raw.groups[0].id,
+        userId: 'fake-anna',
+        catchId: 'fresh',
+        speciesId: 'pica-pica',
+        method: 'live',
+        confidence: 0.9,
+        caughtAt: Date.now(),
+        createdAt: Date.now() + 5000,
+      })
       localStorage.setItem('birddex:fake-group-server', JSON.stringify(raw))
     })
     await page.reload()
@@ -173,7 +235,9 @@ test.describe('sharing a catch', () => {
     await page.getByRole('switch', { name: /Sdílet se skupinou/ }).click()
     await expect(page.getByTestId('share-control')).toHaveAttribute('data-share-state', 'hidden')
     await page.waitForTimeout(1500)
-    expect((await fakeServer(page)).posts.filter((post) => post.userId !== 'fake-tomas' && post.userId !== 'fake-anna' && post.userId !== 'fake-jirka')).toHaveLength(0)
+    expect(
+      (await fakeServer(page)).posts.filter((post) => post.userId !== 'fake-tomas' && post.userId !== 'fake-anna' && post.userId !== 'fake-jirka'),
+    ).toHaveLength(0)
   })
 
   test('a catch made without a group is not shared and has no switches', async ({ page }) => {

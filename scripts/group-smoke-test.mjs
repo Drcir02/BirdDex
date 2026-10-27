@@ -151,6 +151,28 @@ check('a period in the future leaves everybody at 0', !r.error && r.data.every((
 r = await b.client.rpc('group_leaderboard', { p_group: group, p_board: 'nonsense' })
 check('an unknown board is refused', !!r.error, 'it answered')
 
+// ----- older catches count in the totals but never show in the feed
+r = await post(b, group, 'old-photo', 'fringilla-coelebs', { caught_at: new Date(Date.now() - 2 * 365 * 86_400_000).toISOString() })
+check('an old photo (two years back) can be posted', !r.error, errorOf(r))
+r = await post(b, group, 'too-old', 'fringilla-coelebs', { caught_at: '1999-12-31T00:00:00Z' })
+check('a date before the year 2000 is refused', !!r.error, 'it worked')
+r = await post(b, group, 'stats-place', 'pica-pica', { in_feed: false })
+check('a stats-only post with a place is refused', !!r.error, 'it worked')
+r = await post(b, group, 'stats-1', 'pica-pica', { in_feed: false, place_name: null, lat: null, lon: null, bp: 410, caught_at: new Date(Date.now() - 400 * 86_400_000).toISOString() })
+check('a stats-only post without picture and place is accepted', !r.error, errorOf(r))
+r = await a.client.rpc('group_feed', { p_group: group, p_limit: 50 })
+check('the feed does not show the stats-only post', !r.error && !r.data.some((row) => row.catch_id === 'stats-1') && r.data.some((row) => row.catch_id === 'old-photo'), errorOf(r))
+r = await a.client.rpc('group_feed', { p_group: group, p_limit: 50, p_all: true })
+const statsRow = (r.data ?? []).find((row) => row.catch_id === 'stats-1')
+check('p_all brings it, marked as not in the feed', statsRow?.in_feed === false && (r.data ?? []).find((row) => row.catch_id === 'old-photo')?.in_feed === true, JSON.stringify(statsRow))
+rows = await board('species')
+r = await b.client.rpc('group_feed', { p_group: group, p_limit: 50, p_user: b.id, p_all: true })
+const bobSpecies = new Set((r.data ?? []).map((row) => row.species_id)).size
+check('Druhy counts the stats-only species too (as many as Bob has posts of different species)', bobSpecies >= 4 && rows.find((row) => row.nickname === 'Bob')?.value === bobSpecies, JSON.stringify(rows))
+await post(a, group, 'a-pica', 'pica-pica')
+r = await a.client.rpc('group_feed', { p_group: group, p_limit: 50 })
+check('a species Bob had before is not "first in group" for Anna afterwards', (r.data ?? []).find((row) => row.catch_id === 'a-pica')?.first_in_group === false, JSON.stringify((r.data ?? []).find((row) => row.catch_id === 'a-pica')))
+
 // ----- who can change what
 r = await b.client.from('members').update({ nickname: 'Bobík' }).eq('group_id', group).eq('user_id', b.id).select()
 check('a member renames themselves', !r.error && r.data?.[0]?.nickname === 'Bobík', errorOf(r))

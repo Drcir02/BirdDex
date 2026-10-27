@@ -18,11 +18,11 @@ import { useMediaUrls } from '../features/group/useFeed'
 import { useRemote } from '../features/group/useRemote'
 import '../features/group/group.css'
 
-/** Up to 300 posts of one member, in pages of 50 (the server's page size). */
+/** Up to 500 posts of one member (also the stats-only ones of the birds from before joining), in pages of 50 (the server's page size). */
 async function postsOf(api: GroupApi, groupId: string, userId: string): Promise<FeedPost[]> {
   const all: FeedPost[] = []
-  for (let page = 0; page < 6; page++) {
-    const posts = await api.feed(groupId, { limit: 50, userId, before: all.length ? all[all.length - 1].createdAt : undefined })
+  for (let page = 0; page < 10; page++) {
+    const posts = await api.feed(groupId, { limit: 50, userId, all: true, before: all.length ? all[all.length - 1].createdAt : undefined })
     all.push(...posts)
     if (posts.length < 50) break
   }
@@ -45,7 +45,7 @@ export default function GroupMemberPage() {
     [groupId],
   )
   const posts = useRemote((api) => postsOf(api, groupId as string, userId), [groupId, userId])
-  const urls = useMediaUrls((posts.data ?? []).slice(0, 10))
+  const urls = useMediaUrls((posts.data ?? []).filter((post) => post.inFeed).slice(0, 10))
   // A Super given on this page shows at once; the server's answer replaces it with the next load.
   const [given, setGiven] = useState<Record<string, boolean>>({})
 
@@ -173,20 +173,23 @@ export default function GroupMemberPage() {
           </LcdPanel>
           <h2 className="bd-member__heading">{t('group.profile.latest')}</h2>
           <ul className="bd-feed__list" data-testid="member-posts">
-            {list.slice(0, 10).map((post) => (
-              <FeedCard
-                key={post.id}
-                post={post}
-                species={species ? getSpeciesById(post.speciesId, species) : undefined}
-                mediaUrl={post.mediaPath ? urls[post.mediaPath] : undefined}
-                inMyDex={summary.bySpecies.has(post.speciesId)}
-                isMine={mine}
-                canDelete={false}
-                onReact={(id, on) => void react(id, on)}
-                onDelete={() => undefined}
-                compact
-              />
-            ))}
+            {list
+              .filter((post) => post.inFeed)
+              .slice(0, 10)
+              .map((post) => (
+                <FeedCard
+                  key={post.id}
+                  post={post}
+                  species={species ? getSpeciesById(post.speciesId, species) : undefined}
+                  mediaUrl={post.mediaPath ? urls[post.mediaPath] : undefined}
+                  inMyDex={summary.bySpecies.has(post.speciesId)}
+                  isMine={mine}
+                  canDelete={false}
+                  onReact={(id, on) => void react(id, on)}
+                  onDelete={() => undefined}
+                  compact
+                />
+              ))}
           </ul>
         </>
       )}

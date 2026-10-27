@@ -13,6 +13,7 @@ import {
   flushShares,
   forgetShared,
   initialShare,
+  backfillOlderCatches,
   isShareable,
   leaveAndForget,
   mediaOf,
@@ -230,6 +231,132 @@ describe('the outbox', () => {
     expect(getMembership()).toBeUndefined()
     expect(getGroupState().removedFrom).toBe('Rodina')
     expect((await getCatch('c1'))!.shareState).toBeUndefined()
+  })
+})
+
+describe('a catch with an old date (a photo from the gallery)', () => {
+  beforeEach(join)
+
+  it('is posted as any other: the date of the catch is its own, even years back', async () => {
+    await save('old-photo', { method: 'photo', caughtAt: NOW - 3 * 365 * 86_400_000 })
+    await flushShares(NOW + SHARE_DELAY_MS)
+    const [post] = await posts()
+    expect(post).toMatchObject({ catchId: 'old-photo', inFeed: true })
+    expect(post.caughtAt).toBe(NOW - 3 * 365 * 86_400_000)
+    expect((await getCatch('old-photo'))!.shareState).toBe('sent')
+  })
+})
+
+describe('the birds from before joining', () => {
+  beforeEach(join)
+  const older = async (id: string, speciesId = 'parus-major', patch: Partial<Parameters<typeof addCatch>[0]> = {}) =>
+    addCatch({
+      id,
+      speciesId,
+      method: 'live',
+      confidence: 0.9,
+      caughtAt: NOW - 30 * 86_400_000,
+      placeName: 'Doma',
+      location: { lat: 50.1, lon: 14.4 },
+      birdPoints: { bp: 410, bpBase: 400, bpQ: 0.7, bpLuck: 0.02, bpRange: [50, 500], bpFactors: [0.8, 1, 0.7, 1, 1] },
+      ...patch,
+    })
+  const allPosts = async () => (await api.feed(groupId, { all: true, limit: 50 })).filter((post) => post.userId === 'me')
+
+  it('are counted in the leaderboards, without a picture or a place, and never show in the feed', async () => {
+    await older('a', 'parus-major')
+    await older('b', 'turdus-merula')
+    expect(await backfillOlderCatches(NOW)).toBe(2)
+    expect(await getCatch('a')).toMatchObject({ shareState: 'pending', shareStatsOnly: true })
+    await flushShares(NOW + 1)
+    expect(await posts()).toHaveLength(0)
+    const sent = await allPosts()
+    expect(sent).toHaveLength(2)
+    for (const post of sent) {
+      expect(post).toMatchObject({ inFeed: false, bp: 410 })
+      expect(post.placeName).toBeUndefined()
+      expect(post.lat).toBeUndefined()
+      expect(post.mediaPath).toBeUndefined()
+    }
+    expect((await api.leaderboard(groupId, 'species')).find((row) => row.nickname === 'Míša')?.value).toBe(2)
+    expect((await getCatch('a'))!.shareState).toBe('sent')
+  })
+
+  it('are marked once: not again after they were sent, not when the person hid them, not when made after joining', async () => {
+    await older('a')
+    await backfillOlderCatches(NOW)
+    await flushShares(NOW + 1)
+    expect(await backfillOlderCatches(NOW + 5)).toBe(0)
+    await save('new')
+    expect(await backfillOlderCatches(NOW + 5)).toBe(0)
+    expect((await getCatch('new'))!.shareStatsOnly).toBeUndefined()
+    await changeShare('a', { shared: false }, NOW + 10)
+    expect(await backfillOlderCatches(NOW + 10)).toBe(0)
+  })
+
+  it('pick up a catch that came back with a backup restored after joining', async () => {
+    await older('restored')
+    expect(await backfillOlderCatches(NOW)).toBe(1)
+  })
+
+  it('make a species old for the member: the first new catch of it is not a new species, and the group has it already', async () => {
+    await older('a', 'parus-major')
+    await backfillOlderCatches(NOW)
+    await save('fresh')
+    await flushShares(NOW + SHARE_DELAY_MS + 1)
+    const [fresh] = await posts()
+    expect(fresh).toMatchObject({ catchId: 'fresh', newForUser: false, firstInGroup: false })
+  })
+
+  it('go before the new catches, so that the badges of the new ones are right', async () => {
+    await save('fresh')
+    await older('a', 'parus-major')
+    await backfillOlderCatches(NOW)
+    await flushShares(NOW + SHARE_DELAY_MS + 1)
+    const [fresh] = await posts()
+    expect(fresh).toMatchObject({ catchId: 'fresh', newForUser: false })
+  })
+
+  it('can be taken out of the totals, and put back, but have no place to hide', async () => {
+    await older('a')
+    await backfillOlderCatches(NOW)
+    await flushShares(NOW + 1)
+    await changeShare('a', { place: 'none' }, NOW + 5)
+    expect((await getCatch('a'))!.sharePlace).toBeUndefined()
+    await changeShare('a', { shared: false }, NOW + 10)
+    await flushShares(NOW + 11)
+    expect(await allPosts()).toHaveLength(0)
+    expect(await getCatch('a')).toMatchObject({ shareState: 'hidden', shareStatsOnly: true })
+    await changeShare('a', { shared: true }, NOW + 20)
+    expect(await getCatch('a')).toMatchObject({ shareState: 'pending', shareStatsOnly: true })
+    await flushShares(NOW + 2_000)
+    expect((await allPosts())[0]).toMatchObject({ catchId: 'a', inFeed: false })
+  })
+
+  it('send many at once without losing one', async () => {
+    for (let index = 0; index < 25; index++) await older(`m${index}`, index % 2 ? 'turdus-merula' : 'parus-major')
+    await backfillOlderCatches(NOW)
+    await flushShares(NOW + 1)
+    expect((await allPosts()).length).toBe(25)
+  })
+
+  it('stay at home when the person leaves, and forget they were counted', async () => {
+    await older('a')
+    await backfillOlderCatches(NOW)
+    await flushShares(NOW + 1)
+    await leaveAndForget()
+    const kept = (await getCatch('a'))!
+    expect(kept.shareState).toBeUndefined()
+    expect(kept.shareStatsOnly).toBeUndefined()
+    expect(kept.sharedPostId).toBeUndefined()
+  })
+
+  it('do nothing without a group', async () => {
+    localStorage.clear()
+    reloadGroupStateForTests()
+    await older('a')
+    expect(await backfillOlderCatches(NOW)).toBe(0)
+    expect((await getCatch('a'))!.shareState).toBeUndefined()
   })
 })
 

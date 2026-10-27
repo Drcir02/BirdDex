@@ -95,7 +95,7 @@ export default function GroupJoinPage() {
 
         <LcdPanel title={t('group.join.sharedTitle')} titleLevel={3} className="bd-group__consent" data-testid="join-consent">
           <ul>
-            {(['what', 'picture', 'place', 'who', 'control'] as const).map((key) => (
+            {(['what', 'older', 'picture', 'place', 'who', 'control'] as const).map((key) => (
               <li key={key}>{t(`group.join.shared.${key}` as const)}</li>
             ))}
           </ul>

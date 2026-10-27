@@ -19,6 +19,7 @@ export {
   getCatch,
   getMedia,
   listCatches,
+  markOlderCatchesForStats,
   putCachedPhoto,
   updateCatchNote,
   updateCatchShare,

@@ -99,6 +99,7 @@ export function feedOf(posts: readonly StoredPost[], context: FeedContext, query
     if (query.userId && post.userId !== query.userId) continue
     const flags = badge.get(post.id) as { newForUser: boolean; firstInGroup: boolean }
     if (query.newOnly && !flags.newForUser) continue
+    if (post.inFeed === false && !query.all) continue
     const member = context.members.find((m) => m.userId === post.userId)
     if (!member) continue
     const { groupId: _group, ...input } = post
@@ -109,6 +110,7 @@ export function feedOf(posts: readonly StoredPost[], context: FeedContext, query
       reactions: context.reactions.filter((r) => r.postId === post.id).length,
       iReacted: context.reactions.some((r) => r.postId === post.id && r.userId === context.viewerId),
       ...flags,
+      inFeed: post.inFeed !== false,
     })
     if (out.length >= limit) break
   }

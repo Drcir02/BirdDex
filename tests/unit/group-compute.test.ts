@@ -102,6 +102,18 @@ describe('the leaderboards', () => {
     ])
   })
 
+  it('counts the stats-only posts in every leaderboard (the totals are everything a member has caught)', () => {
+    const totals = [
+      post('a', 'parus-major', 900, { bp: 700, inFeed: false }),
+      post('a', 'turdus-merula', 876, { bp: 300, inFeed: false }),
+      post('a', 'pica-pica', 2, { bp: 100 }),
+    ]
+    expect(boardOf(MEMBERS, totals, 'species')[0]).toMatchObject({ nickname: 'Anna', value: 3 })
+    expect(boardOf(MEMBERS, totals, 'catches')[0]).toMatchObject({ nickname: 'Anna', value: 3 })
+    expect(boardOf(MEMBERS, totals, 'strongest')[0]).toMatchObject({ nickname: 'Anna', value: 700, speciesId: 'parus-major' })
+    expect(boardOf(MEMBERS, totals, 'streak')[0]).toMatchObject({ nickname: 'Anna', value: 2 })
+  })
+
   it('a tie shares the place and the next place is skipped', () => {
     const ranked = withRanks([{ value: 5 }, { value: 5 }, { value: 3 }, { value: 0 }, { value: 0 }])
     expect(ranked.map((row) => row.rank)).toEqual([1, 1, 3, 4, 4])
@@ -150,6 +162,18 @@ describe('the feed', () => {
       ]),
     )
     expect(feed[0]).toMatchObject({ reactions: 2, iReacted: true, nickname: 'Tomáš' })
+  })
+
+  it('keeps the stats-only posts out of the feed, unless all are asked for, but they still make a species old for the member', () => {
+    const before = post('a', 'parus-major', 100, { inFeed: false })
+    const now = post('a', 'parus-major', 5)
+    expect(feedOf([before, now], context()).map((item) => item.id)).toEqual([now.id])
+    expect(feedOf([before, now], context())[0]).toMatchObject({ newForUser: false, firstInGroup: false, inFeed: true })
+    const all = feedOf([before, now], context(), { all: true })
+    expect(all.map((item) => [item.id, item.inFeed])).toEqual([
+      [now.id, true],
+      [before.id, false],
+    ])
   })
 
   it('leaves out the posts of somebody who is no longer a member', () => {

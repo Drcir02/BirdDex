@@ -77,7 +77,9 @@ describe('posting', () => {
   it('refuses a BP outside the range and a date far from today', async () => {
     expect(await kindOf(api.publish(groupId, input('c2', { bp: 900 })))).toBe('rejected')
     expect(await kindOf(api.publish(groupId, input('c3', { caughtAt: now + 3 * 86_400_000 })))).toBe('rejected')
-    expect(await kindOf(api.publish(groupId, input('c4', { caughtAt: now - 400 * 86_400_000 })))).toBe('rejected')
+    // An old photo from the gallery is fine (the server only refuses a date before the year 2000).
+    expect(await kindOf(api.publish(groupId, input('c4', { caughtAt: now - 400 * 86_400_000 })))).toBe('no error')
+    expect(await kindOf(api.publish(groupId, input('c4b', { caughtAt: Date.UTC(1999, 11, 31) })))).toBe('rejected')
   })
 
   it('shows the new post on top, with the member who made it, and takes it away again', async () => {
@@ -103,6 +105,17 @@ describe('posting', () => {
     expect((await api.feed(groupId))[0]).toMatchObject({ reactions: post.reactions + 1, iReacted: true })
     await api.react(post.id, false)
     expect((await api.feed(groupId))[0]).toMatchObject({ reactions: post.reactions, iReacted: false })
+  })
+
+  it('takes a stats-only post without picture and place, keeps it out of the feed and of the red dot, and gives it when all are asked for', async () => {
+    const before = await api.latest(groupId)
+    expect(await kindOf(api.publish(groupId, input('s1', { inFeed: false, placeName: 'Praha' })))).toBe('rejected')
+    await api.publish(groupId, input('s2', { inFeed: false, caughtAt: now - 800 * 86_400_000 }))
+    expect((await api.feed(groupId)).some((post) => post.catchId === 's2')).toBe(false)
+    expect((await api.feed(groupId, { all: true })).find((post) => post.catchId === 's2')).toMatchObject({ inFeed: false, nickname: 'Míša' })
+    await api.as('fake-anna').publish(groupId, input('s3', { inFeed: false }))
+    expect(await api.latest(groupId)).toBe(before)
+    expect((await api.leaderboard(groupId, 'catches')).find((row) => row.nickname === 'Míša')?.value).toBe(1)
   })
 
   it('tells about the newest post of somebody else (and not of me)', async () => {

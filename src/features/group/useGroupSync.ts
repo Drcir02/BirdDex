@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getGroupApi } from './api'
-import { flushShares, scheduleFlush } from './share'
+import { backfillOlderCatches, flushShares, scheduleFlush } from './share'
 import { getGroupState, getMembership, updatePrefs, useGroupState } from './state'
 import { GroupError } from './types'
 
@@ -17,6 +17,8 @@ export function useGroupSync(): void {
         if (result.nextDueAt) scheduleFlush(result.nextDueAt - Date.now() + 200)
       })
     }
+    // The birds caught before joining count in the leaderboards (as stats only); then everything waiting is sent.
+    void backfillOlderCatches().catch(() => undefined)
     scheduleFlush(1_500)
     const interval = setInterval(run, POLL_MS)
     window.addEventListener('online', run)

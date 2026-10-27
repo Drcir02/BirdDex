@@ -164,6 +164,7 @@ export async function exportBackup(options: { now?: Date; onProgress?: (done: nu
     delete copy.shareAt
     delete copy.sharePlace
     delete copy.sharedPostId
+    delete copy.shareStatsOnly
     if (record.mediaId && !savedMedia.has(record.mediaId)) {
       const media = await db.media.get(record.mediaId)
       if (media) {

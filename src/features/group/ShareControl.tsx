@@ -37,7 +37,8 @@ function ShareSwitches({ catchId, catchIds }: { catchId?: string; catchIds?: rea
   if (!membership || !record) return null
 
   const shared = record.shareState !== 'hidden'
-  const hasPlace = !!record.placeName || !!record.location
+  const statsOnly = record.shareStatsOnly === true
+  const hasPlace = !statsOnly && (!!record.placeName || !!record.location)
   const placeShown = (record.sharePlace ?? prefs.place) !== 'none'
   const apply = async (change: Parameters<typeof changeShare>[1]) => {
     if (busy) return
@@ -50,7 +51,8 @@ function ShareSwitches({ catchId, catchIds }: { catchId?: string; catchIds?: rea
       setBusy(false)
     }
   }
-  const state = record.shareState === 'sent' ? 'stateSent' : record.shareState === 'pending' ? 'statePending' : 'stateHidden'
+  const state =
+    record.shareState === 'hidden' ? 'stateHidden' : statsOnly ? 'stateStats' : record.shareState === 'sent' ? 'stateSent' : 'statePending'
 
   return (
     <LcdPanel title={t('group.title')} titleLevel={3} className="bd-share" data-testid="share-control" data-share-state={record.shareState}>

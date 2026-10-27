@@ -187,7 +187,7 @@ About the size of the BirdPoints work, 1.5 to 2 times; the first two parts are w
 3. Place: **exact by default**, with a map link; name only or nothing are choices in the settings, and one catch can be hidden.
 4. Leaderboards: **Druhy, Nejsilnější pták, Úlovky, Série**. No sum of BP.
 5. **Reactions are in the first version** (comments later).
-6. **Only new catches** are shared; no button for the older ones.
+6. ~~Only new catches are shared~~ (changed after the first phone test, see "Built"): **the feed shows only birds caught after joining, but the leaderboards and profiles count everything a member has caught.** Birds from before joining are sent as stats-only posts (species, BP, date; no picture, no place) that never appear in the feed.
 
 ## Built
 
@@ -210,6 +210,13 @@ About the size of the BirdPoints work, 1.5 to 2 times; the first two parts are w
   A catch made before joining has no `shareState` and can never be shared. The post is made with the id of the catch, so a retry never doubles.
   Changing the place of a bird that is already in the feed deletes its post and sends it again; hiding it deletes the post. If the
   connection is lost in between, the old post is deleted first the next time (a place that was hidden is never left in the feed).
+* **Totals and the feed (migration `002_group_totals.sql`).** A post has `in_feed` (default true). The birds a phone had before joining (or got back from a
+  backup) are marked `shareStatsOnly` and sent right after joining, four at a time and before any new catch, as `in_feed = false` posts: species, BP, confidence,
+  date, no picture, no place (the server refuses a stats-only post that has them). `group_feed` leaves them out unless `p_all` is set (a member's page uses it for
+  the five strongest birds and the rarest), the leaderboards and streaks count them, and they make a species "old" for the member and the group, so a new catch of a
+  species the member had before is not a "new species". On a bird's page they show "Počítá se jen do žebříčku" and the switch can take one out of the totals.
+  The date of a catch may be any date from the year 2000 up to tomorrow, so an old photo from the gallery posts like any other (it was refused before: the
+  first version allowed one year back, and a catch with an older photo was silently kept at home).
 * **Polling, not realtime:** the feed and the boards refresh every 60 seconds while the app is visible; the red dot asks `latest()` every 60 seconds.
 * **Tests:** `tests/unit/group-*.test.ts` (boards, badges, state, the fake, the outbox, the screens), `tests/e2e/group.spec.ts` (browser, with the fake).
 

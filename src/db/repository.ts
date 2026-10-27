@@ -182,7 +182,7 @@ export async function updateCatchNote(id: string, note: string | undefined): Pro
 }
 
 /** What can change about the sharing of a catch. `null` removes a field. */
-export type SharePatch = { [K in 'shareState' | 'shareAt' | 'sharePlace' | 'sharedPostId']?: CatchRecord[K] | null }
+export type SharePatch = { [K in 'shareState' | 'shareAt' | 'sharePlace' | 'sharedPostId' | 'shareStatsOnly']?: CatchRecord[K] | null }
 
 /** Changes the sharing fields of a catch in one step. Returns the catch as it is now, or undefined when there is none. */
 export function updateCatchShare(id: string, patch: SharePatch): Promise<CatchRecord | undefined> {
@@ -227,8 +227,28 @@ export function clearAllShares(): Promise<void> {
         delete record.shareAt
         delete record.sharePlace
         delete record.sharedPostId
+        delete record.shareStatsOnly
       })
   })
+}
+
+/**
+ * Every catch that has nothing to do with the group yet (made before joining, or restored from a backup) is marked to be counted in
+ * the leaderboards, as a "stats only" post. Returns how many were marked.
+ */
+export function markOlderCatchesForStats(at: number): Promise<number> {
+  const db = getDb()
+  return guard(() =>
+    db.transaction('rw', db.catches, async () =>
+      db.catches
+        .filter((record) => record.shareState === undefined)
+        .modify((record) => {
+          record.shareState = 'pending'
+          record.shareAt = at
+          record.shareStatsOnly = true
+        }),
+    ),
+  )
 }
 
 /** Removes every catch and every saved photo and clip. The reference photo cache stays. */

@@ -13,7 +13,7 @@ import { FAKE_FOUNDER_CODE, FAKE_GROUP_CODE, createFakeApi, type FakeGroupApi } 
 import { GroupSection } from '../../src/features/group/GroupSection'
 import { EraseSection } from '../../src/features/settings/EraseSection'
 import { ShareControl } from '../../src/features/group/ShareControl'
-import { SHARE_DELAY_MS, flushShares, initialShare } from '../../src/features/group/share'
+import { SHARE_DELAY_MS, backfillOlderCatches, flushShares, initialShare } from '../../src/features/group/share'
 import { getMembership, reloadGroupStateForTests, setMembership, updatePrefs } from '../../src/features/group/state'
 import { reloadSettingsForTests } from '../../src/state/settings'
 import { ToastProvider, ToastViewport } from '../../src/ui/Toast'
@@ -140,7 +140,9 @@ describe('joining', () => {
     render(app('/group/join'))
     const consent = screen.getByTestId('join-consent')
     expect(consent.textContent).toContain('720 bodů')
-    expect(consent.textContent).toContain('Starší úlovky se nesdílejí')
+    // The birds from before joining count in the totals, but only as species, BP and date, and not in the feed.
+    expect(consent.textContent).toContain('Tvoji dosavadní ptáci se započítají do žebříčku')
+    expect(consent.textContent).toContain('Ve feedu se neukážou')
   })
 
   it('asks for a nickname, and says when the code is wrong or the name is taken', async () => {
@@ -339,6 +341,37 @@ describe('the members', () => {
     expect(screen.getAllByTestId('feed-post')).toHaveLength(4)
   })
 
+  it('counts the birds a member had before joining (stats only) in their numbers, but shows no card for them', async () => {
+    await joinAs()
+    const tomas = api.as('fake-tomas')
+    await tomas.publish('fake-group-rodina', {
+      catchId: 'older-1',
+      speciesId: 'erithacus-rubecula',
+      method: 'live',
+      confidence: 0.9,
+      bp: 599,
+      bpRange: [50, 600],
+      caughtAt: Date.now() - 900 * 86_400_000,
+      inFeed: false,
+    })
+    await tomas.publish('fake-group-rodina', {
+      catchId: 'older-2',
+      speciesId: 'pica-pica',
+      method: 'live',
+      confidence: 0.9,
+      bp: 100,
+      bpRange: [50, 600],
+      caughtAt: Date.now() - 800 * 86_400_000,
+      inFeed: false,
+    })
+    render(app('/group/member/fake-tomas'))
+    await waitFor(() => expect(screen.getByTestId('member-catches').textContent).toBe('6'))
+    expect(screen.getByTestId('member-strongest').textContent).toBe('BP 599')
+    expect(screen.getByTestId('member-top').querySelectorAll('li')).toHaveLength(5)
+    expect(screen.getAllByTestId('feed-post')).toHaveLength(4)
+    expect(screen.getByTestId('member-top').textContent).toContain('599')
+  })
+
   it('says when the member is no longer in the group', async () => {
     await joinAs()
     render(app('/group/member/nobody'))
@@ -389,6 +422,20 @@ describe('the group in the settings', () => {
     await waitFor(() => expect(getMembership()).toBeUndefined())
     expect((await getCatch('c1'))!.shareState).toBeUndefined()
     expect(screen.getByTestId('group-join-link')).toBeTruthy()
+  })
+})
+
+describe('the share switches of a bird from before joining', () => {
+  it('say that it counts only in the leaderboard, offer no place and can be switched off', async () => {
+    await joinAs()
+    await addCatch({ id: 'older', speciesId: 'parus-major', method: 'live', confidence: 0.9, placeName: 'Doma' })
+    await backfillOlderCatches(Date.now())
+    render(h(ToastProvider, null, h(ShareControl, { catchId: 'older' })))
+    const control = await screen.findByTestId('share-control')
+    expect(control.textContent).toContain('Počítá se jen do žebříčku')
+    expect(within(control).queryByRole('switch', { name: /Ukázat místo/ })).toBeNull()
+    fireEvent.click(within(control).getByRole('switch', { name: /Sdílet se skupinou/ }))
+    await waitFor(() => expect(screen.getByTestId('share-control').getAttribute('data-share-state')).toBe('hidden'))
   })
 })
 
@@ -443,7 +490,9 @@ describe('erasing everything', () => {
     await joinAs()
     await addCatch({ id: 'c1', speciesId: 'parus-major', method: 'live', confidence: 0.9, share: initialShare() })
     await flushShares(Date.now() + SHARE_DELAY_MS + 1)
-    expect((await api.feed((await api.members('fake-group-rodina'))[0] && 'fake-group-rodina')).filter((post) => post.userId === 'me')).toHaveLength(1)
+    expect((await api.feed((await api.members('fake-group-rodina'))[0] && 'fake-group-rodina')).filter((post) => post.userId === 'me')).toHaveLength(
+      1,
+    )
     render(h(ToastProvider, null, h(EraseSection)))
     fireEvent.click(screen.getByTestId('erase-start'))
     expect(screen.getByTestId('erase-group-note').textContent).toMatch(/příspěvky ve skupině se smažou/i)

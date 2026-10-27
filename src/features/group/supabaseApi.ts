@@ -100,6 +100,7 @@ interface FeedRow {
   i_reacted: boolean
   new_for_user: boolean
   first_in_group: boolean
+  in_feed: boolean
 }
 
 export function toFeedPost(row: FeedRow): FeedPost {
@@ -118,6 +119,7 @@ export function toFeedPost(row: FeedRow): FeedPost {
     iReacted: row.i_reacted === true,
     newForUser: row.new_for_user === true,
     firstInGroup: row.first_in_group === true,
+    inFeed: row.in_feed !== false,
   }
   if (row.bp !== null) post.bp = row.bp
   if (row.bp_base !== null) post.bpBase = row.bp_base
@@ -263,6 +265,7 @@ export function createSupabaseApi(url: string = GROUP_SERVER_URL, key: string = 
         lon: post.lon ?? null,
         media_path: mediaPath ?? null,
         media_kind: media ? (media.ext === 'jpg' ? 'image' : 'audio') : null,
+        in_feed: post.inFeed !== false,
       }
       const inserted = await sb.from('posts').insert(row).select('id').single()
       if (inserted.error) {
@@ -295,6 +298,7 @@ export function createSupabaseApi(url: string = GROUP_SERVER_URL, key: string = 
           p_limit: query.limit ?? 20,
           p_user: query.userId ?? null,
           p_new_only: query.newOnly === true,
+          p_all: query.all === true,
         }),
       ) as FeedRow[]
       return rows.map(toFeedPost)
@@ -304,7 +308,14 @@ export function createSupabaseApi(url: string = GROUP_SERVER_URL, key: string = 
       const userId = await me()
       const sb = await client()
       const rows = check(
-        await sb.from('posts').select('created_at').eq('group_id', groupId).neq('user_id', userId).order('created_at', { ascending: false }).limit(1),
+        await sb
+          .from('posts')
+          .select('created_at')
+          .eq('group_id', groupId)
+          .neq('user_id', userId)
+          .eq('in_feed', true)
+          .order('created_at', { ascending: false })
+          .limit(1),
       ) as Array<{ created_at: string }>
       return rows[0] ? toMs(rows[0].created_at) : undefined
     },

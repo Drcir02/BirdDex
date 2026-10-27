@@ -38,10 +38,11 @@ export const group = {
     submit: 'Připojit se',
     sharedTitle: 'Co se ve skupině sdílí',
     shared: {
-      what: 'Nově chycení ptáci: druh, BP, způsob chycení, datum a hodina.',
+      what: 'Ptáci, které chytíš po připojení: druh, BP, způsob chycení, datum a hodina. Ukážou se ve feedu.',
+      older: 'Tvoji dosavadní ptáci se započítají do žebříčku a statistik, ale jen druh, BP a datum, bez fotky a místa. Ve feedu se neukážou.',
       picture: 'Jejich fotka zmenšená na 720 bodů (bez polohy a údajů z foťáku) nebo nahrávka.',
       place: 'Místo: název a odkaz na mapu. Můžeš to změnit na jen název nebo nic, a u každého ptáka ho zvlášť skrýt.',
-      who: 'Vidí to jen členové téhle skupiny a správce serveru. Starší úlovky se nesdílejí.',
+      who: 'Vidí to jen členové téhle skupiny a správce serveru.',
       control: 'Každého ptáka můžeš hned po chycení nebo později skrýt, nebo smazat. Ze skupiny můžeš kdykoli odejít, tvé příspěvky se smažou.',
     },
     errors: {
@@ -135,6 +136,7 @@ export const group = {
     statePending: 'Za chvíli se pošle do feedu.',
     stateSent: 'Je ve feedu skupiny.',
     stateHidden: 'Zůstává jen u tebe.',
+    stateStats: 'Počítá se jen do žebříčku (druh, BP a datum), ve feedu není.',
     place: 'Ukázat místo',
     placeHint: 'Jak moc se ukáže, nastavuješ v Nastavení.',
     failed: 'Změnu se nepodařilo uložit.',

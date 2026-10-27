@@ -98,6 +98,8 @@ export interface CatchRecord {
   shareAt?: number
   sharePlace?: SharePlace
   sharedPostId?: string
+  /** A catch from before joining the group: only its species, BP and date count in the leaderboards; it never shows in the feed. */
+  shareStatsOnly?: true
 }
 
 export type ShareState = 'pending' | 'sent' | 'hidden'

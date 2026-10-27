@@ -23,7 +23,7 @@ export const about = {
   privacy: {
     title: 'Žádné sledování',
     text: 'Žádné účty, žádná reklama, žádné statistiky ani sledování. Tvoje sbírka, fotky, nahrávky a poloha zůstávají v telefonu. Z internetu se stahují jen modely (jednou), ukázkové fotky ptáků a název místa, a to jen když jsi online.',
-    group: 'Když se sám přidáš do skupiny, odešlou se na její server (u služby Supabase) tvoje nové úlovky: druh, BP, datum, zmenšená fotka nebo nahrávka a podle nastavení místo. Vidí je jen členové té skupiny a správce serveru. Skupinu můžeš kdykoli opustit a tvoje příspěvky se smažou.',
+    group: 'Když se sám přidáš do skupiny, odešlou se na její server (u služby Supabase) tvoje nové úlovky: druh, BP, datum, zmenšená fotka nebo nahrávka a podle nastavení místo. U starších ptáků jen druh, BP a datum, aby se započítali do žebříčku. Vidí je jen členové té skupiny a správce serveru. Skupinu můžeš kdykoli opustit a tvoje příspěvky se smažou.',
   },
 
   sound: {

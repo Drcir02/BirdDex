@@ -319,7 +319,9 @@ export function createFakeApi(options: FakeOptions = {}): FakeGroupApi {
       async publish(groupId: string, post: Parameters<GroupApi['publish']>[1], file?: PostMedia) {
         await gate()
         requireMember(groupId)
-        if (post.caughtAt > now() + 24 * HOUR || post.caughtAt < now() - 366 * 24 * HOUR) throw new GroupError('rejected', 'date')
+        if (post.caughtAt > now() + 24 * HOUR || post.caughtAt < Date.UTC(2000, 0, 1)) throw new GroupError('rejected', 'date')
+        if (post.inFeed === false && (file || post.placeName || post.lat !== undefined || post.lon !== undefined))
+          throw new GroupError('rejected', 'stats only')
         if (post.bp !== undefined && post.bpRange && (post.bp < post.bpRange[0] || post.bp > post.bpRange[1])) throw new GroupError('rejected', 'bp')
         const same = data.posts.find((p) => p.groupId === groupId && p.userId === userId && p.catchId === post.catchId)
         if (same) return { postId: same.id }
@@ -369,7 +371,7 @@ export function createFakeApi(options: FakeOptions = {}): FakeGroupApi {
       async latest(groupId: string) {
         await gate()
         requireMember(groupId)
-        const others = data.posts.filter((p) => p.groupId === groupId && p.userId !== userId)
+        const others = data.posts.filter((p) => p.groupId === groupId && p.userId !== userId && p.inFeed !== false)
         return others.length ? Math.max(...others.map((p) => p.createdAt)) : undefined
       },
 

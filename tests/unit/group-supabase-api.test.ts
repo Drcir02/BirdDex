@@ -62,6 +62,7 @@ describe('a row of the feed', () => {
     i_reacted: true,
     new_for_user: true,
     first_in_group: false,
+    in_feed: true,
   }
 
   it('becomes a post with times in milliseconds and the optional parts only when there', () => {
@@ -76,6 +77,7 @@ describe('a row of the feed', () => {
       iReacted: true,
       newForUser: true,
       firstInGroup: false,
+      inFeed: true,
     })
     expect(post.caughtAt).toBe(Date.UTC(2026, 8, 16, 8))
     expect(post).toMatchObject({ lat: 48.8555, lon: 16.0488, mediaPath: 'g/u1/c1.jpg', mediaKind: 'image' })
@@ -96,5 +98,7 @@ describe('a row of the feed', () => {
     expect(bare.placeName).toBeUndefined()
     expect(bare.lat).toBeUndefined()
     expect(bare.mediaPath).toBeUndefined()
+    // A post of a catch from before joining is marked as not belonging to the feed.
+    expect(toFeedPost({ ...row, in_feed: false }).inFeed).toBe(false)
   })
 })
