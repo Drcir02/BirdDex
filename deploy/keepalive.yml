@@ -1,0 +1,24 @@
+# Keeps the group server awake. The free plan of Supabase pauses a project that nobody has used for a week; this asks it a harmless
+# question (the function ping(), which only returns the time) every three days, so the group never has to be restored by hand.
+# The address and the key below are the public ones that are also inside the app (src/features/group/server.ts).
+# This file is the same as .github/workflows/keepalive.yml. Keep the two identical.
+name: Keep the group server awake
+
+on:
+  schedule:
+    - cron: '17 5 */3 * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask the server for the time
+        run: |
+          curl --fail --silent --show-error --retry 3 --retry-delay 10 -X POST \
+            "https://lyiiibtdzshoftbagoce.supabase.co/rest/v1/rpc/ping" \
+            -H "apikey: sb_publishable_mPEfsCWWYCjUKxRXPT5hYA_P4p1otCj" \
+            -H "Content-Type: application/json" \
+            -d '{}'
